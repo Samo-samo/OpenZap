@@ -1,100 +1,157 @@
-## UYGULAMA SPESİFİKASYON DÖKÜMANI (PRD)
+# OpenZap Product Requirements Document (PRD)
+
+## 1. Overview
+
+OpenZap is an open-source, cross-platform application that allows users to control compatible Smart TVs over a local network.
+
+The project aims to provide a modern, lightweight and ad-free alternative to existing Smart TV remote applications, many of which rely on advertisements, unnecessary permissions or proprietary services.
+
+OpenZap is designed with extensibility in mind. Support for additional TV brands and capabilities should be possible without requiring major changes to the application architecture.
 
 ---
 
-## 1. Uygulamanın Temel Amacı ve Vizyonu
+# 2. Vision
 
-## Problem Tanımı
+Create a reliable, open-source Smart TV controller that is simple to use, easy to maintain and capable of supporting multiple Smart TV platforms through a modular architecture.
 
-Piyasadaki mevcut akıllı televizyon (Smart TV) kumanda uygulamalarının çok büyük bir kısmı aşırı miktarda reklam barındırmakta, kullanıcı arayüzleri görsel olarak demode kalmakta ve her TV markası için kullanıcının ayrı bir uygulama indirmesini gerektirmektedir. Ayrıca, açık kaynaklı alternatiflerin çoğu son kullanıcı için teknik bilgi gerektiren, kurulumu zor yapılara sahiptir.
-
-## Vizyon ve Çözüm
-
-Bu proje; tamamen açık kaynaklı (open-source), reklamsız, modern tasarım trendlerine (Material You) uygun ve tek bir kod tabanıyla çoklu platformda (Cross-Platform) çalışan bir akıllı televizyon uzaktan kumanda uygulamasıdır.  
-Uygulama, ilk aşamada Vestel Linux Smart TV protokolünü temel alacak; ancak mimarisi tamamen modüler (genişletilebilir) tasarlanarak ilerleyen aşamalarda Samsung, LG, Sony gibi diğer majör TV markalarını da tek bir çatı altında destekleyecektir. Kullanıcılar ek hiçbir modül indirmeden, uygulamanın hafif mimarisi sayesinde tüm TV protokollerine tek bir paketle erişebilecektir.
+The project prioritizes long-term maintainability, clean design and practical usability over rapid feature expansion.
 
 ---
 
-## 2. Kullanıcı Rolleri ve Deneyimi (UX/UI)
+# 3. Goals
 
-## Kullanıcı Rolü
+The initial goals of OpenZap are:
 
-- Ev Kullanıcısı / Son Kullanıcı: Teknik bilgiye sahip olmayan, sadece televizyonunu reklamsız, hızlı ve akıcı bir şekilde telefonundan veya bilgisayarından kontrol etmek isteyen kişiler.
-- Geliştirici / Katkıda Bulunan (Açık Kaynak): GitHub üzerinden projeye yeni TV markalarının protokollerini (modüllerini) eklemek veya arayüzü geliştirmek isteyen yazılımcılar.
-
-## Tasarım ve Deneyim Prensipleri
-
-- Material You Entegrasyonu: Android başta olmak üzere tüm platformlarda dinamik renk şemalarını destekleyen, modern, minimalist ve gece modu uyumlu arayüz.
-- Sıfır Sürtünme (Zero Friction): TV bağlantısı için kullanıcının IP adresi aramasına gerek kalmadan akıllı otomasyon süreçlerinin işletilmesi.
-- İlk Kurulum Sihirbazı (Onboarding): Kullanıcıyı teknik hatalardan korumak için durum kontrolü yapan rehber ekranlar.
+* Provide a responsive Smart TV remote experience.
+* Support multiple Smart TV brands through a unified architecture.
+* Remain completely open source.
+* Contain no advertisements or unnecessary third-party services.
+* Operate entirely within the user's local network.
+* Be easy to extend with new TV integrations.
 
 ---
 
-## 3. Tüm Fonksiyonlar ve Özellik Listesi (Features)
+# 4. Project Scope
 
-## A. Çekirdek Uzaktan Kumanda Fonksiyonları
+The first public milestone focuses on delivering a stable foundation and complete support for Vestel Smart TVs.
 
-- Standart Kumanda Seti: Yön tuşları (Yukarı, Aşağı, Sağ, Sol), Tamam (OK), Geri (Back), Ana Sayfa (Home/Menu) tuşları.
-- Ses ve Kanal Kontrolleri: Sesi Aç/Kıs (Volume Up/Down), Sustur (Mute), Kanal Değiştirme (Program Up/Down) tuşları.
-- Özel Vestel Tuş Kodları: Niyazi Alpay'ın açık kaynaklı projesinde tanımlanan ham TCP anahtar kodlarının (Örn: Power=`1012`, VolUp=`1016`, VolDown=`1017`) arayüz butonlarına haritalanması.
+Core functionality includes:
 
-## B. Gelişmiş Özellik Modülleri
-
-- Wake-on-LAN (WoL) - Kapalı TV'yi Açma: TV derin uyku (standby) modundayken, daha önce kaydedilen MAC adresine yerel ağ üzerinden "Sihirli Paket" (Magic Packet) göndererek televizyonun uzaktan açılmasını sağlama.
-- Hızlı Uygulama Başlatıcı (Quick Launcher): TV arayüzünde gezinmeden, uygulama içindeki Netflix, YouTube, Prime Video logolarına tek tıkla basarak televizyonda ilgili uygulamayı doğrudan tetikleme.
-- Uyku Zamanlayıcısı (Sleep Timer): Uygulama içinden geri sayım sayacı kurarak (Örn: 45 dakika sonra), süre bittiğinde televizyona otomatik olarak kapatma (Power) komutu gönderme.
-- Çoklu Oda ve Akıllı TV Değiştirme: Evde birden fazla uyumlu TV olması durumunda, üst menüden tek tıkla TV'ler arasında geçiş yapabilme veya Wi-Fi sinyal gücüne/kayıtlı IP'ye göre otomatik odaklanma.
-- QR Kod ile TV Paylaşımı: Evdeki bir cihaz TV'yi başarıyla eşleştirdiğinde, üretilen bir QR kod vasıtasıyla evdeki diğer aile üyelerinin ağ tarama süreciyle uğraşmadan TV profilini (IP ve MAC adresini) anında kendi uygulamalarına ithal edebilmesi.
-- İlerleyen Aşamalar İçin Rezerve Özellikler: Dokunmatik Yüzey (Trackpad) modu ve Ana Ekran Widget'ları (İleride eklenecektir, ilk sürüme dahil edilmeyecektir).
-
-## C. Sistem ve Altyapı Özellikleri
-
-- Uluslararasılaştırma (i18n): İlk aşamada tam Türkçe ve İngilizce dil desteği (Tüm metinler lokalizasyon dosyalarından çekilecektir).
-- Çoklu Platform (Cross-Platform) Desteği: Tek bir Flutter kod tabanı ile sırasıyla Windows, Android ve iOS platformlarına derlenebilme yeteneği.
+* Device discovery on the local network
+* Remote control
+* Device management
+* Wake-on-LAN
+* Application launching (when supported)
+* Sleep timer
+* Basic settings and personalization
 
 ---
 
-## 4. Çalışma Mantığı ve İş Akışı (Flow)
+# 5. Supported Platforms
 
-## Adım 1: İlk Açılış ve Durum Doğrulama (Onboarding Flow)
+## Current
 
-1. Uygulama ilk kez açıldığında kullanıcıya bir sihirbaz gösterilir.
-2. Uygulama arka planda cihazın yerel ağ durumunu kontrol eder.
-3. Kullanıcıya şu 3 kritik kontrol adım adım onaylatılır:
-    
-    - "Cihazınız Wi-Fi ağına bağlı mı?"
-    - "Televizyonunuz açık ve aynı Wi-Fi ağına bağlı mı?"
-    - (Mobil cihazlar için) "Yerel ağ tarama izni verildi mi?"
-    
+* Windows (Primary development platform)
 
-## Adım 2: Otomatik Cihaz Keşfi ve Modül Aktivasyonu (Discovery Flow)
+## Planned
 
-1. Doğrulamaların ardından uygulama, yerel ağda (LAN) tarama başlatır (Ping Discover Network / SSDP).
-2. Vestel TV'lerin dinlediği portlar (Örn: `56789` veya `1986`) taranır.
-3. Bir cihaz yanıt verdiğinde, cihazın IP ve MAC adresi yerel hafızaya (Secure Storage / Shared Preferences) kalıcı olarak kaydedilir.
-4. Sistem mimarisi, TV'nin imzasını okur. TV "Vestel" olarak tanımlandığı an, uygulamanın çekirdek "Vestel Protokol Modülü" aktif hale gelir ve arayüz bu markaya göre şekillenir.
+* Android
 
-## Adım 3: Komut İletimi ve Soket Yönetimi (Command Flow)
+## Under Consideration
 
-1. Kullanıcı kumanda arayüzünden bir butona (Örn: Ses Açma) basar.
-2. Arka planda `dart:io` kütüphanesi tetiklenerek TV'nin kayıtlı IP adresine ve ilgili portuna anlık bir TCP Soket (Socket.connect) bağlantısı açılır.
-3. Niyazi Alpay'ın projesindeki ham metin protokol formatına uygun olarak (Örn: `key=1016\n`) veri paketi sokete yazılır.
-4. Paket gönderildiği an (`socket.flush`), bağlantı TV'yi ve ağı yormamak için anında kapatılır (`socket.close`).
+* Linux Desktop
+* macOS
+* iOS
+
+Web is currently out of scope.
 
 ---
 
-## 5. Kritik Kurallar ve Kısıtlamalar
+# 6. Supported TV Types
 
-- REKLAM YASAĞI: Uygulamanın hiçbir sürümünde, hiçbir platformda reklam kütüphanesi (AdMob vb.) yer almayacaktır. Kod tabanı tamamen temiz kalacaktır.
-- MODÜLER MİMARİ ZORUNLULUĞU: Tüm TV markaları (Vestel, Samsung, LG vb.) tek bir soyut sınıftan (`TVInterface` veya `TVController`) türetilmelidir. Gelecekte yeni bir marka eklendiğinde ana arayüze dokunulmadan sadece o markanın sınıfı yazılabilmelidir.
-- YEREL KOD BAĞIMSIZLIĞI: Marka protokolleri sadece metin tabanlı komutlar ve API istekleri içerdiği için dinamik olarak GitHub'dan indirilmeye çalışılmamalı; uygulamanın içine statik ve hafif kod blokları olarak gömülmelidir (Boyut tasarrufu için harici indirmeye gerek yoktur).
-- WEB SÜRÜMÜNÜN ELENMESİ: Tarayıcıların yerel ağ kısıtlamaları (CORS ve ham TCP soket engelleri) nedeniyle projenin Web sürümü tamamen kapsam dışı bırakılmıştır. Geliştirme sırası kesin olarak: 1. Windows (Prototip) -> 2. Android -> 3. iOS olacaktır.
-- PLATFORM İZİNLERİ:
-    
-    - Android için `AndroidManifest.xml` içinde yerel ağ ve internet izinleri eksiksiz tanımlanmalıdır.
-    - iOS için `Info.plist` dosyasına "Local Network Usage" izni ve açıklaması eklenmelidir; aksi takdirde Apple ekosisteminde soketler çalışmayacaktır.
-    
-- BAĞLANTI ŞARTI: Uygulamanın çalışabilmesi için TV ve kontrol cihazının kesinlikle aynı lokal ağda (LAN) olması gerektiği kuralı arayüzde net bir şekilde vurgulanmalıdır.
+Currently, OpenZap targets:
+
+* Smart TVs
+
+Other device categories may be evaluated in future versions.
 
 ---
 
+# 7. Supported Brands
+
+| Brand                 | Status               |
+| --------------------- | -------------------- |
+| Vestel Smart TV       | In Development       |
+| Samsung Smart TV      | Future Consideration |
+| LG Smart TV           | Future Consideration |
+| Sony Smart TV         | Future Consideration |
+
+Additional brands may be evaluated based on community interest and protocol research.
+
+---
+
+# 8. Key Features
+
+The first major release is expected to include:
+
+* Local network device discovery
+* Smart TV remote control
+* Device management
+* Wake-on-LAN
+* Quick application launcher (supported devices)
+* Sleep timer
+* Light and dark themes
+* Multiple language support
+
+Feature availability may vary depending on TV brand and protocol capabilities.
+
+---
+
+# 9. Protocol Research
+
+OpenZap is an independent implementation.
+
+Existing open-source projects may be used as references for protocol research, validation and interoperability testing. However, implementation decisions are based on observed device behavior rather than reproducing another project's architecture or code.
+
+Where necessary, network traffic analysis may be performed to understand communication between official remote applications and compatible televisions.
+
+---
+
+# 10. Future Considerations
+
+Potential future improvements include:
+
+* Additional Smart TV brands
+* Android TV support
+* Google TV support
+* Text input
+* Touchpad mode
+* Advanced application management
+* Automation features
+* Developer diagnostics
+
+Items listed here are exploratory and should not be interpreted as committed roadmap items.
+
+---
+
+# 11. Release Strategy
+
+The project follows Semantic Versioning (SemVer).
+
+Development will initially remain within the 0.x release series while the architecture and public APIs continue to evolve.
+
+Version 1.0.0 represents the first stable release where the core architecture and primary functionality are considered production-ready.
+
+---
+
+# 12. Guiding Principles
+
+Every technical and product decision should prioritize:
+
+* Simplicity over unnecessary complexity.
+* Maintainability over short-term convenience.
+* Extensibility over hardcoded implementations.
+* Transparency over hidden behavior.
+* User experience over feature count.
+
+OpenZap is developed primarily to be a useful tool for both its creator and the community, rather than to maximize popularity or commercial success.
