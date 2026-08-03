@@ -1,0 +1,28 @@
+# AI
+.ai/
+.opencode/
+opencode.json
+opencode.jsonc
+tui.json
+*opencode*
+
+# PYTHON AND ENVIRONMENT
+__pycache__/
+.venv/
+venv/
+.DS_Store
+.vscode/
+
+.env
+.env.local
+.env.development
+.env.production
+secrets.toml
+config.yaml
+credentials.json
+
+*.tmp
+*.temp
+
+.git/
+
