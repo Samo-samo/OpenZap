@@ -116,6 +116,36 @@ abstract class AppLocalizations {
   /// **'No devices found. Make sure the TV is turned on and the virtual remote feature is enabled.'**
   String get noDevicesFound;
 
+  /// No description provided for @recentDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent device'**
+  String get recentDevice;
+
+  /// No description provided for @scanningProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning {scanned} of {total} devices'**
+  String scanningProgress(int scanned, int total);
+
+  /// No description provided for @tvStatusOn.
+  ///
+  /// In en, this message translates to:
+  /// **'On'**
+  String get tvStatusOn;
+
+  /// No description provided for @tvStatusOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get tvStatusOff;
+
+  /// No description provided for @tvStatusUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get tvStatusUnknown;
+
   /// No description provided for @noDeviceSelected.
   ///
   /// In en, this message translates to:

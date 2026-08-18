@@ -40,7 +40,7 @@ class VestelDeviceDiscovery implements DeviceDiscovery {
     List<String>? subnets,
     Future<List<String>> Function()? hostResolver,
     this.deviceDescriptionPorts = _deviceDescriptionPorts,
-    this.probeTimeout = const Duration(milliseconds: 800),
+    this.probeTimeout = const Duration(milliseconds: 500),
     this.maxConcurrency = 30,
   })  : _probe = probe ?? DartHttpProbe(),
         _hostResolver = hostResolver ??
@@ -53,9 +53,12 @@ class VestelDeviceDiscovery implements DeviceDiscovery {
   final int maxConcurrency;
 
   @override
-  Stream<DiscoveredDevice> discover() async* {
+  Stream<DiscoveredDevice> discover({
+    void Function(int scanned, int total)? onProgress,
+  }) async* {
     final hosts = await _hostResolver();
-    final bodies = await _probeAll(hosts);
+    onProgress?.call(0, hosts.length);
+    final bodies = await _probeAll(hosts, onProgress);
     for (var i = 0; i < hosts.length; i++) {
       final body = bodies[i];
       if (body != null) {
@@ -66,12 +69,16 @@ class VestelDeviceDiscovery implements DeviceDiscovery {
 
   Future<void> close() => _probe.close();
 
-  Future<List<String?>> _probeAll(List<String> hosts) async {
+  Future<List<String?>> _probeAll(
+    List<String> hosts,
+    void Function(int scanned, int total)? onProgress,
+  ) async {
     if (hosts.isEmpty) {
       return const [];
     }
     final results = List<String?>.filled(hosts.length, null);
     var next = 0;
+    var scanned = 0;
     final workers = maxConcurrency < 1 ? 1 : maxConcurrency;
     final count = workers > hosts.length ? hosts.length : workers;
     await Future.wait(List.generate(count, (_) async {
@@ -81,6 +88,8 @@ class VestelDeviceDiscovery implements DeviceDiscovery {
           return;
         }
         results[index] = await _probeHost(hosts[index]);
+        scanned++;
+        onProgress?.call(scanned, hosts.length);
       }
     }));
     return results;

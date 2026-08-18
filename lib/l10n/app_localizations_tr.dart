@@ -19,6 +19,23 @@ class AppLocalizationsTr extends AppLocalizations {
       'Cihaz bulunamadı. TV\'nin açık olduğundan ve sanal uzaktan kumanda özelliğinin etkin olduğundan emin olun.';
 
   @override
+  String get recentDevice => 'Son cihaz';
+
+  @override
+  String scanningProgress(int scanned, int total) {
+    return 'Taranıyor: $scanned/$total';
+  }
+
+  @override
+  String get tvStatusOn => 'Açık';
+
+  @override
+  String get tvStatusOff => 'Kapalı';
+
+  @override
+  String get tvStatusUnknown => 'Bilinmiyor';
+
+  @override
   String get noDeviceSelected => 'Cihaz seçilmedi';
 
   @override

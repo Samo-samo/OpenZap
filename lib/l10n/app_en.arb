@@ -3,6 +3,21 @@
   "appTitle": "OpenZap",
   "findDevices": "Find devices",
   "noDevicesFound": "No devices found. Make sure the TV is turned on and the virtual remote feature is enabled.",
+  "recentDevice": "Recent device",
+  "scanningProgress": "Scanning {scanned} of {total} devices",
+  "@scanningProgress": {
+    "placeholders": {
+      "scanned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "tvStatusOn": "On",
+  "tvStatusOff": "Off",
+  "tvStatusUnknown": "Unknown",
   "noDeviceSelected": "No device selected",
   "commandFailed": "Could not send the command to the TV.",
   "tooltipPower": "Power",

@@ -40,6 +40,8 @@ dependencies:
   flutter_riverpod: ^2.6.1
   # Required by flutter_localizations for ARB-based localization.
   intl: any
+  # Persists the last used TV across launches (device management, v0.4).
+  shared_preferences: ^2.3.0
 
 dev_dependencies:
   flutter_test:

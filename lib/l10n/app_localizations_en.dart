@@ -19,6 +19,23 @@ class AppLocalizationsEn extends AppLocalizations {
       'No devices found. Make sure the TV is turned on and the virtual remote feature is enabled.';
 
   @override
+  String get recentDevice => 'Recent device';
+
+  @override
+  String scanningProgress(int scanned, int total) {
+    return 'Scanning $scanned of $total devices';
+  }
+
+  @override
+  String get tvStatusOn => 'On';
+
+  @override
+  String get tvStatusOff => 'Off';
+
+  @override
+  String get tvStatusUnknown => 'Unknown';
+
+  @override
   String get noDeviceSelected => 'No device selected';
 
   @override

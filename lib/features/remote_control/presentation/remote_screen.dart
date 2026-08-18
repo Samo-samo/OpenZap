@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../tv_status/domain/tv_status.dart';
 import '../domain/remote_control_error.dart';
 import '../domain/remote_key.dart';
 
@@ -31,6 +32,8 @@ class RemoteScreen extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                const _TvStatusChip(),
+                const SizedBox(height: 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
@@ -161,6 +164,30 @@ class RemoteScreen extends ConsumerWidget {
       runSpacing: 8,
       alignment: WrapAlignment.center,
       children: [for (final digit in digits) _DigitButton(digit)],
+    );
+  }
+}
+
+class _TvStatusChip extends ConsumerWidget {
+  const _TvStatusChip();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final status = ref.watch(tvStatusProvider).valueOrNull;
+    final state = status?.powerState ?? TvPowerState.unknown;
+    final (label, color) = switch (state) {
+      TvPowerState.on => (l10n.tvStatusOn, Colors.green),
+      TvPowerState.off => (l10n.tvStatusOff, Colors.red),
+      TvPowerState.unknown => (l10n.tvStatusUnknown, Colors.grey),
+    };
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.circle, size: 12, color: color),
+        const SizedBox(width: 8),
+        Text(label),
+      ],
     );
   }
 }

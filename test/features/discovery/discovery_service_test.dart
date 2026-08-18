@@ -12,7 +12,9 @@ class _FakeDiscovery implements DeviceDiscovery {
   final DiscoveryError? error;
 
   @override
-  Stream<DiscoveredDevice> discover() async* {
+  Stream<DiscoveredDevice> discover({
+    void Function(int scanned, int total)? onProgress,
+  }) async* {
     if (error != null) {
       throw error!;
     }

@@ -3,6 +3,21 @@
   "appTitle": "OpenZap",
   "findDevices": "Cihaz Bul",
   "noDevicesFound": "Cihaz bulunamadı. TV'nin açık olduğundan ve sanal uzaktan kumanda özelliğinin etkin olduğundan emin olun.",
+  "recentDevice": "Son cihaz",
+  "scanningProgress": "Taranıyor: {scanned}/{total}",
+  "@scanningProgress": {
+    "placeholders": {
+      "scanned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "tvStatusOn": "Açık",
+  "tvStatusOff": "Kapalı",
+  "tvStatusUnknown": "Bilinmiyor",
   "noDeviceSelected": "Cihaz seçilmedi",
   "commandFailed": "Komut TV'ye gönderilemedi.",
   "tooltipPower": "Güç",
