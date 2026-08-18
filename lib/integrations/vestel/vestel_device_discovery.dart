@@ -4,26 +4,51 @@ import '../../core/networking/http_probe.dart';
 import '../../features/discovery/domain/device_discovery.dart';
 import '../../features/discovery/domain/discovered_device.dart';
 
-const int _deviceDescriptionPort = 56792;
-const int _remoteControlPort = 56791;
+const List<int> _deviceDescriptionPorts = [56790, 56792];
+const int _remoteControlPort = 56789;
+const int _maxScannedHosts = 1024;
 
-/// Discovers Vestel-based TVs by probing hosts on the local subnet.
+const List<String> _virtualAdapterKeywords = [
+  'wsl',
+  'vmware',
+  'vmnet',
+  'virtualbox',
+  'vbox',
+  'hyper-v',
+  'docker',
+  'radmin',
+  'tailscale',
+  'zerotier',
+  'wireguard',
+  'loopback',
+];
+
+/// Discovers Vestel-based TVs by probing hosts on the local network.
 ///
 /// Based on observed Vestel TV behavior: a host that answers
-/// `GET /dd.xml` on port 56792 is treated as a compatible device.
+/// `GET /dd.xml` on one of the known device-description ports is treated as
+/// a compatible device. The port varies by model generation (e.g. 56790 on
+/// MB180, 56792 on older models), so several ports are probed per host.
+///
+/// By default the candidates are derived from the host's own interfaces
+/// (a `/24` subnet per private IPv4 address). Pass [subnets] to scan
+/// additional subnet prefixes (e.g. when the TV sits on a different subnet);
+/// this is the hook that will later back a user-facing setting.
 class VestelDeviceDiscovery implements DeviceDiscovery {
   VestelDeviceDiscovery({
     HttpProbe? probe,
+    List<String>? subnets,
     Future<List<String>> Function()? hostResolver,
-    this.deviceDescriptionPort = _deviceDescriptionPort,
+    this.deviceDescriptionPorts = _deviceDescriptionPorts,
     this.probeTimeout = const Duration(milliseconds: 800),
     this.maxConcurrency = 30,
   })  : _probe = probe ?? DartHttpProbe(),
-        _hostResolver = hostResolver ?? _resolveCandidateHosts;
+        _hostResolver = hostResolver ??
+            (subnets != null ? () => _hostsFromSubnets(subnets) : _resolveCandidateHosts);
 
   final HttpProbe _probe;
   final Future<List<String>> Function() _hostResolver;
-  final int deviceDescriptionPort;
+  final List<int> deviceDescriptionPorts;
   final Duration probeTimeout;
   final int maxConcurrency;
 
@@ -55,13 +80,23 @@ class VestelDeviceDiscovery implements DeviceDiscovery {
         if (index >= hosts.length) {
           return;
         }
-        results[index] = await _probe.get(
-          'http://${hosts[index]}:$deviceDescriptionPort/dd.xml',
-          timeout: probeTimeout,
-        );
+        results[index] = await _probeHost(hosts[index]);
       }
     }));
     return results;
+  }
+
+  Future<String?> _probeHost(String host) async {
+    final bodies = await Future.wait([
+      for (final port in deviceDescriptionPorts)
+        _probe.get('http://$host:$port/dd.xml', timeout: probeTimeout),
+    ]);
+    for (final body in bodies) {
+      if (body != null) {
+        return body;
+      }
+    }
+    return null;
   }
 
   DiscoveredDevice _deviceFor(String host, String body) {
@@ -87,9 +122,28 @@ Future<List<String>> _resolveCandidateHosts() async {
     includeLoopback: false,
   );
   for (final interface in interfaces) {
+    if (_isVirtualAdapter(interface.name)) {
+      continue;
+    }
     for (final address in interface.addresses) {
       hosts.addAll(hostsFor(address));
     }
+  }
+  if (hosts.length > _maxScannedHosts) {
+    return hosts.take(_maxScannedHosts).toList();
+  }
+  return hosts.toList();
+}
+
+bool _isVirtualAdapter(String name) {
+  final lower = name.toLowerCase();
+  return _virtualAdapterKeywords.any(lower.contains);
+}
+
+Future<List<String>> _hostsFromSubnets(List<String> subnets) async {
+  final hosts = <String>{};
+  for (final subnet in subnets) {
+    hosts.addAll(hostsForPrefix(subnet));
   }
   return hosts.toList();
 }
@@ -106,7 +160,21 @@ List<String> hostsFor(InternetAddress address) {
   if (raw.length != 4 || !_isPrivate(raw)) {
     return const [];
   }
-  final network = '${raw[0]}.${raw[1]}.${raw[2]}';
+  return hostsForPrefix('${raw[0]}.${raw[1]}.${raw[2]}');
+}
+
+/// Computes the candidate hosts `x.y.z.1` through `x.y.z.254` for the given
+/// [subnetPrefix] (three octets, e.g. `192.168.0`).
+List<String> hostsForPrefix(String subnetPrefix) {
+  final parts = subnetPrefix.split('.');
+  if (parts.length != 3) {
+    throw ArgumentError.value(
+      subnetPrefix,
+      'subnet',
+      'Expected a three-octet prefix such as 192.168.0.',
+    );
+  }
+  final network = parts.join('.');
   return List.generate(254, (i) => '$network.${i + 1}');
 }
 

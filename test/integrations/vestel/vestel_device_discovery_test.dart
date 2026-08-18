@@ -59,7 +59,7 @@ void main() {
       expect(device.name, 'Living Room TV');
       expect(device.model, '17MB95');
       expect(device.manufacturer, 'Vestel');
-      expect(device.port, 56791);
+      expect(device.port, 56789);
     });
 
     test('uses the host address as name when there is no friendlyName',
@@ -74,15 +74,16 @@ void main() {
       expect(devices.single.name, '192.168.1.10');
     });
 
-    test('probes every candidate host exactly once', () async {
+    test('probes every candidate host on every known port', () async {
       final probe = _FakeProbe({});
       final discovery = _discovery(probe, ['192.168.1.10', '192.168.1.11']);
 
       await discovery.discover().toList();
 
-      expect(probe.requestedUrls, hasLength(2));
+      expect(probe.requestedUrls, hasLength(4));
       expect(probe.requestedUrls[0], contains('192.168.1.10'));
-      expect(probe.requestedUrls[1], contains('192.168.1.11'));
+      expect(probe.requestedUrls[2], contains('192.168.1.11'));
+      expect(probe.requestedUrls, everyElement(contains('/dd.xml')));
     });
 
     test('yields nothing when there are no candidate hosts', () async {
@@ -92,6 +93,22 @@ void main() {
       final devices = await discovery.discover().toList();
 
       expect(devices, isEmpty);
+    });
+
+    test('scans the configured subnets when given', () async {
+      final probe = _FakeProbe({});
+      final discovery = VestelDeviceDiscovery(
+        probe: probe,
+        subnets: ['192.168.0', '192.168.1'],
+      );
+
+      final devices = await discovery.discover().toList();
+      await discovery.close();
+
+      expect(devices, isEmpty);
+      expect(probe.requestedUrls, hasLength(1016));
+      expect(probe.requestedUrls, contains(contains('192.168.0.1')));
+      expect(probe.requestedUrls, contains(contains('192.168.1.254')));
     });
 
     test('discovers a real device through the HTTP probe end-to-end',
@@ -106,7 +123,7 @@ void main() {
 
       final discovery = VestelDeviceDiscovery(
         hostResolver: () async => ['127.0.0.1'],
-        deviceDescriptionPort: server.port,
+        deviceDescriptionPorts: [server.port],
       );
 
       final devices = await discovery.discover().toList();
@@ -153,6 +170,21 @@ void main() {
       final hosts = hostsFor(InternetAddress('127.0.0.1'));
 
       expect(hosts, isEmpty);
+    });
+  });
+
+  group('hostsForPrefix', () {
+    test('enumerates the hosts of the given prefix', () {
+      final hosts = hostsForPrefix('192.168.0');
+
+      expect(hosts, hasLength(254));
+      expect(hosts.first, '192.168.0.1');
+      expect(hosts.last, '192.168.0.254');
+    });
+
+    test('rejects malformed prefixes', () {
+      expect(() => hostsForPrefix('192.168'), throwsArgumentError);
+      expect(() => hostsForPrefix('192.168.0.1'), throwsArgumentError);
     });
   });
 }
