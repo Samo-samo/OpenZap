@@ -19,6 +19,17 @@ class _FakeProbe implements HttpProbe {
   }
 
   @override
+  Future<String?> post(
+    String url, {
+    required String body,
+    Map<String, String>? headers,
+    required Duration timeout,
+  }) async {
+    requestedUrls.add(url);
+    return responses[Uri.parse(url).host];
+  }
+
+  @override
   Future<void> close() async {}
 }
 
