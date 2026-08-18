@@ -20,6 +20,25 @@
   "tvStatusUnknown": "Unknown",
   "noDeviceSelected": "No device selected",
   "commandFailed": "Could not send the command to the TV.",
+  "commandSent": "Command sent",
+  "cancelScan": "Cancel",
+  "settings": "Settings",
+  "commandFeedback": "Command feedback",
+  "commandFeedbackDescription": "Controls whether sending a command shows a message.",
+  "feedbackErrorsOnly": "Errors only",
+  "feedbackAll": "Successes and errors",
+  "feedbackNone": "Off",
+  "sleepTimer": "Sleep timer",
+  "sleepTimerMinutes": "{minutes} minutes",
+  "@sleepTimerMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerRemaining": "TV turns off in",
+  "cancelSleepTimer": "Cancel sleep timer",
   "tooltipPower": "Power",
   "tooltipMute": "Mute",
   "tooltipVolumeUp": "Volume up",

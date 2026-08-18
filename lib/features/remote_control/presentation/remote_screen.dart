@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../settings/domain/app_settings.dart';
+import '../../settings/presentation/settings_providers.dart';
+import '../../sleep_timer/presentation/sleep_timer_provider.dart';
 import '../../tv_status/domain/tv_status.dart';
 import '../domain/remote_control_error.dart';
 import '../domain/remote_key.dart';
@@ -100,6 +103,8 @@ class RemoteScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 _buildDigits(),
+                const SizedBox(height: 16),
+                const _SleepTimerControl(),
               ],
             ),
           ),
@@ -164,6 +169,62 @@ class RemoteScreen extends ConsumerWidget {
       runSpacing: 8,
       alignment: WrapAlignment.center,
       children: [for (final digit in digits) _DigitButton(digit)],
+    );
+  }
+}
+
+class _SleepTimerControl extends ConsumerWidget {
+  const _SleepTimerControl();
+
+  static const _options = [
+    Duration(minutes: 15),
+    Duration(minutes: 30),
+    Duration(minutes: 45),
+    Duration(minutes: 60),
+    Duration(minutes: 90),
+    Duration(minutes: 120),
+  ];
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final remaining = ref.watch(sleepTimerProvider);
+    if (remaining != null) {
+      final minutes = remaining.inMinutes;
+      final seconds = remaining.inSeconds % 60;
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.bedtime),
+          const SizedBox(width: 8),
+          Text(
+            '${l10n.sleepTimerRemaining} '
+            '${minutes.toString().padLeft(2, '0')}:'
+            '${seconds.toString().padLeft(2, '0')}',
+          ),
+          IconButton(
+            icon: const Icon(Icons.close),
+            tooltip: l10n.cancelSleepTimer,
+            onPressed: () => ref.read(sleepTimerProvider.notifier).cancel(),
+          ),
+        ],
+      );
+    }
+    return PopupMenuButton<Duration>(
+      tooltip: l10n.sleepTimer,
+      itemBuilder: (_) => [
+        for (final option in _options)
+          PopupMenuItem(
+            value: option,
+            child: Text(l10n.sleepTimerMinutes(option.inMinutes)),
+          ),
+      ],
+      onSelected: (duration) =>
+          ref.read(sleepTimerProvider.notifier).start(duration),
+      child: Chip(
+        avatar: const Icon(Icons.bedtime),
+        label: Text(l10n.sleepTimer),
+      ),
     );
   }
 }
@@ -254,11 +315,20 @@ Future<void> _sendKey(
     return;
   }
   final messenger = ScaffoldMessenger.of(context);
+  final l10n = AppLocalizations.of(context)!;
+  final feedback =
+      ref.read(settingsProvider).valueOrNull?.commandFeedback ??
+          CommandFeedback.errorsOnly;
   try {
     await remote.sendKey(key);
+    if (feedback == CommandFeedback.all) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.commandSent)));
+    }
   } on RemoteControlException catch (e) {
-    messenger.showSnackBar(
-      SnackBar(content: Text(e.message)),
-    );
+    if (feedback != CommandFeedback.none) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('${l10n.commandFailed}: ${e.message}')),
+      );
+    }
   }
 }

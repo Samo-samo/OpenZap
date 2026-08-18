@@ -21,6 +21,10 @@ const List<String> _virtualAdapterKeywords = [
   'zerotier',
   'wireguard',
   'loopback',
+  'vEthernet',
+  'virtual ethernet',
+  'host-only',
+  'hostonly',
 ];
 
 /// Discovers Vestel-based TVs by probing hosts on the local network.
@@ -30,10 +34,13 @@ const List<String> _virtualAdapterKeywords = [
 /// a compatible device. The port varies by model generation (e.g. 56790 on
 /// MB180, 56792 on older models), so several ports are probed per host.
 ///
-/// By default the candidates are derived from the host's own interfaces
-/// (a `/24` subnet per private IPv4 address). Pass [subnets] to scan
-/// additional subnet prefixes (e.g. when the TV sits on a different subnet);
-/// this is the hook that will later back a user-facing setting.
+/// By default the candidates are derived from the subnet of the interface
+/// that owns the default route (the LAN the TV lives on), so virtual-adapter
+/// subnets (Hyper-V, VirtualBox, VMware, VPNs, ...) are not scanned. If the
+/// route cannot be read, all non-virtual interfaces are used instead. Pass
+/// [subnets] to scan specific subnet prefixes (e.g. when the TV sits on a
+/// different subnet); this is the hook that will later back a user-facing
+/// setting.
 class VestelDeviceDiscovery implements DeviceDiscovery {
   VestelDeviceDiscovery({
     HttpProbe? probe,
@@ -125,13 +132,17 @@ class VestelDeviceDiscovery implements DeviceDiscovery {
 }
 
 Future<List<String>> _resolveCandidateHosts() async {
+  final defaultRouteHosts = await _defaultRouteSubnetHosts();
+  if (defaultRouteHosts != null) {
+    return defaultRouteHosts;
+  }
   final hosts = <String>{};
   final interfaces = await NetworkInterface.list(
     type: InternetAddressType.IPv4,
     includeLoopback: false,
   );
   for (final interface in interfaces) {
-    if (_isVirtualAdapter(interface.name)) {
+    if (_isVirtualAdapter(interface)) {
       continue;
     }
     for (final address in interface.addresses) {
@@ -144,9 +155,60 @@ Future<List<String>> _resolveCandidateHosts() async {
   return hosts.toList();
 }
 
-bool _isVirtualAdapter(String name) {
-  final lower = name.toLowerCase();
-  return _virtualAdapterKeywords.any(lower.contains);
+/// Returns the candidate hosts of the subnet that owns the default route,
+/// or `null` when the routing table cannot be read.
+///
+/// Reading the table (`route print` on Windows) lets discovery skip the
+/// subnets of virtual adapters entirely, scanning only the LAN the TV
+/// actually sits on.
+Future<List<String>?> _defaultRouteSubnetHosts() async {
+  final interfaceAddress = await _defaultRouteInterfaceAddress();
+  if (interfaceAddress == null) {
+    return null;
+  }
+  final address = InternetAddress.tryParse(interfaceAddress);
+  if (address == null) {
+    return null;
+  }
+  final hosts = hostsFor(address);
+  return hosts.isEmpty ? null : hosts;
+}
+
+Future<String?> _defaultRouteInterfaceAddress() async {
+  try {
+    final result = await Process.run('route', ['print', '-4']);
+    if (result.exitCode != 0) {
+      return null;
+    }
+    final lines = (result.stdout as String).split('\n');
+    for (final line in lines) {
+      final trimmed = line.trim();
+      if (!trimmed.startsWith('0.0.0.0 ')) {
+        continue;
+      }
+      final parts = trimmed.split(RegExp(r'\s+'));
+      if (parts.length < 4) {
+        continue;
+      }
+      final address = InternetAddress.tryParse(parts[3]);
+      if (address != null && _isPrivate(address.rawAddress)) {
+        return parts[3];
+      }
+    }
+  } on ProcessException {
+    return null;
+  }
+  return null;
+}
+
+/// Returns `true` for virtual adapters (Hyper-V, VirtualBox, VMware, WSL,
+/// VPNs, ...) whose subnets are irrelevant to TV discovery.
+///
+/// The check runs on the adapter name, which is the only reliable metadata
+/// exposed by the SDK.
+bool _isVirtualAdapter(NetworkInterface interface) {
+  final name = interface.name.toLowerCase();
+  return _virtualAdapterKeywords.any(name.contains);
 }
 
 Future<List<String>> _hostsFromSubnets(List<String> subnets) async {

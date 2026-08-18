@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/providers.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../remote_control/presentation/remote_screen.dart';
+import '../../settings/presentation/settings_screen.dart';
 import '../domain/discovered_device.dart';
 import 'discovery_providers.dart';
 
@@ -16,7 +17,18 @@ class DeviceListScreen extends ConsumerWidget {
     final devices = ref.watch(deviceListProvider);
     final lastDevice = ref.watch(lastDeviceProvider).valueOrNull;
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.appTitle)),
+      appBar: AppBar(
+        title: Text(l10n.appTitle),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: l10n.settings,
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const SettingsScreen()),
+            ),
+          ),
+        ],
+      ),
       body: devices.when(
         loading: () => _ScanningProgress(),
         error: (error, _) => _CenteredText('${l10n.noDevicesFound}\n$error'),
@@ -130,6 +142,13 @@ class _ScanningProgress extends ConsumerWidget {
               value: progress.total == 0
                   ? null
                   : progress.scanned / progress.total,
+            ),
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              icon: const Icon(Icons.close),
+              label: Text(l10n.cancelScan),
+              onPressed: () =>
+                  ref.read(deviceListProvider.notifier).cancelScan(),
             ),
           ],
         ),

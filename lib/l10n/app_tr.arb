@@ -20,6 +20,25 @@
   "tvStatusUnknown": "Bilinmiyor",
   "noDeviceSelected": "Cihaz seçilmedi",
   "commandFailed": "Komut TV'ye gönderilemedi.",
+  "commandSent": "Komut gönderildi",
+  "cancelScan": "İptal",
+  "settings": "Ayarlar",
+  "commandFeedback": "Komut geri bildirimi",
+  "commandFeedbackDescription": "Komut gönderiminde mesaj gösterilip gösterilmeyeceğini kontrol eder.",
+  "feedbackErrorsOnly": "Sadece hatalar",
+  "feedbackAll": "Başarılar ve hatalar",
+  "feedbackNone": "Kapalı",
+  "sleepTimer": "Uyku zamanlayıcısı",
+  "sleepTimerMinutes": "{minutes} dakika",
+  "@sleepTimerMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerRemaining": "TV kapanıyor",
+  "cancelSleepTimer": "Uyku zamanlayıcısını iptal et",
   "tooltipPower": "Güç",
   "tooltipMute": "Sessiz",
   "tooltipVolumeUp": "Ses aç",

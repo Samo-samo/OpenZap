@@ -158,6 +158,78 @@ abstract class AppLocalizations {
   /// **'Could not send the command to the TV.'**
   String get commandFailed;
 
+  /// No description provided for @commandSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Command sent'**
+  String get commandSent;
+
+  /// No description provided for @cancelScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancelScan;
+
+  /// No description provided for @settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settings;
+
+  /// No description provided for @commandFeedback.
+  ///
+  /// In en, this message translates to:
+  /// **'Command feedback'**
+  String get commandFeedback;
+
+  /// No description provided for @commandFeedbackDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Controls whether sending a command shows a message.'**
+  String get commandFeedbackDescription;
+
+  /// No description provided for @feedbackErrorsOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Errors only'**
+  String get feedbackErrorsOnly;
+
+  /// No description provided for @feedbackAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Successes and errors'**
+  String get feedbackAll;
+
+  /// No description provided for @feedbackNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get feedbackNone;
+
+  /// No description provided for @sleepTimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep timer'**
+  String get sleepTimer;
+
+  /// No description provided for @sleepTimerMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} minutes'**
+  String sleepTimerMinutes(int minutes);
+
+  /// No description provided for @sleepTimerRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'TV turns off in'**
+  String get sleepTimerRemaining;
+
+  /// No description provided for @cancelSleepTimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel sleep timer'**
+  String get cancelSleepTimer;
+
   /// No description provided for @tooltipPower.
   ///
   /// In en, this message translates to:

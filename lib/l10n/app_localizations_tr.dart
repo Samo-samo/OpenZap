@@ -42,6 +42,45 @@ class AppLocalizationsTr extends AppLocalizations {
   String get commandFailed => 'Komut TV\'ye gönderilemedi.';
 
   @override
+  String get commandSent => 'Komut gönderildi';
+
+  @override
+  String get cancelScan => 'İptal';
+
+  @override
+  String get settings => 'Ayarlar';
+
+  @override
+  String get commandFeedback => 'Komut geri bildirimi';
+
+  @override
+  String get commandFeedbackDescription =>
+      'Komut gönderiminde mesaj gösterilip gösterilmeyeceğini kontrol eder.';
+
+  @override
+  String get feedbackErrorsOnly => 'Sadece hatalar';
+
+  @override
+  String get feedbackAll => 'Başarılar ve hatalar';
+
+  @override
+  String get feedbackNone => 'Kapalı';
+
+  @override
+  String get sleepTimer => 'Uyku zamanlayıcısı';
+
+  @override
+  String sleepTimerMinutes(int minutes) {
+    return '$minutes dakika';
+  }
+
+  @override
+  String get sleepTimerRemaining => 'TV kapanıyor';
+
+  @override
+  String get cancelSleepTimer => 'Uyku zamanlayıcısını iptal et';
+
+  @override
   String get tooltipPower => 'Güç';
 
   @override

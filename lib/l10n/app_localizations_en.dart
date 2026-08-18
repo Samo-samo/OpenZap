@@ -42,6 +42,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commandFailed => 'Could not send the command to the TV.';
 
   @override
+  String get commandSent => 'Command sent';
+
+  @override
+  String get cancelScan => 'Cancel';
+
+  @override
+  String get settings => 'Settings';
+
+  @override
+  String get commandFeedback => 'Command feedback';
+
+  @override
+  String get commandFeedbackDescription =>
+      'Controls whether sending a command shows a message.';
+
+  @override
+  String get feedbackErrorsOnly => 'Errors only';
+
+  @override
+  String get feedbackAll => 'Successes and errors';
+
+  @override
+  String get feedbackNone => 'Off';
+
+  @override
+  String get sleepTimer => 'Sleep timer';
+
+  @override
+  String sleepTimerMinutes(int minutes) {
+    return '$minutes minutes';
+  }
+
+  @override
+  String get sleepTimerRemaining => 'TV turns off in';
+
+  @override
+  String get cancelSleepTimer => 'Cancel sleep timer';
+
+  @override
   String get tooltipPower => 'Power';
 
   @override

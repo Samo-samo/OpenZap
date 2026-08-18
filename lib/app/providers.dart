@@ -5,6 +5,8 @@ import '../features/device_settings/domain/device_store.dart';
 import '../features/discovery/domain/device_discovery.dart';
 import '../features/discovery/domain/discovered_device.dart';
 import '../features/remote_control/domain/remote_control.dart';
+import '../features/settings/data/shared_preferences_settings_store.dart';
+import '../features/settings/domain/settings_store.dart';
 import '../features/tv_status/domain/tv_status.dart';
 import '../features/tv_status/domain/tv_status_service.dart';
 import '../integrations/vestel/vestel_device_discovery.dart';
@@ -39,6 +41,11 @@ final remoteControlProvider = Provider<RemoteControl?>((ref) {
 /// Persistence for the last controlled TV.
 final deviceStoreProvider = Provider<DeviceStore>(
   (ref) => SharedPreferencesDeviceStore(),
+);
+
+/// Persistence for user settings.
+final settingsStoreProvider = Provider<SettingsStore>(
+  (ref) => SharedPreferencesSettingsStore(),
 );
 
 /// The device last controlled across app launches, if any.
