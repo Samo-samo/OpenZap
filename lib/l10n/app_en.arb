@@ -1,0 +1,22 @@
+{
+  "@@locale": "en",
+  "appTitle": "OpenZap",
+  "findDevices": "Find devices",
+  "noDevicesFound": "No devices found. Make sure the TV is turned on and the virtual remote feature is enabled.",
+  "noDeviceSelected": "No device selected",
+  "commandFailed": "Could not send the command to the TV.",
+  "tooltipPower": "Power",
+  "tooltipMute": "Mute",
+  "tooltipVolumeUp": "Volume up",
+  "tooltipVolumeDown": "Volume down",
+  "tooltipChannelUp": "Channel up",
+  "tooltipChannelDown": "Channel down",
+  "tooltipUp": "Up",
+  "tooltipDown": "Down",
+  "tooltipLeft": "Left",
+  "tooltipRight": "Right",
+  "tooltipOk": "OK",
+  "tooltipBack": "Back",
+  "tooltipExit": "Exit",
+  "tooltipInfo": "Info"
+}

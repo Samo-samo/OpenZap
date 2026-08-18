@@ -1,0 +1,22 @@
+{
+  "@@locale": "tr",
+  "appTitle": "OpenZap",
+  "findDevices": "Cihaz Bul",
+  "noDevicesFound": "Cihaz bulunamadı. TV'nin açık olduğundan ve sanal uzaktan kumanda özelliğinin etkin olduğundan emin olun.",
+  "noDeviceSelected": "Cihaz seçilmedi",
+  "commandFailed": "Komut TV'ye gönderilemedi.",
+  "tooltipPower": "Güç",
+  "tooltipMute": "Sessiz",
+  "tooltipVolumeUp": "Ses aç",
+  "tooltipVolumeDown": "Ses kıs",
+  "tooltipChannelUp": "Kanal +",
+  "tooltipChannelDown": "Kanal -",
+  "tooltipUp": "Yukarı",
+  "tooltipDown": "Aşağı",
+  "tooltipLeft": "Sol",
+  "tooltipRight": "Sağ",
+  "tooltipOk": "OK",
+  "tooltipBack": "Geri",
+  "tooltipExit": "Çıkış",
+  "tooltipInfo": "Bilgi"
+}

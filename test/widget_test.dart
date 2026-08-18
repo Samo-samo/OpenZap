@@ -6,8 +6,9 @@ import 'package:openzap/app/app.dart';
 void main() {
   testWidgets('OpenZapApp builds without error', (tester) async {
     await tester.pumpWidget(const OpenZapApp());
+    await tester.pump();
 
-    final MaterialApp app = tester.widget(find.byType(MaterialApp));
-    expect(app.title, 'OpenZap');
+    expect(find.byType(MaterialApp), findsOneWidget);
+    expect(find.text('OpenZap'), findsOneWidget);
   });
 }
