@@ -18,9 +18,7 @@ void main() {
   );
 
   Widget wrap() => ProviderScope(
-    overrides: [
-      selectedDeviceProvider.overrideWith((ref) => device),
-    ],
+    overrides: [selectedDeviceProvider.overrideWith((ref) => device)],
     child: MaterialApp(
       localizationsDelegates: const [
         AppLocalizations.delegate,

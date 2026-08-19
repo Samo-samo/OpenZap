@@ -110,14 +110,25 @@ void main() {
       expect(loaded.showExtras, isTrue);
     });
 
-    test('defaults to system theme and language', () async {
+    test('defaults to system theme and dynamic color', () async {
       SharedPreferences.setMockInitialValues({});
       final store = SharedPreferencesSettingsStore();
 
       final settings = await store.load();
 
       expect(settings.themeMode, AppThemeMode.system);
+      expect(settings.dynamicColor, isTrue);
       expect(settings.languageCode, isNull);
+    });
+
+    test('round-trips the dynamic color setting', () async {
+      SharedPreferences.setMockInitialValues({});
+      final store = SharedPreferencesSettingsStore();
+
+      await store.save(const AppSettings(dynamicColor: false));
+      final loaded = await store.load();
+
+      expect(loaded.dynamicColor, isFalse);
     });
 
     test('round-trips status tracking and defaults to off', () async {
