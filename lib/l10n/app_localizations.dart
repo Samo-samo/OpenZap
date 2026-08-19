@@ -332,6 +332,84 @@ abstract class AppLocalizations {
   /// **'This device is already added.'**
   String get deviceAlreadyAdded;
 
+  /// No description provided for @saveDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Save device'**
+  String get saveDevice;
+
+  /// No description provided for @renameDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get renameDevice;
+
+  /// No description provided for @renameDeviceDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename device'**
+  String get renameDeviceDialogTitle;
+
+  /// No description provided for @deviceSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Device saved'**
+  String get deviceSaved;
+
+  /// No description provided for @deviceRenamed.
+  ///
+  /// In en, this message translates to:
+  /// **'Device renamed'**
+  String get deviceRenamed;
+
+  /// No description provided for @deviceRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Device removed'**
+  String get deviceRemoved;
+
+  /// No description provided for @appsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Apps'**
+  String get appsTitle;
+
+  /// No description provided for @appYouTube.
+  ///
+  /// In en, this message translates to:
+  /// **'YouTube'**
+  String get appYouTube;
+
+  /// No description provided for @appNetflix.
+  ///
+  /// In en, this message translates to:
+  /// **'Netflix'**
+  String get appNetflix;
+
+  /// No description provided for @appHdmi.
+  ///
+  /// In en, this message translates to:
+  /// **'HDMI'**
+  String get appHdmi;
+
+  /// No description provided for @appPortal.
+  ///
+  /// In en, this message translates to:
+  /// **'Portal'**
+  String get appPortal;
+
+  /// No description provided for @appLaunched.
+  ///
+  /// In en, this message translates to:
+  /// **'App launched'**
+  String get appLaunched;
+
+  /// No description provided for @appLaunchFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not launch the app.'**
+  String get appLaunchFailed;
+
   /// No description provided for @tvStatusTracking.
   ///
   /// In en, this message translates to:

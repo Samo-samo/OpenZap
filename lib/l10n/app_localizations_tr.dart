@@ -131,6 +131,45 @@ class AppLocalizationsTr extends AppLocalizations {
   String get deviceAlreadyAdded => 'Bu cihaz zaten ekli.';
 
   @override
+  String get saveDevice => 'Cihazı Kaydet';
+
+  @override
+  String get renameDevice => 'Yeniden Adlandır';
+
+  @override
+  String get renameDeviceDialogTitle => 'Cihazı Yeniden Adlandır';
+
+  @override
+  String get deviceSaved => 'Cihaz kaydedildi';
+
+  @override
+  String get deviceRenamed => 'Cihaz yeniden adlandırıldı';
+
+  @override
+  String get deviceRemoved => 'Cihaz kaldırıldı';
+
+  @override
+  String get appsTitle => 'Uygulamalar';
+
+  @override
+  String get appYouTube => 'YouTube';
+
+  @override
+  String get appNetflix => 'Netflix';
+
+  @override
+  String get appHdmi => 'HDMI';
+
+  @override
+  String get appPortal => 'Portal';
+
+  @override
+  String get appLaunched => 'Uygulama başlatıldı';
+
+  @override
+  String get appLaunchFailed => 'Uygulama başlatılamadı.';
+
+  @override
   String get tvStatusTracking => 'Canlı durum takibi';
 
   @override

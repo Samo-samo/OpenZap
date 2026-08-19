@@ -131,6 +131,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deviceAlreadyAdded => 'This device is already added.';
 
   @override
+  String get saveDevice => 'Save device';
+
+  @override
+  String get renameDevice => 'Rename';
+
+  @override
+  String get renameDeviceDialogTitle => 'Rename device';
+
+  @override
+  String get deviceSaved => 'Device saved';
+
+  @override
+  String get deviceRenamed => 'Device renamed';
+
+  @override
+  String get deviceRemoved => 'Device removed';
+
+  @override
+  String get appsTitle => 'Apps';
+
+  @override
+  String get appYouTube => 'YouTube';
+
+  @override
+  String get appNetflix => 'Netflix';
+
+  @override
+  String get appHdmi => 'HDMI';
+
+  @override
+  String get appPortal => 'Portal';
+
+  @override
+  String get appLaunched => 'App launched';
+
+  @override
+  String get appLaunchFailed => 'Could not launch the app.';
+
+  @override
   String get tvStatusTracking => 'Live status tracking';
 
   @override

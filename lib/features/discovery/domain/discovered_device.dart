@@ -17,6 +17,22 @@ class DiscoveredDevice {
   final String? manufacturer;
   final String? model;
 
+  DiscoveredDevice copyWith({
+    String? name,
+    String? ipAddress,
+    int? port,
+    String? manufacturer,
+    String? model,
+  }) {
+    return DiscoveredDevice(
+      name: name ?? this.name,
+      ipAddress: ipAddress ?? this.ipAddress,
+      port: port ?? this.port,
+      manufacturer: manufacturer ?? this.manufacturer,
+      model: model ?? this.model,
+    );
+  }
+
   @override
   bool operator ==(Object other) =>
       other is DiscoveredDevice && other.ipAddress == ipAddress;
