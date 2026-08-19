@@ -8,14 +8,17 @@ Items and priorities may change as the project evolves.
 
 ## Current status
 
-- Release: v0.4 pre-alpha (no tagged releases yet).
-- Working Windows build with a minimal Riverpod UI (device discovery, remote
-  control, live status, sleep timer, settings, TR/EN localization) validated
-  against a real VESTEL 50U9510M (MB180).
-- 48 tests pass, `flutter analyze` clean, Windows debug build succeeds.
+- Release: v0.4.0 pre-alpha. First release builds available: Windows
+  (`build/windows/x64/runner/Release`) and Android (`app-release.apk`, signed
+  with the project keystore). No tagged GitHub releases yet.
+- Working Windows and Android builds with a minimal Riverpod UI (device
+  discovery, remote control, live status, sleep timer, settings, TR/EN
+  localization) validated against a real VESTEL 50U9510M (MB180).
+- 49 tests pass, `flutter analyze` clean, Windows and Android release builds
+  succeed.
 - Open gaps: live status tracking not working on MB180 (no frames pushed on
   the 7681 channel; default off, marked "in development"), quick launcher and
-  Wake-on-LAN not started, Android not started.
+  Wake-on-LAN not started.
 
 ---
 
@@ -94,7 +97,7 @@ In development / not working on MB180:
 
 # v0.4.0 — User Experience
 
-Status: In Progress
+Status: Completed (first release builds shipped)
 
 Goals:
 
@@ -116,6 +119,8 @@ Done:
 * Localization: full TR/EN ARB set
 * Themes: light/dark + system, pointer cursors on desktop
 * Snackbar feedback (success green, error red, immediate replace)
+* Dismissible same-network warning on the start screen (settings toggle)
+* First release builds: Windows (Release folder) + Android (signed APK)
 
 Skipped / not started (research done, see `.ai/vestel-protocol-notes.md`):
 
@@ -129,13 +134,16 @@ Skipped / not started (research done, see `.ai/vestel-protocol-notes.md`):
 
 # v0.5.0 — Android
 
-Status: Planned
+Status: Completed (brought forward with v0.4)
 
-Goals:
+Done:
 
-* Android support
-* Platform-specific permissions
-* Mobile optimizations
+* Android support (manifest: INTERNET/network-state/Wi-Fi permissions,
+  cleartext traffic for LAN TV control, app label "OpenZap")
+* Discovery fallback via `NetworkInterface` on Android (no `route print`)
+* Release signing with a project keystore (`android/key.properties` is
+  gitignored)
+* Launcher icon generated for Android (adaptive) and Windows
 
 ---
 
