@@ -6,6 +6,7 @@ import '../domain/settings_store.dart';
 class SharedPreferencesSettingsStore implements SettingsStore {
   static const _commandFeedbackKey = 'command_feedback';
   static const _themeModeKey = 'theme_mode';
+  static const _remoteLayoutKey = 'remote_layout';
   static const _languageCodeKey = 'language_code';
   static const _sleepTimerHumanReadableKey = 'sleep_timer_human_readable';
   static const _sleepTimerMinutesInParensKey = 'sleep_timer_minutes_in_parens';
@@ -20,9 +21,12 @@ class SharedPreferencesSettingsStore implements SettingsStore {
         .asNameMap()[prefs.getString(_commandFeedbackKey)];
     final theme = AppThemeMode.values
         .asNameMap()[prefs.getString(_themeModeKey)];
+    final layout = RemoteLayout.values
+        .asNameMap()[prefs.getString(_remoteLayoutKey)];
     return AppSettings(
       commandFeedback: mode ?? CommandFeedback.errorsOnly,
       themeMode: theme ?? AppThemeMode.system,
+      remoteLayout: layout ?? RemoteLayout.classic,
       languageCode: prefs.getString(_languageCodeKey),
       sleepTimerHumanReadable:
           prefs.getBool(_sleepTimerHumanReadableKey) ?? true,
@@ -39,6 +43,7 @@ class SharedPreferencesSettingsStore implements SettingsStore {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_commandFeedbackKey, settings.commandFeedback.name);
     await prefs.setString(_themeModeKey, settings.themeMode.name);
+    await prefs.setString(_remoteLayoutKey, settings.remoteLayout.name);
     final languageCode = settings.languageCode;
     if (languageCode == null) {
       await prefs.remove(_languageCodeKey);

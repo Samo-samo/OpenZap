@@ -164,15 +164,19 @@ Done:
   touch): save an unsaved device, rename or remove a saved one. Saved devices
   keep their (possibly renamed) name in the list and settings.
 * Apps screen (remote screen → Apps): quick-launch YouTube, Netflix, HDMI
-  input and the smart portal through DIAL (`POST /apps/{id}`) and the
-  INPUT_SOURCE key (1056).
+  input and the smart portal. On MB180 DIAL is unavailable (403), so launches
+  use the virtual-remote shortcut keys (1063/1064/1056/1046).
+* Key test screen (Apps → Key test): send a raw key code or one of the known
+  shortcut keys to discover and verify codes from the TV room.
+* Remote layout presets (settings): classic, compact, minimal — controls
+  which sections the remote screen shows.
 * `tool/launch_app.dart` smoke test for app launch.
 
 Skipped / not started (research done, see `.ai/vestel-protocol-notes.md`):
 
 * Custom app list (add/remove/reorder apps in the Apps screen) — defaults are
   fixed for now.
-* Remote layout presets / customizable key arrangement — idea only.
+* Customizable key arrangement / drag-to-reorder — presets only for now.
 * Wake-on-LAN — deferred: the TV is on Wi-Fi, where magic packets are
   unreliable; revisit if the TV is wired.
 * Live status research — deferred; the 7681 channel pushes nothing on MB180.

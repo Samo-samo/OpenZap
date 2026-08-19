@@ -78,6 +78,16 @@ void main() {
       expect(loaded.languageCode, 'tr');
     });
 
+    test('round-trips the remote layout', () async {
+      SharedPreferences.setMockInitialValues({});
+      final store = SharedPreferencesSettingsStore();
+
+      expect((await store.load()).remoteLayout, RemoteLayout.classic);
+
+      await store.save(const AppSettings(remoteLayout: RemoteLayout.compact));
+      expect((await store.load()).remoteLayout, RemoteLayout.compact);
+    });
+
     test('defaults to system theme and language', () async {
       SharedPreferences.setMockInitialValues({});
       final store = SharedPreferencesSettingsStore();

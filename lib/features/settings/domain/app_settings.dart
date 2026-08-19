@@ -22,11 +22,26 @@ enum AppThemeMode {
   dark,
 }
 
+/// Preset arrangements of the remote screen.
+enum RemoteLayout {
+  /// All sections: status, power/mute/info, volume/channels, D-pad,
+  /// back/exit, digits, sleep timer.
+  classic,
+
+  /// Hides the status chip and the digit row.
+  compact,
+
+  /// Only the essential controls: power/mute/info, volume/channels, D-pad,
+  /// back/exit.
+  minimal,
+}
+
 /// User-configurable application settings.
 class AppSettings {
   const AppSettings({
     this.commandFeedback = CommandFeedback.errorsOnly,
     this.themeMode = AppThemeMode.system,
+    this.remoteLayout = RemoteLayout.classic,
     this.languageCode,
     this.sleepTimerHumanReadable = true,
     this.sleepTimerShowMinutesInParens = false,
@@ -40,6 +55,9 @@ class AppSettings {
 
   /// Color theme mode.
   final AppThemeMode themeMode;
+
+  /// Preset arrangement of the remote screen.
+  final RemoteLayout remoteLayout;
 
   /// App language (`tr`, `en`, ...), or `null` to follow the system locale.
   final String? languageCode;
@@ -65,6 +83,7 @@ class AppSettings {
   AppSettings copyWith({
     CommandFeedback? commandFeedback,
     AppThemeMode? themeMode,
+    RemoteLayout? remoteLayout,
     String? languageCode,
     bool? sleepTimerHumanReadable,
     bool? sleepTimerShowMinutesInParens,
@@ -75,6 +94,7 @@ class AppSettings {
     return AppSettings(
       commandFeedback: commandFeedback ?? this.commandFeedback,
       themeMode: themeMode ?? this.themeMode,
+      remoteLayout: remoteLayout ?? this.remoteLayout,
       languageCode: languageCode ?? this.languageCode,
       sleepTimerHumanReadable:
           sleepTimerHumanReadable ?? this.sleepTimerHumanReadable,
@@ -92,6 +112,7 @@ class AppSettings {
       other is AppSettings &&
       other.commandFeedback == commandFeedback &&
       other.themeMode == themeMode &&
+      other.remoteLayout == remoteLayout &&
       other.languageCode == languageCode &&
       other.sleepTimerHumanReadable == sleepTimerHumanReadable &&
       other.sleepTimerShowMinutesInParens == sleepTimerShowMinutesInParens &&
@@ -103,6 +124,7 @@ class AppSettings {
   int get hashCode => Object.hash(
     commandFeedback,
     themeMode,
+    remoteLayout,
     languageCode,
     sleepTimerHumanReadable,
     sleepTimerShowMinutesInParens,

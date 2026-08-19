@@ -19,6 +19,7 @@ class SettingsScreen extends ConsumerWidget {
     final commandFeedback =
         settings?.commandFeedback ?? CommandFeedback.errorsOnly;
     final themeMode = settings?.themeMode ?? AppThemeMode.system;
+    final remoteLayout = settings?.remoteLayout ?? RemoteLayout.classic;
     // No explicit "System" option: the current system locale is detected and
     // preselected, and any pick stores a concrete language.
     final systemLanguageCode =
@@ -83,6 +84,34 @@ class SettingsScreen extends ConsumerWidget {
                   title: Text(l10n.languageEnglish),
                   mouseCursor: SystemMouseCursors.click,
                   value: 'en',
+                ),
+              ],
+            ),
+          ),
+          _SectionHeader(l10n.remoteLayout),
+          RadioGroup<RemoteLayout>(
+            groupValue: remoteLayout,
+            onChanged: (value) {
+              if (value != null) {
+                ref.read(settingsProvider.notifier).setRemoteLayout(value);
+              }
+            },
+            child: Column(
+              children: [
+                RadioListTile<RemoteLayout>(
+                  title: Text(l10n.layoutClassic),
+                  mouseCursor: SystemMouseCursors.click,
+                  value: RemoteLayout.classic,
+                ),
+                RadioListTile<RemoteLayout>(
+                  title: Text(l10n.layoutCompact),
+                  mouseCursor: SystemMouseCursors.click,
+                  value: RemoteLayout.compact,
+                ),
+                RadioListTile<RemoteLayout>(
+                  title: Text(l10n.layoutMinimal),
+                  mouseCursor: SystemMouseCursors.click,
+                  value: RemoteLayout.minimal,
                 ),
               ],
             ),
