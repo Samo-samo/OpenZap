@@ -117,10 +117,12 @@ Done:
 * Themes: light/dark + system, pointer cursors on desktop
 * Snackbar feedback (success green, error red, immediate replace)
 
-Skipped / not started:
+Skipped / not started (research done, see `.ai/vestel-protocol-notes.md`):
 
-* Quick launcher
-* Wake-on-LAN
+* Quick launcher — DIAL app launch is viable: `POST /apps/Netflix`,
+  `/apps/YouTube`, SmartCenter + key navigation; HDMI via key 1056.
+* Wake-on-LAN — works via UDP magic packet to the TV MAC (broadcast:9),
+  retries + poll; do not combine with the POWER key.
 * Device reconnect/health checks for saved offline devices
 
 ---
