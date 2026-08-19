@@ -62,6 +62,23 @@
   "appPortal": "Portal",
   "appLaunched": "Uygulama başlatıldı",
   "appLaunchFailed": "Uygulama başlatılamadı.",
+  "remoteLayout": "Kumanda düzeni",
+  "layoutClassic": "Klasik",
+  "layoutCompact": "Kompakt",
+  "layoutMinimal": "Minimal",
+  "keyTesterTitle": "Tuş testi",
+  "keyTesterDescription": "Ham kumanda tuş kodlarını gönderip doğrulayın",
+  "keyCodeLabel": "Tuş kodu",
+  "sendKey": "Gönder",
+  "presetKeys": "Hazır tuşlar",
+  "keySent": "{code} tuşu gönderildi",
+  "@keySent": {
+    "placeholders": {
+      "code": {
+        "type": "int"
+      }
+    }
+  },
   "tvStatusTracking": "Canlı durum takibi",
   "tvStatusTrackingDescription": "Uzaktan kumanda ekranında TV'nin açık/kapalı durumunu göster.",
   "sleepTimer": "Uyku zamanlayıcısı",

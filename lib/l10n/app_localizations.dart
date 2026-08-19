@@ -410,6 +410,66 @@ abstract class AppLocalizations {
   /// **'Could not launch the app.'**
   String get appLaunchFailed;
 
+  /// No description provided for @remoteLayout.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote layout'**
+  String get remoteLayout;
+
+  /// No description provided for @layoutClassic.
+  ///
+  /// In en, this message translates to:
+  /// **'Classic'**
+  String get layoutClassic;
+
+  /// No description provided for @layoutCompact.
+  ///
+  /// In en, this message translates to:
+  /// **'Compact'**
+  String get layoutCompact;
+
+  /// No description provided for @layoutMinimal.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimal'**
+  String get layoutMinimal;
+
+  /// No description provided for @keyTesterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Key test'**
+  String get keyTesterTitle;
+
+  /// No description provided for @keyTesterDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Send raw remote key codes to discover and verify them'**
+  String get keyTesterDescription;
+
+  /// No description provided for @keyCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Key code'**
+  String get keyCodeLabel;
+
+  /// No description provided for @sendKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get sendKey;
+
+  /// No description provided for @presetKeys.
+  ///
+  /// In en, this message translates to:
+  /// **'Preset keys'**
+  String get presetKeys;
+
+  /// No description provided for @keySent.
+  ///
+  /// In en, this message translates to:
+  /// **'Key {code} sent'**
+  String keySent(int code);
+
   /// No description provided for @tvStatusTracking.
   ///
   /// In en, this message translates to:

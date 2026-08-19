@@ -62,6 +62,23 @@
   "appPortal": "Portal",
   "appLaunched": "App launched",
   "appLaunchFailed": "Could not launch the app.",
+  "remoteLayout": "Remote layout",
+  "layoutClassic": "Classic",
+  "layoutCompact": "Compact",
+  "layoutMinimal": "Minimal",
+  "keyTesterTitle": "Key test",
+  "keyTesterDescription": "Send raw remote key codes to discover and verify them",
+  "keyCodeLabel": "Key code",
+  "sendKey": "Send",
+  "presetKeys": "Preset keys",
+  "keySent": "Key {code} sent",
+  "@keySent": {
+    "placeholders": {
+      "code": {
+        "type": "int"
+      }
+    }
+  },
   "tvStatusTracking": "Live status tracking",
   "tvStatusTrackingDescription": "Show the TV's power state on the remote screen.",
   "sleepTimer": "Sleep timer",

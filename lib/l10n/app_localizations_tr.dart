@@ -170,6 +170,39 @@ class AppLocalizationsTr extends AppLocalizations {
   String get appLaunchFailed => 'Uygulama başlatılamadı.';
 
   @override
+  String get remoteLayout => 'Kumanda düzeni';
+
+  @override
+  String get layoutClassic => 'Klasik';
+
+  @override
+  String get layoutCompact => 'Kompakt';
+
+  @override
+  String get layoutMinimal => 'Minimal';
+
+  @override
+  String get keyTesterTitle => 'Tuş testi';
+
+  @override
+  String get keyTesterDescription =>
+      'Ham kumanda tuş kodlarını gönderip doğrulayın';
+
+  @override
+  String get keyCodeLabel => 'Tuş kodu';
+
+  @override
+  String get sendKey => 'Gönder';
+
+  @override
+  String get presetKeys => 'Hazır tuşlar';
+
+  @override
+  String keySent(int code) {
+    return '$code tuşu gönderildi';
+  }
+
+  @override
   String get tvStatusTracking => 'Canlı durum takibi';
 
   @override

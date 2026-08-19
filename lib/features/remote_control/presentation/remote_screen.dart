@@ -46,83 +46,101 @@ class RemoteScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(16),
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: [
-                const _TvStatusChip(),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _RemoteButton(
-                      remoteKey: RemoteKey.power,
-                      icon: Icons.power_settings_new,
-                      tooltip: l10n.tooltipPower,
-                    ),
-                    _RemoteButton(
-                      remoteKey: RemoteKey.mute,
-                      icon: Icons.volume_off,
-                      tooltip: l10n.tooltipMute,
-                    ),
-                    _RemoteButton(
-                      remoteKey: RemoteKey.info,
-                      icon: Icons.info_outline,
-                      tooltip: l10n.tooltipInfo,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _RemoteButton(
-                      remoteKey: RemoteKey.volumeDown,
-                      icon: Icons.volume_down,
-                      tooltip: l10n.tooltipVolumeDown,
-                    ),
-                    _RemoteButton(
-                      remoteKey: RemoteKey.volumeUp,
-                      icon: Icons.volume_up,
-                      tooltip: l10n.tooltipVolumeUp,
-                    ),
-                    _RemoteButton(
-                      remoteKey: RemoteKey.channelDown,
-                      icon: Icons.remove,
-                      tooltip: l10n.tooltipChannelDown,
-                    ),
-                    _RemoteButton(
-                      remoteKey: RemoteKey.channelUp,
-                      icon: Icons.add,
-                      tooltip: l10n.tooltipChannelUp,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                _buildDirectionalPad(l10n),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _RemoteButton(
-                      remoteKey: RemoteKey.back,
-                      icon: Icons.arrow_back,
-                      tooltip: l10n.tooltipBack,
-                    ),
-                    _RemoteButton(
-                      remoteKey: RemoteKey.exit,
-                      icon: Icons.cancel_outlined,
-                      tooltip: l10n.tooltipExit,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                _buildDigits(),
-                const SizedBox(height: 16),
-                const _SleepTimerControl(),
-              ],
+              children: _buildSections(context, ref, l10n),
             ),
           ),
         ),
       ),
     );
+  }
+
+  /// Builds the remote sections according to the selected [RemoteLayout]:
+  /// classic shows everything, compact hides the status chip and digits,
+  /// minimal keeps only the essential control rows.
+  List<Widget> _buildSections(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+  ) {
+    final layout =
+        ref.watch(settingsProvider).valueOrNull?.remoteLayout ??
+        RemoteLayout.classic;
+    final showStatusChip = layout == RemoteLayout.classic;
+    final showDigits = layout == RemoteLayout.classic;
+    final showSleepTimer = layout != RemoteLayout.minimal;
+    return [
+      if (showStatusChip) ...[
+        const _TvStatusChip(),
+        const SizedBox(height: 12),
+      ],
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _RemoteButton(
+            remoteKey: RemoteKey.power,
+            icon: Icons.power_settings_new,
+            tooltip: l10n.tooltipPower,
+          ),
+          _RemoteButton(
+            remoteKey: RemoteKey.mute,
+            icon: Icons.volume_off,
+            tooltip: l10n.tooltipMute,
+          ),
+          _RemoteButton(
+            remoteKey: RemoteKey.info,
+            icon: Icons.info_outline,
+            tooltip: l10n.tooltipInfo,
+          ),
+        ],
+      ),
+      const SizedBox(height: 12),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _RemoteButton(
+            remoteKey: RemoteKey.volumeDown,
+            icon: Icons.volume_down,
+            tooltip: l10n.tooltipVolumeDown,
+          ),
+          _RemoteButton(
+            remoteKey: RemoteKey.volumeUp,
+            icon: Icons.volume_up,
+            tooltip: l10n.tooltipVolumeUp,
+          ),
+          _RemoteButton(
+            remoteKey: RemoteKey.channelDown,
+            icon: Icons.remove,
+            tooltip: l10n.tooltipChannelDown,
+          ),
+          _RemoteButton(
+            remoteKey: RemoteKey.channelUp,
+            icon: Icons.add,
+            tooltip: l10n.tooltipChannelUp,
+          ),
+        ],
+      ),
+      const SizedBox(height: 16),
+      _buildDirectionalPad(l10n),
+      const SizedBox(height: 16),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _RemoteButton(
+            remoteKey: RemoteKey.back,
+            icon: Icons.arrow_back,
+            tooltip: l10n.tooltipBack,
+          ),
+          _RemoteButton(
+            remoteKey: RemoteKey.exit,
+            icon: Icons.cancel_outlined,
+            tooltip: l10n.tooltipExit,
+          ),
+        ],
+      ),
+      const SizedBox(height: 16),
+      if (showDigits) ...[_buildDigits(), const SizedBox(height: 16)],
+      if (showSleepTimer) const _SleepTimerControl(),
+    ];
   }
 
   Widget _buildDirectionalPad(AppLocalizations l10n) {

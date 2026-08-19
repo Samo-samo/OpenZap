@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../remote_control/presentation/key_tester_screen.dart';
 import '../../settings/domain/app_settings.dart';
 import '../../settings/presentation/settings_providers.dart';
 import '../domain/quick_launch_error.dart';
@@ -38,6 +39,19 @@ class AppsScreen extends ConsumerWidget {
                     mouseCursor: SystemMouseCursors.click,
                     onTap: () => _launch(context, ref, launcher, target),
                   ),
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.keyboard_alt_outlined),
+                  title: Text(l10n.keyTesterTitle),
+                  subtitle: Text(l10n.keyTesterDescription),
+                  trailing: const Icon(Icons.chevron_right),
+                  mouseCursor: SystemMouseCursors.click,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const KeyTesterScreen(),
+                    ),
+                  ),
+                ),
               ],
             ),
     );

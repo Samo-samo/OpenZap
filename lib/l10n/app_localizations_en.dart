@@ -170,6 +170,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appLaunchFailed => 'Could not launch the app.';
 
   @override
+  String get remoteLayout => 'Remote layout';
+
+  @override
+  String get layoutClassic => 'Classic';
+
+  @override
+  String get layoutCompact => 'Compact';
+
+  @override
+  String get layoutMinimal => 'Minimal';
+
+  @override
+  String get keyTesterTitle => 'Key test';
+
+  @override
+  String get keyTesterDescription =>
+      'Send raw remote key codes to discover and verify them';
+
+  @override
+  String get keyCodeLabel => 'Key code';
+
+  @override
+  String get sendKey => 'Send';
+
+  @override
+  String get presetKeys => 'Preset keys';
+
+  @override
+  String keySent(int code) {
+    return 'Key $code sent';
+  }
+
+  @override
   String get tvStatusTracking => 'Live status tracking';
 
   @override

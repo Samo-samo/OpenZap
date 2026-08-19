@@ -1,7 +1,3 @@
-import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:openzap/core/networking/http_probe.dart';
@@ -37,80 +33,51 @@ class _FakeProbe implements HttpProbe {
 
 void main() {
   group('VestelAppLauncher', () {
-    test(
-      'launches YouTube through the DIAL endpoint with an empty body',
-      () async {
-        final probe = _FakeProbe()..response = '';
-        final launcher = VestelAppLauncher(host: '192.168.0.101', probe: probe);
+    test('sends the YouTube shortcut key', () async {
+      final probe = _FakeProbe()..response = '';
+      final launcher = VestelAppLauncher(host: '192.168.0.101', probe: probe);
 
-        await launcher.launch(QuickLaunchTarget.youtube);
+      await launcher.launch(QuickLaunchTarget.youtube);
 
-        expect(probe.lastUrl, 'http://192.168.0.101:56789/apps/YouTube');
-        expect(probe.lastBody, '');
-        expect(
-          probe.lastHeaders?['Content-Type'],
-          'text/plain; charset=ISO-8859-1',
-        );
-        expect(probe.lastHeaders?['Connection'], 'Keep-Alive');
-      },
-    );
+      expect(probe.lastUrl, 'http://192.168.0.101:56789/apps/SmartCenter');
+      expect(probe.lastBody, contains("code='1063'"));
+    });
 
-    test('launches Netflix through the DIAL endpoint', () async {
+    test('sends the Netflix shortcut key', () async {
       final probe = _FakeProbe()..response = '';
       final launcher = VestelAppLauncher(host: '192.168.0.101', probe: probe);
 
       await launcher.launch(QuickLaunchTarget.netflix);
 
-      expect(probe.lastUrl, 'http://192.168.0.101:56789/apps/Netflix');
-      expect(probe.lastBody, '');
+      expect(probe.lastBody, contains("code='1064'"));
     });
 
-    test('opens the portal through SmartCenter', () async {
+    test('sends the portal (APP) shortcut key', () async {
       final probe = _FakeProbe()..response = '';
       final launcher = VestelAppLauncher(host: '192.168.0.101', probe: probe);
 
       await launcher.launch(QuickLaunchTarget.portal);
 
-      expect(probe.lastUrl, 'http://192.168.0.101:56789/apps/SmartCenter');
-      expect(probe.lastBody, '');
+      expect(probe.lastBody, contains("code='1046'"));
     });
 
-    test('switches to HDMI via the INPUT_SOURCE key', () async {
+    test('sends the HDMI (INPUT_SOURCE) shortcut key', () async {
       final probe = _FakeProbe()..response = '';
       final launcher = VestelAppLauncher(host: '192.168.0.101', probe: probe);
 
       await launcher.launch(QuickLaunchTarget.hdmi);
 
-      expect(probe.lastUrl, 'http://192.168.0.101:56789/apps/SmartCenter');
       expect(probe.lastBody, contains("code='1056'"));
     });
 
-    test('throws when the TV does not accept the app launch', () async {
+    test('throws when the TV does not accept the key', () async {
       final probe = _FakeProbe()..response = null;
       final launcher = VestelAppLauncher(host: '192.168.0.101', probe: probe);
 
       expect(
-        () => launcher.launch(QuickLaunchTarget.youtube),
+        () => launcher.launch(QuickLaunchTarget.netflix),
         throwsA(isA<QuickLaunchException>()),
       );
-    });
-
-    test('launches an app against a real TV endpoint end-to-end', () async {
-      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
-      unawaited(() async {
-        final request = await server.first;
-        expect(request.method, 'POST');
-        expect(request.uri.path, '/apps/YouTube');
-        expect(await utf8.decodeStream(request), '');
-        request.response.statusCode = HttpStatus.ok;
-        await request.response.close();
-      }());
-
-      final launcher = VestelAppLauncher(host: '127.0.0.1', port: server.port);
-
-      await launcher.launch(QuickLaunchTarget.youtube);
-      await server.close(force: true);
-      await launcher.close();
     });
   });
 }

@@ -4,85 +4,54 @@ import '../../features/quick_launch/domain/quick_launch_service.dart';
 import '../../features/remote_control/domain/remote_control_error.dart';
 import 'vestel_remote_control.dart';
 
-const int _dialPort = 56789;
-const String _dialBase = '/apps';
-
 /// Launches apps and switches inputs on Vestel-based TVs.
 ///
-/// Apps are started through DIAL (`POST http://<ip>:56789/apps/{AppId}` with
-/// an empty body), as observed on a VESTEL 50U9510M (MB180). HDMI is switched
-/// via the INPUT_SOURCE key (1056). The default port matches that device;
-/// other models may use a different port (see `.ai/vestel-protocol-notes.md`).
+/// Apps are started through the virtual-remote shortcut keys (observed on a
+/// VESTEL 50U9510M / MB180): NETFLIX 1064, APP (portal) 1046, INPUT_SOURCE
+/// 1056 and a tentative YouTube key 1063. DIAL `POST /apps/{id}` is **not**
+/// available on MB180 (returns 403) and is therefore not used here.
 class VestelAppLauncher implements QuickLaunchService {
   VestelAppLauncher({
     required this.host,
-    this.port = _dialPort,
+    this.port = _remoteControlPort,
     HttpProbe? probe,
     this.probeTimeout = const Duration(seconds: 3),
-  }) : _probe = probe ?? DartHttpProbe(),
-       _remote = VestelRemoteControl(
+  }) : _remote = VestelRemoteControl(
          host: host,
          port: port,
          probe: probe,
-         probeTimeout: const Duration(seconds: 3),
+         probeTimeout: probeTimeout,
        );
+
+  static const int _remoteControlPort = 56789;
+
+  /// Remote key codes per launch target (node-red keymap, confirmed working
+  /// on MB180 as key POSTs return 200).
+  static const Map<QuickLaunchTarget, int> _keyCodes = {
+    QuickLaunchTarget.youtube: 1063,
+    QuickLaunchTarget.netflix: 1064,
+    QuickLaunchTarget.hdmi: 1056,
+    QuickLaunchTarget.portal: 1046,
+  };
 
   final String host;
   final int port;
   final Duration probeTimeout;
-  final HttpProbe _probe;
   final VestelRemoteControl _remote;
-
-  /// DIAL application IDs observed on Vestel TVs.
-  static const Map<QuickLaunchTarget, String> dialAppIds = {
-    QuickLaunchTarget.youtube: 'YouTube',
-    QuickLaunchTarget.netflix: 'Netflix',
-    QuickLaunchTarget.portal: 'SmartCenter',
-  };
-
-  /// Remote key code that cycles through input sources (see notes).
-  static const int _inputSourceCode = 1056;
 
   @override
   Future<void> launch(QuickLaunchTarget target) async {
-    final appId = dialAppIds[target];
-    if (appId != null) {
-      return _launchDial(appId);
+    final code = _keyCodes[target];
+    if (code == null) {
+      throw QuickLaunchException('Unsupported launch target: $target');
     }
-    if (target == QuickLaunchTarget.hdmi) {
-      return _switchInput();
-    }
-    throw QuickLaunchException('Unsupported launch target: $target');
-  }
-
-  Future<void> _launchDial(String appId) async {
-    final response = await _probe.post(
-      'http://$host:$port$_dialBase/$appId',
-      body: '',
-      headers: const {
-        'Content-Type': 'text/plain; charset=ISO-8859-1',
-        'Connection': 'Keep-Alive',
-      },
-      timeout: probeTimeout,
-    );
-    if (response == null) {
-      throw QuickLaunchException(
-        'TV at $host:$port did not accept the app launch',
-      );
-    }
-  }
-
-  Future<void> _switchInput() async {
     try {
-      await _remote.sendCode(_inputSourceCode);
+      await _remote.sendCode(code);
     } on RemoteControlException catch (e) {
       throw QuickLaunchException(e.message);
     }
   }
 
   @override
-  Future<void> close() async {
-    await _probe.close();
-    await _remote.close();
-  }
+  Future<void> close() => _remote.close();
 }
