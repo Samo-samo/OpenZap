@@ -260,6 +260,54 @@ abstract class AppLocalizations {
   /// **'Off'**
   String get feedbackNone;
 
+  /// No description provided for @devices.
+  ///
+  /// In en, this message translates to:
+  /// **'Devices'**
+  String get devices;
+
+  /// No description provided for @addDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Add device'**
+  String get addDevice;
+
+  /// No description provided for @removeDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get removeDevice;
+
+  /// No description provided for @noSavedDevices.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved devices.'**
+  String get noSavedDevices;
+
+  /// No description provided for @deviceNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name (optional)'**
+  String get deviceNameLabel;
+
+  /// No description provided for @deviceIpLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'IP address'**
+  String get deviceIpLabel;
+
+  /// No description provided for @deviceIpInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid IP address.'**
+  String get deviceIpInvalid;
+
+  /// No description provided for @deviceAlreadyAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'This device is already added.'**
+  String get deviceAlreadyAdded;
+
   /// No description provided for @sleepTimer.
   ///
   /// In en, this message translates to:

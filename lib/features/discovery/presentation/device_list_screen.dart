@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../device_settings/presentation/saved_devices_provider.dart';
 import '../../remote_control/presentation/remote_screen.dart';
 import '../../settings/presentation/settings_screen.dart';
 import '../domain/discovered_device.dart';
@@ -32,7 +33,15 @@ class DeviceListScreen extends ConsumerWidget {
       body: devices.when(
         loading: () => _ScanningProgress(),
         error: (error, _) => _CenteredText('${l10n.noDevicesFound}\n$error'),
-        data: (list) => ListView(
+        data: (list) {
+        final saved =
+            ref.watch(savedDevicesProvider).valueOrNull ?? const [];
+        final knownIps = {for (final device in list) device.ipAddress};
+        final extras = [
+          for (final device in saved)
+            if (!knownIps.contains(device.ipAddress)) device,
+        ];
+        return ListView(
           children: [
             if (lastDevice != null) ...[
               _RecentDeviceTile(
@@ -41,15 +50,16 @@ class DeviceListScreen extends ConsumerWidget {
               ),
               const Divider(),
             ],
-            for (final device in list)
+            for (final device in [...list, ...extras])
               _DeviceTile(
                 device: device,
                 onTap: () => _selectDevice(context, ref, device),
               ),
-            if (list.isEmpty && lastDevice == null)
+            if (list.isEmpty && extras.isEmpty && lastDevice == null)
               _CenteredText(l10n.noDevicesFound),
           ],
-        ),
+        );
+      },
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => ref.read(deviceListProvider.notifier).refresh(),

@@ -94,6 +94,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get feedbackNone => 'Off';
 
   @override
+  String get devices => 'Devices';
+
+  @override
+  String get addDevice => 'Add device';
+
+  @override
+  String get removeDevice => 'Remove';
+
+  @override
+  String get noSavedDevices => 'No saved devices.';
+
+  @override
+  String get deviceNameLabel => 'Name (optional)';
+
+  @override
+  String get deviceIpLabel => 'IP address';
+
+  @override
+  String get deviceIpInvalid => 'Enter a valid IP address.';
+
+  @override
+  String get deviceAlreadyAdded => 'This device is already added.';
+
+  @override
   String get sleepTimer => 'Sleep timer';
 
   @override

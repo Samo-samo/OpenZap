@@ -1,7 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../device_settings/presentation/saved_devices_provider.dart';
+import '../../discovery/domain/discovered_device.dart';
 import '../domain/app_settings.dart';
 import 'settings_providers.dart';
 
@@ -132,8 +136,143 @@ class SettingsScreen extends ConsumerWidget {
             onChanged: (value) =>
                 ref.read(settingsProvider.notifier).setSleepTimerManualInput(value),
           ),
+          _SectionHeader(l10n.devices),
+          ref.watch(savedDevicesProvider).when(
+                loading: () => const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+                error: (error, _) => ListTile(title: Text('$error')),
+                data: (devices) => Column(
+                  children: [
+                    if (devices.isEmpty)
+                      ListTile(title: Text(l10n.noSavedDevices)),
+                    for (final device in devices)
+                      ListTile(
+                        leading: const Icon(Icons.tv),
+                        title: Text(device.name),
+                        subtitle: Text(device.ipAddress),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete_outline),
+                          tooltip: l10n.removeDevice,
+                          onPressed: () => ref
+                              .read(savedDevicesProvider.notifier)
+                              .remove(device.ipAddress),
+                        ),
+                      ),
+                    ListTile(
+                      leading: const Icon(Icons.add),
+                      title: Text(l10n.addDevice),
+                      mouseCursor: SystemMouseCursors.click,
+                      onTap: () => _addDevice(context, ref),
+                    ),
+                  ],
+                ),
+              ),
         ],
       ),
+    );
+  }
+
+  Future<void> _addDevice(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
+    final added = await showDialog<DiscoveredDevice>(
+      context: context,
+      builder: (_) => const _AddDeviceDialog(),
+    );
+    if (added == null) {
+      return;
+    }
+    if (!context.mounted) {
+      return;
+    }
+    final devices = ref.read(savedDevicesProvider).valueOrNull ?? const [];
+    if (devices.any((device) => device.ipAddress == added.ipAddress)) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(l10n.deviceAlreadyAdded)));
+      return;
+    }
+    await ref.read(savedDevicesProvider.notifier).add(added);
+  }
+}
+
+class _AddDeviceDialog extends StatefulWidget {
+  const _AddDeviceDialog();
+
+  @override
+  State<_AddDeviceDialog> createState() => _AddDeviceDialogState();
+}
+
+class _AddDeviceDialogState extends State<_AddDeviceDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _ipController = TextEditingController();
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _ipController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+    final ip = _ipController.text.trim();
+    final name = _nameController.text.trim();
+    Navigator.of(context).pop(
+      DiscoveredDevice(
+        name: name.isEmpty ? ip : name,
+        ipAddress: ip,
+        port: 56789,
+        manufacturer: 'Vestel',
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final materialL10n = MaterialLocalizations.of(context);
+    return AlertDialog(
+      title: Text(l10n.addDevice),
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextFormField(
+              controller: _nameController,
+              textInputAction: TextInputAction.next,
+              decoration: InputDecoration(labelText: l10n.deviceNameLabel),
+            ),
+            TextFormField(
+              controller: _ipController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(labelText: l10n.deviceIpLabel),
+              validator: (value) {
+                final ip = value?.trim() ?? '';
+                if (InternetAddress.tryParse(ip) == null) {
+                  return l10n.deviceIpInvalid;
+                }
+                return null;
+              },
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(materialL10n.cancelButtonLabel),
+        ),
+        FilledButton(
+          onPressed: _submit,
+          child: Text(materialL10n.saveButtonLabel),
+        ),
+      ],
     );
   }
 }

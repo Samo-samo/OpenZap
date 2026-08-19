@@ -7,11 +7,65 @@ import '../domain/device_store.dart';
 
 class SharedPreferencesDeviceStore implements DeviceStore {
   static const _lastDeviceKey = 'last_device';
+  static const _savedDevicesKey = 'saved_devices';
 
   @override
   Future<DiscoveredDevice?> loadLastDevice() async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_lastDeviceKey);
+    return _decodeDevice(prefs.getString(_lastDeviceKey));
+  }
+
+  @override
+  Future<void> saveLastDevice(DiscoveredDevice device) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_lastDeviceKey, _encodeDevice(device));
+  }
+
+  @override
+  Future<List<DiscoveredDevice>> loadDevices() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_savedDevicesKey);
+    if (raw == null) {
+      return const [];
+    }
+    try {
+      final list = jsonDecode(raw) as List<dynamic>;
+      return [
+        for (final entry in list) ?_decodeDevice(jsonEncode(entry)),
+      ];
+    } on FormatException {
+      return const [];
+    }
+  }
+
+  @override
+  Future<void> saveDevice(DiscoveredDevice device) async {
+    final prefs = await SharedPreferences.getInstance();
+    final devices = [
+      for (final existing in await loadDevices())
+        if (existing.ipAddress != device.ipAddress) existing,
+      device,
+    ];
+    await prefs.setString(
+      _savedDevicesKey,
+      jsonEncode([for (final d in devices) jsonDecode(_encodeDevice(d))]),
+    );
+  }
+
+  @override
+  Future<void> removeDevice(String ipAddress) async {
+    final prefs = await SharedPreferences.getInstance();
+    final devices = [
+      for (final existing in await loadDevices())
+        if (existing.ipAddress != ipAddress) existing,
+    ];
+    await prefs.setString(
+      _savedDevicesKey,
+      jsonEncode([for (final d in devices) jsonDecode(_encodeDevice(d))]),
+    );
+  }
+
+  static DiscoveredDevice? _decodeDevice(String? raw) {
     if (raw == null) {
       return null;
     }
@@ -31,18 +85,11 @@ class SharedPreferencesDeviceStore implements DeviceStore {
     }
   }
 
-  @override
-  Future<void> saveLastDevice(DiscoveredDevice device) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      _lastDeviceKey,
-      jsonEncode({
+  static String _encodeDevice(DiscoveredDevice device) => jsonEncode({
         'name': device.name,
         'ip': device.ipAddress,
         'port': device.port,
         'manufacturer': device.manufacturer,
         'model': device.model,
-      }),
-    );
-  }
+      });
 }

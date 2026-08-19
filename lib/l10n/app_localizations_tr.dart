@@ -94,6 +94,30 @@ class AppLocalizationsTr extends AppLocalizations {
   String get feedbackNone => 'Kapalı';
 
   @override
+  String get devices => 'Cihazlar';
+
+  @override
+  String get addDevice => 'Cihaz Ekle';
+
+  @override
+  String get removeDevice => 'Kaldır';
+
+  @override
+  String get noSavedDevices => 'Kayıtlı cihaz yok.';
+
+  @override
+  String get deviceNameLabel => 'Ad (isteğe bağlı)';
+
+  @override
+  String get deviceIpLabel => 'IP adresi';
+
+  @override
+  String get deviceIpInvalid => 'Geçerli bir IP adresi girin.';
+
+  @override
+  String get deviceAlreadyAdded => 'Bu cihaz zaten ekli.';
+
+  @override
   String get sleepTimer => 'Uyku zamanlayıcısı';
 
   @override
