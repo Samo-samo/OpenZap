@@ -69,15 +69,17 @@ class VestelDeviceDiscovery implements DeviceDiscovery {
     final batchSize = maxConcurrency < 1 ? 1 : maxConcurrency;
     // Probing is done in batches so that cancelling the stream subscription
     // (the UI's "Cancel" button) stops the scan after the current batch
-    // instead of after all hosts.
+    // instead of after all hosts. Progress is reported per host so the UI
+    // advances smoothly instead of jumping in batch-sized steps.
     for (var i = 0; i < hosts.length; i += batchSize) {
       final end = i + batchSize > hosts.length ? hosts.length : i + batchSize;
       final batch = hosts.sublist(i, end);
       final bodies = await Future.wait([
-        for (final host in batch) _probeHost(host),
+        for (final host in batch) _probeHost(host, () {
+          scanned++;
+          onProgress?.call(scanned, hosts.length);
+        }),
       ]);
-      scanned += batch.length;
-      onProgress?.call(scanned, hosts.length);
       for (var j = 0; j < batch.length; j++) {
         final body = bodies[j];
         if (body != null) {
@@ -89,11 +91,12 @@ class VestelDeviceDiscovery implements DeviceDiscovery {
 
   Future<void> close() => _probe.close();
 
-  Future<String?> _probeHost(String host) async {
+  Future<String?> _probeHost(String host, void Function() onComplete) async {
     final bodies = await Future.wait([
       for (final port in deviceDescriptionPorts)
         _probe.get('http://$host:$port/dd.xml', timeout: probeTimeout),
     ]);
+    onComplete();
     for (final body in bodies) {
       if (body != null) {
         return body;
