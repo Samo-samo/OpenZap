@@ -24,4 +24,12 @@ enum RemoteKey {
   digit7,
   digit8,
   digit9,
+  settings,
+  favorites,
+  pictureFormat,
+  pictureMode,
+  audioTrack,
+  subtitleAudio,
+  subtitles,
+  teletext,
 }

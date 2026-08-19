@@ -78,14 +78,36 @@ void main() {
       expect(loaded.languageCode, 'tr');
     });
 
-    test('round-trips the remote layout', () async {
+    test('defaults all remote sections to visible', () async {
       SharedPreferences.setMockInitialValues({});
       final store = SharedPreferencesSettingsStore();
 
-      expect((await store.load()).remoteLayout, RemoteLayout.classic);
+      final settings = await store.load();
 
-      await store.save(const AppSettings(remoteLayout: RemoteLayout.compact));
-      expect((await store.load()).remoteLayout, RemoteLayout.compact);
+      expect(settings.showTvStatus, isTrue);
+      expect(settings.showDigits, isTrue);
+      expect(settings.showSleepTimer, isTrue);
+      expect(settings.showExtras, isTrue);
+    });
+
+    test('round-trips remote section visibility', () async {
+      SharedPreferences.setMockInitialValues({});
+      final store = SharedPreferencesSettingsStore();
+
+      await store.save(
+        const AppSettings(
+          showTvStatus: false,
+          showDigits: false,
+          showSleepTimer: false,
+          showExtras: true,
+        ),
+      );
+      final loaded = await store.load();
+
+      expect(loaded.showTvStatus, isFalse);
+      expect(loaded.showDigits, isFalse);
+      expect(loaded.showSleepTimer, isFalse);
+      expect(loaded.showExtras, isTrue);
     });
 
     test('defaults to system theme and language', () async {

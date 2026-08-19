@@ -81,4 +81,12 @@ const Map<RemoteKey, int> _keyCodes = {
   RemoteKey.digit7: 1007,
   RemoteKey.digit8: 1008,
   RemoteKey.digit9: 1009,
+  RemoteKey.settings: 1066,
+  RemoteKey.favorites: 1040,
+  RemoteKey.pictureFormat: 1011,
+  RemoteKey.pictureMode: 1014,
+  RemoteKey.audioTrack: 1035,
+  RemoteKey.subtitleAudio: 1015,
+  RemoteKey.subtitles: 1031,
+  RemoteKey.teletext: 1060,
 };

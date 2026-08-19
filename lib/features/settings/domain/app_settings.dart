@@ -22,13 +22,17 @@ enum AppThemeMode {
   dark,
 }
 
-/// Preset arrangements of the remote screen.
+/// Preset arrangements of the remote screen sections.
+///
+/// Selecting a preset turns the individual sections on/off through
+/// [AppSettings.copyWith]; the user can deviate from a preset to build a
+/// custom layout.
 enum RemoteLayout {
   /// All sections: status, power/mute/info, volume/channels, D-pad,
-  /// back/exit, digits, sleep timer.
+  /// back/exit, digits, quick controls, sleep timer.
   classic,
 
-  /// Hides the status chip and the digit row.
+  /// Hides the status chip and the digit row, keeps quick controls.
   compact,
 
   /// Only the essential controls: power/mute/info, volume/channels, D-pad,
@@ -36,12 +40,63 @@ enum RemoteLayout {
   minimal,
 }
 
+/// Applies the section visibility of a [RemoteLayout] preset to [settings].
+AppSettings applyRemoteLayoutPreset(RemoteLayout layout, AppSettings settings) {
+  return switch (layout) {
+    RemoteLayout.classic => settings.copyWith(
+      showTvStatus: true,
+      showDigits: true,
+      showSleepTimer: true,
+      showExtras: true,
+    ),
+    RemoteLayout.compact => settings.copyWith(
+      showTvStatus: false,
+      showDigits: false,
+      showSleepTimer: true,
+      showExtras: true,
+    ),
+    RemoteLayout.minimal => settings.copyWith(
+      showTvStatus: false,
+      showDigits: false,
+      showSleepTimer: false,
+      showExtras: false,
+    ),
+  };
+}
+
+/// The preset matching [settings]' section visibility, or `null` when the
+/// combination is custom.
+RemoteLayout? matchingRemoteLayoutPreset(AppSettings settings) {
+  if (settings.showTvStatus &&
+      settings.showDigits &&
+      settings.showSleepTimer &&
+      settings.showExtras) {
+    return RemoteLayout.classic;
+  }
+  if (!settings.showTvStatus &&
+      !settings.showDigits &&
+      settings.showSleepTimer &&
+      settings.showExtras) {
+    return RemoteLayout.compact;
+  }
+  if (!settings.showTvStatus &&
+      !settings.showDigits &&
+      !settings.showSleepTimer &&
+      !settings.showExtras) {
+    return RemoteLayout.minimal;
+  }
+  return null;
+}
+
 /// User-configurable application settings.
 class AppSettings {
   const AppSettings({
     this.commandFeedback = CommandFeedback.errorsOnly,
     this.themeMode = AppThemeMode.system,
-    this.remoteLayout = RemoteLayout.classic,
+    this.showTvStatus = true,
+    this.showDigits = true,
+    this.showSleepTimer = true,
+    this.showExtras = true,
     this.languageCode,
     this.sleepTimerHumanReadable = true,
     this.sleepTimerShowMinutesInParens = false,
@@ -56,8 +111,18 @@ class AppSettings {
   /// Color theme mode.
   final AppThemeMode themeMode;
 
-  /// Preset arrangement of the remote screen.
-  final RemoteLayout remoteLayout;
+  /// Whether the remote screen shows the TV status chip.
+  final bool showTvStatus;
+
+  /// Whether the remote screen shows the digit key row.
+  final bool showDigits;
+
+  /// Whether the remote screen shows the sleep-timer control.
+  final bool showSleepTimer;
+
+  /// Whether the remote screen shows the quick controls (picture, audio,
+  /// favorites, settings, teletext).
+  final bool showExtras;
 
   /// App language (`tr`, `en`, ...), or `null` to follow the system locale.
   final String? languageCode;
@@ -83,7 +148,10 @@ class AppSettings {
   AppSettings copyWith({
     CommandFeedback? commandFeedback,
     AppThemeMode? themeMode,
-    RemoteLayout? remoteLayout,
+    bool? showTvStatus,
+    bool? showDigits,
+    bool? showSleepTimer,
+    bool? showExtras,
     String? languageCode,
     bool? sleepTimerHumanReadable,
     bool? sleepTimerShowMinutesInParens,
@@ -94,7 +162,10 @@ class AppSettings {
     return AppSettings(
       commandFeedback: commandFeedback ?? this.commandFeedback,
       themeMode: themeMode ?? this.themeMode,
-      remoteLayout: remoteLayout ?? this.remoteLayout,
+      showTvStatus: showTvStatus ?? this.showTvStatus,
+      showDigits: showDigits ?? this.showDigits,
+      showSleepTimer: showSleepTimer ?? this.showSleepTimer,
+      showExtras: showExtras ?? this.showExtras,
       languageCode: languageCode ?? this.languageCode,
       sleepTimerHumanReadable:
           sleepTimerHumanReadable ?? this.sleepTimerHumanReadable,
@@ -112,7 +183,10 @@ class AppSettings {
       other is AppSettings &&
       other.commandFeedback == commandFeedback &&
       other.themeMode == themeMode &&
-      other.remoteLayout == remoteLayout &&
+      other.showTvStatus == showTvStatus &&
+      other.showDigits == showDigits &&
+      other.showSleepTimer == showSleepTimer &&
+      other.showExtras == showExtras &&
       other.languageCode == languageCode &&
       other.sleepTimerHumanReadable == sleepTimerHumanReadable &&
       other.sleepTimerShowMinutesInParens == sleepTimerShowMinutesInParens &&
@@ -124,7 +198,10 @@ class AppSettings {
   int get hashCode => Object.hash(
     commandFeedback,
     themeMode,
-    remoteLayout,
+    showTvStatus,
+    showDigits,
+    showSleepTimer,
+    showExtras,
     languageCode,
     sleepTimerHumanReadable,
     sleepTimerShowMinutesInParens,

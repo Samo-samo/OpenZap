@@ -173,6 +173,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get remoteLayout => 'Kumanda düzeni';
 
   @override
+  String get layoutSections => 'Bölümler';
+
+  @override
   String get layoutClassic => 'Klasik';
 
   @override
@@ -180,6 +183,18 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get layoutMinimal => 'Minimal';
+
+  @override
+  String get layoutSectionTvStatus => 'TV durumu';
+
+  @override
+  String get layoutSectionDigits => 'Rakam tuşları';
+
+  @override
+  String get layoutSectionSleepTimer => 'Uyku zamanlayıcı';
+
+  @override
+  String get layoutSectionExtras => 'Hızlı kontroller';
 
   @override
   String get keyTesterTitle => 'Tuş testi';
@@ -290,4 +305,28 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get tooltipInfo => 'Bilgi';
+
+  @override
+  String get tooltipSettings => 'Ayarlar';
+
+  @override
+  String get tooltipFavorites => 'Favoriler';
+
+  @override
+  String get tooltipPictureFormat => 'Görüntü formatı';
+
+  @override
+  String get tooltipPictureMode => 'Görüntü modu';
+
+  @override
+  String get tooltipAudioTrack => 'Ses modu';
+
+  @override
+  String get tooltipSubtitleAudio => 'Altyazı ve ses';
+
+  @override
+  String get tooltipSubtitles => 'Altyazı';
+
+  @override
+  String get tooltipTeletext => 'Teletekst';
 }

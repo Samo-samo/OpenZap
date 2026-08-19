@@ -168,8 +168,12 @@ Done:
   use the virtual-remote shortcut keys (1062/1064/1056/1046).
 * Key test screen (Apps → Key test): send a raw key code or one of the known
   shortcut keys to discover and verify codes from the TV room.
-* Remote layout presets (settings): classic, compact, minimal — controls
-  which sections the remote screen shows.
+* Remote layout (settings): presets classic / compact / minimal plus a custom
+  combination — each section (TV status, digits, sleep timer, quick controls)
+  can be toggled independently.
+* Quick controls on the remote screen (picture format, picture mode, audio
+  track, subtitle/audio, subtitles, favorites, settings, teletext — all
+  confirmed codes).
 * `tool/launch_app.dart` smoke test for app launch.
 
 Skipped / not started (research done, see `.ai/vestel-protocol-notes.md`):

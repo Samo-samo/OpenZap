@@ -416,6 +416,12 @@ abstract class AppLocalizations {
   /// **'Remote layout'**
   String get remoteLayout;
 
+  /// No description provided for @layoutSections.
+  ///
+  /// In en, this message translates to:
+  /// **'Sections'**
+  String get layoutSections;
+
   /// No description provided for @layoutClassic.
   ///
   /// In en, this message translates to:
@@ -433,6 +439,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Minimal'**
   String get layoutMinimal;
+
+  /// No description provided for @layoutSectionTvStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'TV status'**
+  String get layoutSectionTvStatus;
+
+  /// No description provided for @layoutSectionDigits.
+  ///
+  /// In en, this message translates to:
+  /// **'Digit keys'**
+  String get layoutSectionDigits;
+
+  /// No description provided for @layoutSectionSleepTimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep timer'**
+  String get layoutSectionSleepTimer;
+
+  /// No description provided for @layoutSectionExtras.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick controls'**
+  String get layoutSectionExtras;
 
   /// No description provided for @keyTesterTitle.
   ///
@@ -631,6 +661,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Info'**
   String get tooltipInfo;
+
+  /// No description provided for @tooltipSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get tooltipSettings;
+
+  /// No description provided for @tooltipFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites'**
+  String get tooltipFavorites;
+
+  /// No description provided for @tooltipPictureFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Picture format'**
+  String get tooltipPictureFormat;
+
+  /// No description provided for @tooltipPictureMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Picture mode'**
+  String get tooltipPictureMode;
+
+  /// No description provided for @tooltipAudioTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio track'**
+  String get tooltipAudioTrack;
+
+  /// No description provided for @tooltipSubtitleAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtitle & audio'**
+  String get tooltipSubtitleAudio;
+
+  /// No description provided for @tooltipSubtitles.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtitles'**
+  String get tooltipSubtitles;
+
+  /// No description provided for @tooltipTeletext.
+  ///
+  /// In en, this message translates to:
+  /// **'Teletext'**
+  String get tooltipTeletext;
 }
 
 class _AppLocalizationsDelegate

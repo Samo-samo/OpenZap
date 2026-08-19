@@ -6,7 +6,10 @@ import '../domain/settings_store.dart';
 class SharedPreferencesSettingsStore implements SettingsStore {
   static const _commandFeedbackKey = 'command_feedback';
   static const _themeModeKey = 'theme_mode';
-  static const _remoteLayoutKey = 'remote_layout';
+  static const _showTvStatusKey = 'show_tv_status';
+  static const _showDigitsKey = 'show_digits';
+  static const _showSleepTimerKey = 'show_sleep_timer';
+  static const _showExtrasKey = 'show_extras';
   static const _languageCodeKey = 'language_code';
   static const _sleepTimerHumanReadableKey = 'sleep_timer_human_readable';
   static const _sleepTimerMinutesInParensKey = 'sleep_timer_minutes_in_parens';
@@ -21,12 +24,13 @@ class SharedPreferencesSettingsStore implements SettingsStore {
         .asNameMap()[prefs.getString(_commandFeedbackKey)];
     final theme = AppThemeMode.values
         .asNameMap()[prefs.getString(_themeModeKey)];
-    final layout = RemoteLayout.values
-        .asNameMap()[prefs.getString(_remoteLayoutKey)];
     return AppSettings(
       commandFeedback: mode ?? CommandFeedback.errorsOnly,
       themeMode: theme ?? AppThemeMode.system,
-      remoteLayout: layout ?? RemoteLayout.classic,
+      showTvStatus: prefs.getBool(_showTvStatusKey) ?? true,
+      showDigits: prefs.getBool(_showDigitsKey) ?? true,
+      showSleepTimer: prefs.getBool(_showSleepTimerKey) ?? true,
+      showExtras: prefs.getBool(_showExtrasKey) ?? true,
       languageCode: prefs.getString(_languageCodeKey),
       sleepTimerHumanReadable:
           prefs.getBool(_sleepTimerHumanReadableKey) ?? true,
@@ -43,7 +47,10 @@ class SharedPreferencesSettingsStore implements SettingsStore {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_commandFeedbackKey, settings.commandFeedback.name);
     await prefs.setString(_themeModeKey, settings.themeMode.name);
-    await prefs.setString(_remoteLayoutKey, settings.remoteLayout.name);
+    await prefs.setBool(_showTvStatusKey, settings.showTvStatus);
+    await prefs.setBool(_showDigitsKey, settings.showDigits);
+    await prefs.setBool(_showSleepTimerKey, settings.showSleepTimer);
+    await prefs.setBool(_showExtrasKey, settings.showExtras);
     final languageCode = settings.languageCode;
     if (languageCode == null) {
       await prefs.remove(_languageCodeKey);

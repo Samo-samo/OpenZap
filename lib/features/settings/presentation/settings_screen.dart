@@ -19,7 +19,9 @@ class SettingsScreen extends ConsumerWidget {
     final commandFeedback =
         settings?.commandFeedback ?? CommandFeedback.errorsOnly;
     final themeMode = settings?.themeMode ?? AppThemeMode.system;
-    final remoteLayout = settings?.remoteLayout ?? RemoteLayout.classic;
+    final remoteLayout = settings == null
+        ? RemoteLayout.classic
+        : matchingRemoteLayoutPreset(settings);
     // No explicit "System" option: the current system locale is detected and
     // preselected, and any pick stores a concrete language.
     final systemLanguageCode =
@@ -115,6 +117,35 @@ class SettingsScreen extends ConsumerWidget {
                 ),
               ],
             ),
+          ),
+          _SectionHeader(l10n.layoutSections),
+          SwitchListTile(
+            title: Text(l10n.layoutSectionTvStatus),
+            mouseCursor: SystemMouseCursors.click,
+            value: settings?.showTvStatus ?? true,
+            onChanged: (value) =>
+                ref.read(settingsProvider.notifier).setShowTvStatus(value),
+          ),
+          SwitchListTile(
+            title: Text(l10n.layoutSectionDigits),
+            mouseCursor: SystemMouseCursors.click,
+            value: settings?.showDigits ?? true,
+            onChanged: (value) =>
+                ref.read(settingsProvider.notifier).setShowDigits(value),
+          ),
+          SwitchListTile(
+            title: Text(l10n.layoutSectionSleepTimer),
+            mouseCursor: SystemMouseCursors.click,
+            value: settings?.showSleepTimer ?? true,
+            onChanged: (value) =>
+                ref.read(settingsProvider.notifier).setShowSleepTimer(value),
+          ),
+          SwitchListTile(
+            title: Text(l10n.layoutSectionExtras),
+            mouseCursor: SystemMouseCursors.click,
+            value: settings?.showExtras ?? true,
+            onChanged: (value) =>
+                ref.read(settingsProvider.notifier).setShowExtras(value),
           ),
           _SectionHeader(
             l10n.commandFeedback,

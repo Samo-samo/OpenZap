@@ -54,20 +54,20 @@ class RemoteScreen extends ConsumerWidget {
     );
   }
 
-  /// Builds the remote sections according to the selected [RemoteLayout]:
-  /// classic shows everything, compact hides the status chip and digits,
-  /// minimal keeps only the essential control rows.
+  /// Builds the remote sections according to the visibility settings:
+  /// status chip, digits, sleep timer and quick controls can each be toggled
+  /// independently (presets just turn groups on/off together).
   List<Widget> _buildSections(
     BuildContext context,
     WidgetRef ref,
     AppLocalizations l10n,
   ) {
-    final layout =
-        ref.watch(settingsProvider).valueOrNull?.remoteLayout ??
-        RemoteLayout.classic;
-    final showStatusChip = layout == RemoteLayout.classic;
-    final showDigits = layout == RemoteLayout.classic;
-    final showSleepTimer = layout != RemoteLayout.minimal;
+    final settings =
+        ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    final showStatusChip = settings.showTvStatus;
+    final showDigits = settings.showDigits;
+    final showSleepTimer = settings.showSleepTimer;
+    final showExtras = settings.showExtras;
     return [
       if (showStatusChip) ...[
         const _TvStatusChip(),
@@ -139,8 +139,69 @@ class RemoteScreen extends ConsumerWidget {
       ),
       const SizedBox(height: 16),
       if (showDigits) ...[_buildDigits(), const SizedBox(height: 16)],
+      if (showExtras) ...[_buildExtras(l10n), const SizedBox(height: 16)],
       if (showSleepTimer) const _SleepTimerControl(),
     ];
+  }
+
+  /// Quick controls for picture, audio, menu and app shortcuts.
+  Widget _buildExtras(AppLocalizations l10n) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _RemoteButton(
+              remoteKey: RemoteKey.settings,
+              icon: Icons.settings_outlined,
+              tooltip: l10n.tooltipSettings,
+            ),
+            _RemoteButton(
+              remoteKey: RemoteKey.favorites,
+              icon: Icons.star_outline,
+              tooltip: l10n.tooltipFavorites,
+            ),
+            _RemoteButton(
+              remoteKey: RemoteKey.pictureFormat,
+              icon: Icons.aspect_ratio,
+              tooltip: l10n.tooltipPictureFormat,
+            ),
+            _RemoteButton(
+              remoteKey: RemoteKey.pictureMode,
+              icon: Icons.palette_outlined,
+              tooltip: l10n.tooltipPictureMode,
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _RemoteButton(
+              remoteKey: RemoteKey.audioTrack,
+              icon: Icons.audiotrack,
+              tooltip: l10n.tooltipAudioTrack,
+            ),
+            _RemoteButton(
+              remoteKey: RemoteKey.subtitleAudio,
+              icon: Icons.subtitles_outlined,
+              tooltip: l10n.tooltipSubtitleAudio,
+            ),
+            _RemoteButton(
+              remoteKey: RemoteKey.subtitles,
+              icon: Icons.closed_caption,
+              tooltip: l10n.tooltipSubtitles,
+            ),
+            _RemoteButton(
+              remoteKey: RemoteKey.teletext,
+              icon: Icons.article_outlined,
+              tooltip: l10n.tooltipTeletext,
+            ),
+          ],
+        ),
+      ],
+    );
   }
 
   Widget _buildDirectionalPad(AppLocalizations l10n) {

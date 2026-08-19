@@ -173,6 +173,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get remoteLayout => 'Remote layout';
 
   @override
+  String get layoutSections => 'Sections';
+
+  @override
   String get layoutClassic => 'Classic';
 
   @override
@@ -180,6 +183,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get layoutMinimal => 'Minimal';
+
+  @override
+  String get layoutSectionTvStatus => 'TV status';
+
+  @override
+  String get layoutSectionDigits => 'Digit keys';
+
+  @override
+  String get layoutSectionSleepTimer => 'Sleep timer';
+
+  @override
+  String get layoutSectionExtras => 'Quick controls';
 
   @override
   String get keyTesterTitle => 'Key test';
@@ -301,4 +316,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tooltipInfo => 'Info';
+
+  @override
+  String get tooltipSettings => 'Settings';
+
+  @override
+  String get tooltipFavorites => 'Favorites';
+
+  @override
+  String get tooltipPictureFormat => 'Picture format';
+
+  @override
+  String get tooltipPictureMode => 'Picture mode';
+
+  @override
+  String get tooltipAudioTrack => 'Audio track';
+
+  @override
+  String get tooltipSubtitleAudio => 'Subtitle & audio';
+
+  @override
+  String get tooltipSubtitles => 'Subtitles';
+
+  @override
+  String get tooltipTeletext => 'Teletext';
 }

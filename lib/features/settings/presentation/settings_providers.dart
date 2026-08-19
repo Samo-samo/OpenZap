@@ -21,7 +21,31 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
   }
 
   Future<void> setRemoteLayout(RemoteLayout value) async {
-    final settings = state.value!.copyWith(remoteLayout: value);
+    final settings = applyRemoteLayoutPreset(value, state.value!);
+    state = AsyncData(settings);
+    await ref.read(settingsStoreProvider).save(settings);
+  }
+
+  Future<void> setShowTvStatus(bool value) async {
+    final settings = state.value!.copyWith(showTvStatus: value);
+    state = AsyncData(settings);
+    await ref.read(settingsStoreProvider).save(settings);
+  }
+
+  Future<void> setShowDigits(bool value) async {
+    final settings = state.value!.copyWith(showDigits: value);
+    state = AsyncData(settings);
+    await ref.read(settingsStoreProvider).save(settings);
+  }
+
+  Future<void> setShowSleepTimer(bool value) async {
+    final settings = state.value!.copyWith(showSleepTimer: value);
+    state = AsyncData(settings);
+    await ref.read(settingsStoreProvider).save(settings);
+  }
+
+  Future<void> setShowExtras(bool value) async {
+    final settings = state.value!.copyWith(showExtras: value);
     state = AsyncData(settings);
     await ref.read(settingsStoreProvider).save(settings);
   }
