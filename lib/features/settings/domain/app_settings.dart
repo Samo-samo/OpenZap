@@ -31,6 +31,7 @@ class AppSettings {
     this.sleepTimerHumanReadable = true,
     this.sleepTimerShowMinutesInParens = true,
     this.sleepTimerManualInput = false,
+    this.tvStatusTracking = true,
   });
 
   /// Command feedback mode.
@@ -53,6 +54,10 @@ class AppSettings {
   /// Whether the custom sleep-timer dialog offers a manual minute entry.
   final bool sleepTimerManualInput;
 
+  /// Whether the app connects to the TV's status channel to show its
+  /// power state on the remote screen.
+  final bool tvStatusTracking;
+
   AppSettings copyWith({
     CommandFeedback? commandFeedback,
     AppThemeMode? themeMode,
@@ -60,6 +65,7 @@ class AppSettings {
     bool? sleepTimerHumanReadable,
     bool? sleepTimerShowMinutesInParens,
     bool? sleepTimerManualInput,
+    bool? tvStatusTracking,
   }) {
     return AppSettings(
       commandFeedback: commandFeedback ?? this.commandFeedback,
@@ -71,6 +77,7 @@ class AppSettings {
           sleepTimerShowMinutesInParens ?? this.sleepTimerShowMinutesInParens,
       sleepTimerManualInput:
           sleepTimerManualInput ?? this.sleepTimerManualInput,
+      tvStatusTracking: tvStatusTracking ?? this.tvStatusTracking,
     );
   }
 
@@ -82,7 +89,8 @@ class AppSettings {
       other.languageCode == languageCode &&
       other.sleepTimerHumanReadable == sleepTimerHumanReadable &&
       other.sleepTimerShowMinutesInParens == sleepTimerShowMinutesInParens &&
-      other.sleepTimerManualInput == sleepTimerManualInput;
+      other.sleepTimerManualInput == sleepTimerManualInput &&
+      other.tvStatusTracking == tvStatusTracking;
 
   @override
   int get hashCode => Object.hash(
@@ -92,5 +100,6 @@ class AppSettings {
         sleepTimerHumanReadable,
         sleepTimerShowMinutesInParens,
         sleepTimerManualInput,
+        tvStatusTracking,
       );
 }

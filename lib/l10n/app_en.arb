@@ -45,6 +45,8 @@
   "deviceIpLabel": "IP address",
   "deviceIpInvalid": "Enter a valid IP address.",
   "deviceAlreadyAdded": "This device is already added.",
+  "tvStatusTracking": "Live status tracking",
+  "tvStatusTrackingDescription": "Show the TV's power state on the remote screen.",
   "sleepTimer": "Sleep timer",
   "sleepTimerMinutes": "{minutes, plural, one{1 minute} other{{minutes} minutes}}",
   "@sleepTimerMinutes": {

@@ -10,6 +10,7 @@ class SharedPreferencesSettingsStore implements SettingsStore {
   static const _sleepTimerHumanReadableKey = 'sleep_timer_human_readable';
   static const _sleepTimerMinutesInParensKey = 'sleep_timer_minutes_in_parens';
   static const _sleepTimerManualInputKey = 'sleep_timer_manual_input';
+  static const _tvStatusTrackingKey = 'tv_status_tracking';
 
   @override
   Future<AppSettings> load() async {
@@ -29,6 +30,7 @@ class SharedPreferencesSettingsStore implements SettingsStore {
       sleepTimerShowMinutesInParens:
           prefs.getBool(_sleepTimerMinutesInParensKey) ?? true,
       sleepTimerManualInput: prefs.getBool(_sleepTimerManualInputKey) ?? false,
+      tvStatusTracking: prefs.getBool(_tvStatusTrackingKey) ?? true,
     );
   }
 
@@ -55,5 +57,6 @@ class SharedPreferencesSettingsStore implements SettingsStore {
       _sleepTimerManualInputKey,
       settings.sleepTimerManualInput,
     );
+    await prefs.setBool(_tvStatusTrackingKey, settings.tvStatusTracking);
   }
 }

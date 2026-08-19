@@ -308,6 +308,18 @@ abstract class AppLocalizations {
   /// **'This device is already added.'**
   String get deviceAlreadyAdded;
 
+  /// No description provided for @tvStatusTracking.
+  ///
+  /// In en, this message translates to:
+  /// **'Live status tracking'**
+  String get tvStatusTracking;
+
+  /// No description provided for @tvStatusTrackingDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the TV\'s power state on the remote screen.'**
+  String get tvStatusTrackingDescription;
+
   /// No description provided for @sleepTimer.
   ///
   /// In en, this message translates to:

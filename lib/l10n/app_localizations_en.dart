@@ -118,6 +118,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deviceAlreadyAdded => 'This device is already added.';
 
   @override
+  String get tvStatusTracking => 'Live status tracking';
+
+  @override
+  String get tvStatusTrackingDescription =>
+      'Show the TV\'s power state on the remote screen.';
+
+  @override
   String get sleepTimer => 'Sleep timer';
 
   @override

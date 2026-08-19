@@ -118,6 +118,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get deviceAlreadyAdded => 'Bu cihaz zaten ekli.';
 
   @override
+  String get tvStatusTracking => 'Canlı durum takibi';
+
+  @override
+  String get tvStatusTrackingDescription =>
+      'Uzaktan kumanda ekranında TV\'nin açık/kapalı durumunu göster.';
+
+  @override
   String get sleepTimer => 'Uyku zamanlayıcısı';
 
   @override

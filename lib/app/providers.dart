@@ -7,6 +7,7 @@ import '../features/discovery/domain/discovered_device.dart';
 import '../features/remote_control/domain/remote_control.dart';
 import '../features/settings/data/shared_preferences_settings_store.dart';
 import '../features/settings/domain/settings_store.dart';
+import '../features/settings/presentation/settings_providers.dart';
 import '../features/tv_status/domain/tv_status.dart';
 import '../features/tv_status/domain/tv_status_service.dart';
 import '../integrations/vestel/vestel_device_discovery.dart';
@@ -53,10 +54,13 @@ final lastDeviceProvider = FutureProvider<DiscoveredDevice?>(
   (ref) => ref.watch(deviceStoreProvider).loadLastDevice(),
 );
 
-/// Live status of the selected TV, or `null` when none is selected.
+/// Live status of the selected TV, or `null` when none is selected or when
+/// live status tracking is disabled in the settings.
 final tvStatusProvider = StreamProvider.autoDispose<TvStatus?>((ref) {
+  final tracking =
+      ref.watch(settingsProvider.select((s) => s.valueOrNull?.tvStatusTracking ?? true));
   final device = ref.watch(selectedDeviceProvider);
-  if (device == null) {
+  if (!tracking || device == null) {
     return Stream.value(null);
   }
   final service = VestelTvStatus(host: device.ipAddress);

@@ -136,6 +136,15 @@ class SettingsScreen extends ConsumerWidget {
             onChanged: (value) =>
                 ref.read(settingsProvider.notifier).setSleepTimerManualInput(value),
           ),
+          _SectionHeader(l10n.tvStatusTracking),
+          SwitchListTile(
+            title: Text(l10n.tvStatusTracking),
+            subtitle: Text(l10n.tvStatusTrackingDescription),
+            mouseCursor: SystemMouseCursors.click,
+            value: settings?.tvStatusTracking ?? true,
+            onChanged: (value) =>
+                ref.read(settingsProvider.notifier).setTvStatusTracking(value),
+          ),
           _SectionHeader(l10n.devices),
           ref.watch(savedDevicesProvider).when(
                 loading: () => const Padding(

@@ -45,6 +45,8 @@
   "deviceIpLabel": "IP adresi",
   "deviceIpInvalid": "Geçerli bir IP adresi girin.",
   "deviceAlreadyAdded": "Bu cihaz zaten ekli.",
+  "tvStatusTracking": "Canlı durum takibi",
+  "tvStatusTrackingDescription": "Uzaktan kumanda ekranında TV'nin açık/kapalı durumunu göster.",
   "sleepTimer": "Uyku zamanlayıcısı",
   "sleepTimerMinutes": "{minutes} dakika",
   "@sleepTimerMinutes": {

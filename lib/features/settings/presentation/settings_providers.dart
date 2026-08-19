@@ -44,6 +44,12 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     state = AsyncData(settings);
     await ref.read(settingsStoreProvider).save(settings);
   }
+
+  Future<void> setTvStatusTracking(bool value) async {
+    final settings = state.value!.copyWith(tvStatusTracking: value);
+    state = AsyncData(settings);
+    await ref.read(settingsStoreProvider).save(settings);
+  }
 }
 
 final settingsProvider =

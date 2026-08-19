@@ -92,5 +92,15 @@ void main() {
       expect(settings.themeMode, AppThemeMode.system);
       expect(settings.languageCode, isNull);
     });
+
+    test('round-trips status tracking and defaults to on', () async {
+      SharedPreferences.setMockInitialValues({});
+      final store = SharedPreferencesSettingsStore();
+
+      expect((await store.load()).tvStatusTracking, isTrue);
+
+      await store.save(const AppSettings(tvStatusTracking: false));
+      expect((await store.load()).tvStatusTracking, isFalse);
+    });
   });
 }
