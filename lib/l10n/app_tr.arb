@@ -38,6 +38,8 @@
     }
   },
   "sleepTimerRemaining": "TV kapanıyor",
+  "sleepTimerCustom": "Özel…",
+  "customSleepTimerTitle": "Özel uyku zamanlayıcısı",
   "cancelSleepTimer": "Uyku zamanlayıcısını iptal et",
   "tooltipPower": "Güç",
   "tooltipMute": "Sessiz",

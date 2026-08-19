@@ -184,6 +184,7 @@ class _SleepTimerControl extends ConsumerWidget {
     Duration(minutes: 90),
     Duration(minutes: 120),
   ];
+  static const _customSentinel = Duration(days: 1);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -218,13 +219,82 @@ class _SleepTimerControl extends ConsumerWidget {
             value: option,
             child: Text(l10n.sleepTimerMinutes(option.inMinutes)),
           ),
+        PopupMenuItem(
+          value: _customSentinel,
+          child: Text(l10n.sleepTimerCustom),
+        ),
       ],
-      onSelected: (duration) =>
-          ref.read(sleepTimerProvider.notifier).start(duration),
+      onSelected: (duration) {
+        if (duration == _customSentinel) {
+          _pickCustom(context, ref);
+        } else {
+          ref.read(sleepTimerProvider.notifier).start(duration);
+        }
+      },
       child: Chip(
         avatar: const Icon(Icons.bedtime),
         label: Text(l10n.sleepTimer),
+        mouseCursor: SystemMouseCursors.click,
       ),
+    );
+  }
+
+  Future<void> _pickCustom(BuildContext context, WidgetRef ref) async {
+    final duration = await showDialog<Duration>(
+      context: context,
+      builder: (_) => const _CustomSleepTimerDialog(),
+    );
+    if (duration != null) {
+      ref.read(sleepTimerProvider.notifier).start(duration);
+    }
+  }
+}
+
+class _CustomSleepTimerDialog extends StatefulWidget {
+  const _CustomSleepTimerDialog();
+
+  @override
+  State<_CustomSleepTimerDialog> createState() =>
+      _CustomSleepTimerDialogState();
+}
+
+class _CustomSleepTimerDialogState extends State<_CustomSleepTimerDialog> {
+  static const double _minMinutes = 5;
+  static const double _maxMinutes = 360;
+
+  double _minutes = 30;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final materialL10n = MaterialLocalizations.of(context);
+    return AlertDialog(
+      title: Text(l10n.customSleepTimerTitle),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(l10n.sleepTimerMinutes(_minutes.round())),
+          Slider(
+            value: _minutes,
+            min: _minMinutes,
+            max: _maxMinutes,
+            divisions: (_maxMinutes - _minMinutes) ~/ 5,
+            label: l10n.sleepTimerMinutes(_minutes.round()),
+            onChanged: (value) => setState(() => _minutes = value),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(materialL10n.cancelButtonLabel),
+        ),
+        FilledButton(
+          onPressed: () =>
+              Navigator.of(context).pop(Duration(minutes: _minutes.round())),
+          child: Text(materialL10n.okButtonLabel),
+        ),
+      ],
     );
   }
 }
@@ -322,13 +392,26 @@ Future<void> _sendKey(
   try {
     await remote.sendKey(key);
     if (feedback == CommandFeedback.all) {
-      messenger.showSnackBar(SnackBar(content: Text(l10n.commandSent)));
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(l10n.commandSent),
+            backgroundColor: Colors.green.shade700,
+            duration: const Duration(seconds: 1),
+          ),
+        );
     }
   } on RemoteControlException catch (e) {
     if (feedback != CommandFeedback.none) {
-      messenger.showSnackBar(
-        SnackBar(content: Text('${l10n.commandFailed}: ${e.message}')),
-      );
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text('${l10n.commandFailed}: ${e.message}'),
+            backgroundColor: Colors.red.shade700,
+          ),
+        );
     }
   }
 }

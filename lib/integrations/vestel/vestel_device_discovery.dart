@@ -65,42 +65,29 @@ class VestelDeviceDiscovery implements DeviceDiscovery {
   }) async* {
     final hosts = await _hostResolver();
     onProgress?.call(0, hosts.length);
-    final bodies = await _probeAll(hosts, onProgress);
-    for (var i = 0; i < hosts.length; i++) {
-      final body = bodies[i];
-      if (body != null) {
-        yield _deviceFor(hosts[i], body);
+    var scanned = 0;
+    final batchSize = maxConcurrency < 1 ? 1 : maxConcurrency;
+    // Probing is done in batches so that cancelling the stream subscription
+    // (the UI's "Cancel" button) stops the scan after the current batch
+    // instead of after all hosts.
+    for (var i = 0; i < hosts.length; i += batchSize) {
+      final end = i + batchSize > hosts.length ? hosts.length : i + batchSize;
+      final batch = hosts.sublist(i, end);
+      final bodies = await Future.wait([
+        for (final host in batch) _probeHost(host),
+      ]);
+      scanned += batch.length;
+      onProgress?.call(scanned, hosts.length);
+      for (var j = 0; j < batch.length; j++) {
+        final body = bodies[j];
+        if (body != null) {
+          yield _deviceFor(batch[j], body);
+        }
       }
     }
   }
 
   Future<void> close() => _probe.close();
-
-  Future<List<String?>> _probeAll(
-    List<String> hosts,
-    void Function(int scanned, int total)? onProgress,
-  ) async {
-    if (hosts.isEmpty) {
-      return const [];
-    }
-    final results = List<String?>.filled(hosts.length, null);
-    var next = 0;
-    var scanned = 0;
-    final workers = maxConcurrency < 1 ? 1 : maxConcurrency;
-    final count = workers > hosts.length ? hosts.length : workers;
-    await Future.wait(List.generate(count, (_) async {
-      while (true) {
-        final index = next++;
-        if (index >= hosts.length) {
-          return;
-        }
-        results[index] = await _probeHost(hosts[index]);
-        scanned++;
-        onProgress?.call(scanned, hosts.length);
-      }
-    }));
-    return results;
-  }
 
   Future<String?> _probeHost(String host) async {
     final bodies = await Future.wait([

@@ -78,6 +78,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get sleepTimerRemaining => 'TV kapanıyor';
 
   @override
+  String get sleepTimerCustom => 'Özel…';
+
+  @override
+  String get customSleepTimerTitle => 'Özel uyku zamanlayıcısı';
+
+  @override
   String get cancelSleepTimer => 'Uyku zamanlayıcısını iptal et';
 
   @override

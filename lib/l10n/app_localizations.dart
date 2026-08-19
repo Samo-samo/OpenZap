@@ -224,6 +224,18 @@ abstract class AppLocalizations {
   /// **'TV turns off in'**
   String get sleepTimerRemaining;
 
+  /// No description provided for @sleepTimerCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom…'**
+  String get sleepTimerCustom;
+
+  /// No description provided for @customSleepTimerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom sleep timer'**
+  String get customSleepTimerTitle;
+
   /// No description provided for @cancelSleepTimer.
   ///
   /// In en, this message translates to:

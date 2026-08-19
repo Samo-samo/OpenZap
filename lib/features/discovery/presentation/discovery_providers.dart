@@ -17,40 +17,42 @@ final scanProgressProvider =
 /// aborted with [cancelScan].
 class DeviceDiscoveryNotifier extends AsyncNotifier<List<DiscoveredDevice>> {
   StreamSubscription<DiscoveredDevice>? _subscription;
+  List<DiscoveredDevice> _results = const [];
 
   @override
   Future<List<DiscoveredDevice>> build() async => const [];
 
   Future<void> refresh() async {
-    await _subscription?.cancel();
+    await cancelScan();
     state = const AsyncLoading();
     final progress = ref.read(scanProgressProvider.notifier);
     progress.state = null;
-    final results = <DiscoveredDevice>[];
+    _results = [];
     final discovery = ref.read(deviceDiscoveryProvider);
     _subscription = discovery
         .discover(onProgress: (scanned, total) {
           progress.state = (scanned: scanned, total: total);
         })
         .listen(
-          results.add,
+          _results.add,
           onError: (Object error, StackTrace stackTrace) {
             progress.state = null;
             state = AsyncError(error, stackTrace);
           },
           onDone: () {
             progress.state = null;
-            state = AsyncData(List.unmodifiable(results));
+            state = AsyncData(List.unmodifiable(_results));
           },
           cancelOnError: true,
         );
   }
 
+  /// Stops a running scan, keeping any devices found so far.
   Future<void> cancelScan() async {
     await _subscription?.cancel();
     _subscription = null;
     ref.read(scanProgressProvider.notifier).state = null;
-    state = AsyncData(const []);
+    state = AsyncData(List.unmodifiable(_results));
   }
 }
 

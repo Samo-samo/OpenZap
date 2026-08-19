@@ -89,6 +89,7 @@ class _DeviceTile extends StatelessWidget {
             : '${device.ipAddress} · ${device.model}',
       ),
       trailing: const Icon(Icons.chevron_right),
+      mouseCursor: SystemMouseCursors.click,
       onTap: onTap,
     );
   }
@@ -110,6 +111,7 @@ class _RecentDeviceTile extends StatelessWidget {
         title: Text(l10n.recentDevice),
         subtitle: Text('${device.name}\n${device.ipAddress}'),
         trailing: const Icon(Icons.chevron_right),
+        mouseCursor: SystemMouseCursors.click,
         onTap: onTap,
       ),
     );

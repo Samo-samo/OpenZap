@@ -38,6 +38,8 @@
     }
   },
   "sleepTimerRemaining": "TV turns off in",
+  "sleepTimerCustom": "Custom…",
+  "customSleepTimerTitle": "Custom sleep timer",
   "cancelSleepTimer": "Cancel sleep timer",
   "tooltipPower": "Power",
   "tooltipMute": "Mute",

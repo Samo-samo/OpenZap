@@ -40,14 +40,17 @@ class SettingsScreen extends ConsumerWidget {
               children: [
                 RadioListTile<CommandFeedback>(
                   title: Text(l10n.feedbackErrorsOnly),
+                  mouseCursor: SystemMouseCursors.click,
                   value: CommandFeedback.errorsOnly,
                 ),
                 RadioListTile<CommandFeedback>(
                   title: Text(l10n.feedbackAll),
+                  mouseCursor: SystemMouseCursors.click,
                   value: CommandFeedback.all,
                 ),
                 RadioListTile<CommandFeedback>(
                   title: Text(l10n.feedbackNone),
+                  mouseCursor: SystemMouseCursors.click,
                   value: CommandFeedback.none,
                 ),
               ],

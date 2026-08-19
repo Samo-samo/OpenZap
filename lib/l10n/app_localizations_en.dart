@@ -78,6 +78,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sleepTimerRemaining => 'TV turns off in';
 
   @override
+  String get sleepTimerCustom => 'Custom…';
+
+  @override
+  String get customSleepTimerTitle => 'Custom sleep timer';
+
+  @override
   String get cancelSleepTimer => 'Cancel sleep timer';
 
   @override
