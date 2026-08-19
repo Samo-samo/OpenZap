@@ -66,5 +66,31 @@ void main() {
       expect(loaded.sleepTimerShowMinutesInParens, isFalse);
       expect(loaded.sleepTimerManualInput, isTrue);
     });
+
+    test('round-trips theme and language', () async {
+      SharedPreferences.setMockInitialValues({});
+      final store = SharedPreferencesSettingsStore();
+
+      await store.save(
+        const AppSettings(
+          themeMode: AppThemeMode.dark,
+          languageCode: 'tr',
+        ),
+      );
+      final loaded = await store.load();
+
+      expect(loaded.themeMode, AppThemeMode.dark);
+      expect(loaded.languageCode, 'tr');
+    });
+
+    test('defaults to system theme and language', () async {
+      SharedPreferences.setMockInitialValues({});
+      final store = SharedPreferencesSettingsStore();
+
+      final settings = await store.load();
+
+      expect(settings.themeMode, AppThemeMode.system);
+      expect(settings.languageCode, isNull);
+    });
   });
 }

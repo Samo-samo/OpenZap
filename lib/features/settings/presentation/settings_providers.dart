@@ -14,6 +14,18 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     await ref.read(settingsStoreProvider).save(settings);
   }
 
+  Future<void> setThemeMode(AppThemeMode value) async {
+    final settings = state.value!.copyWith(themeMode: value);
+    state = AsyncData(settings);
+    await ref.read(settingsStoreProvider).save(settings);
+  }
+
+  Future<void> setLanguageCode(String? value) async {
+    final settings = state.value!.copyWith(languageCode: value);
+    state = AsyncData(settings);
+    await ref.read(settingsStoreProvider).save(settings);
+  }
+
   Future<void> setSleepTimerHumanReadable(bool value) async {
     final settings = state.value!.copyWith(sleepTimerHumanReadable: value);
     state = AsyncData(settings);

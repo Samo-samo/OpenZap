@@ -14,10 +14,70 @@ class SettingsScreen extends ConsumerWidget {
     final settings = ref.watch(settingsProvider).valueOrNull;
     final commandFeedback =
         settings?.commandFeedback ?? CommandFeedback.errorsOnly;
+    final themeMode = settings?.themeMode ?? AppThemeMode.system;
+    final languageCode = settings?.languageCode ?? 'system';
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settings)),
       body: ListView(
         children: [
+          _SectionHeader(l10n.appearance),
+          RadioGroup<AppThemeMode>(
+            groupValue: themeMode,
+            onChanged: (value) {
+              if (value != null) {
+                ref.read(settingsProvider.notifier).setThemeMode(value);
+              }
+            },
+            child: Column(
+              children: [
+                RadioListTile<AppThemeMode>(
+                  title: Text(l10n.themeSystem),
+                  mouseCursor: SystemMouseCursors.click,
+                  value: AppThemeMode.system,
+                ),
+                RadioListTile<AppThemeMode>(
+                  title: Text(l10n.themeLight),
+                  mouseCursor: SystemMouseCursors.click,
+                  value: AppThemeMode.light,
+                ),
+                RadioListTile<AppThemeMode>(
+                  title: Text(l10n.themeDark),
+                  mouseCursor: SystemMouseCursors.click,
+                  value: AppThemeMode.dark,
+                ),
+              ],
+            ),
+          ),
+          RadioGroup<String>(
+            groupValue: languageCode,
+            onChanged: (value) {
+              if (value == null) {
+                return;
+              }
+              ref.read(settingsProvider.notifier).setLanguageCode(
+                    value == 'system' ? null : value,
+                  );
+            },
+            child: Column(
+              children: [
+                RadioListTile<String>(
+                  title: Text(l10n.languageSystem),
+                  mouseCursor: SystemMouseCursors.click,
+                  value: 'system',
+                ),
+                RadioListTile<String>(
+                  title: Text(l10n.languageTurkish),
+                  mouseCursor: SystemMouseCursors.click,
+                  value: 'tr',
+                ),
+                RadioListTile<String>(
+                  title: Text(l10n.languageEnglish),
+                  mouseCursor: SystemMouseCursors.click,
+                  value: 'en',
+                ),
+              ],
+            ),
+          ),
           _SectionHeader(
             l10n.commandFeedback,
             description: l10n.commandFeedbackDescription,

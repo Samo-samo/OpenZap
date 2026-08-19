@@ -10,10 +10,24 @@ enum CommandFeedback {
   none,
 }
 
+/// The color theme used by the app.
+enum AppThemeMode {
+  /// Follow the operating system theme.
+  system,
+
+  /// Always use the light theme.
+  light,
+
+  /// Always use the dark theme.
+  dark,
+}
+
 /// User-configurable application settings.
 class AppSettings {
   const AppSettings({
     this.commandFeedback = CommandFeedback.errorsOnly,
+    this.themeMode = AppThemeMode.system,
+    this.languageCode,
     this.sleepTimerHumanReadable = true,
     this.sleepTimerShowMinutesInParens = true,
     this.sleepTimerManualInput = false,
@@ -21,6 +35,12 @@ class AppSettings {
 
   /// Command feedback mode.
   final CommandFeedback commandFeedback;
+
+  /// Color theme mode.
+  final AppThemeMode themeMode;
+
+  /// App language (`tr`, `en`, ...), or `null` to follow the system locale.
+  final String? languageCode;
 
   /// Whether sleep-timer durations are shown as hours and minutes
   /// (e.g. "2 hours 5 minutes") instead of flat minutes.
@@ -35,12 +55,16 @@ class AppSettings {
 
   AppSettings copyWith({
     CommandFeedback? commandFeedback,
+    AppThemeMode? themeMode,
+    String? languageCode,
     bool? sleepTimerHumanReadable,
     bool? sleepTimerShowMinutesInParens,
     bool? sleepTimerManualInput,
   }) {
     return AppSettings(
       commandFeedback: commandFeedback ?? this.commandFeedback,
+      themeMode: themeMode ?? this.themeMode,
+      languageCode: languageCode ?? this.languageCode,
       sleepTimerHumanReadable:
           sleepTimerHumanReadable ?? this.sleepTimerHumanReadable,
       sleepTimerShowMinutesInParens:
@@ -54,6 +78,8 @@ class AppSettings {
   bool operator ==(Object other) =>
       other is AppSettings &&
       other.commandFeedback == commandFeedback &&
+      other.themeMode == themeMode &&
+      other.languageCode == languageCode &&
       other.sleepTimerHumanReadable == sleepTimerHumanReadable &&
       other.sleepTimerShowMinutesInParens == sleepTimerShowMinutesInParens &&
       other.sleepTimerManualInput == sleepTimerManualInput;
@@ -61,6 +87,8 @@ class AppSettings {
   @override
   int get hashCode => Object.hash(
         commandFeedback,
+        themeMode,
+        languageCode,
         sleepTimerHumanReadable,
         sleepTimerShowMinutesInParens,
         sleepTimerManualInput,

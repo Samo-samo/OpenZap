@@ -51,6 +51,33 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settings => 'Ayarlar';
 
   @override
+  String get appearance => 'Görünüm';
+
+  @override
+  String get themeMode => 'Tema';
+
+  @override
+  String get themeSystem => 'Sistem';
+
+  @override
+  String get themeLight => 'Açık';
+
+  @override
+  String get themeDark => 'Koyu';
+
+  @override
+  String get language => 'Dil';
+
+  @override
+  String get languageSystem => 'Sistem';
+
+  @override
+  String get languageTurkish => 'Türkçe';
+
+  @override
+  String get languageEnglish => 'English';
+
+  @override
   String get commandFeedback => 'Komut geri bildirimi';
 
   @override
