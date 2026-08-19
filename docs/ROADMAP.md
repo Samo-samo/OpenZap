@@ -165,7 +165,7 @@ Done:
   keep their (possibly renamed) name in the list and settings.
 * Apps screen (remote screen → Apps): quick-launch YouTube, Netflix, HDMI
   input and the smart portal. On MB180 DIAL is unavailable (403), so launches
-  use the virtual-remote shortcut keys (1063/1064/1056/1046).
+  use the virtual-remote shortcut keys (1062/1064/1056/1046).
 * Key test screen (Apps → Key test): send a raw key code or one of the known
   shortcut keys to discover and verify codes from the TV room.
 * Remote layout presets (settings): classic, compact, minimal — controls

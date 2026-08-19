@@ -21,13 +21,15 @@ class KeyTesterScreen extends ConsumerStatefulWidget {
 class _KeyTesterScreenState extends ConsumerState<KeyTesterScreen> {
   final _codeController = TextEditingController();
 
-  /// (code, guess) — guesses are from the node-red keymap; verify on-device.
+  /// (code, label) — labels confirmed on-device (MB180).
   static const _presets = <(int, String)>[
-    (1063, 'YouTube'),
+    (1062, 'YouTube'),
     (1064, 'Netflix'),
-    (1046, 'Portal'),
-    (1056, 'HDMI / Input'),
+    (1046, 'Fast access / portal'),
+    (1056, 'Source list'),
     (1065, 'Web browser'),
+    (1053, 'Home menu'),
+    (1060, 'Teletext'),
   ];
 
   @override

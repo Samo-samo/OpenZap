@@ -1,10 +1,10 @@
-// Launches an app/input on a Vestel TV through DIAL.
+// Launches an app/input on a Vestel TV through the remote shortcut keys.
 //
 // Usage:
 //   dart run tool/launch_app.dart <tv-ip> <youtube|netflix|hdmi|portal>
 //
-// The app must be installed on the TV; DIAL app IDs are `YouTube`, `Netflix`
-// and `SmartCenter` (portal). HDMI switches via the INPUT_SOURCE key (1056).
+// Keys are sent via the virtual-remote endpoint; DIAL is unavailable on MB180.
+// Confirmed codes: YouTube 1062, Netflix 1064, portal 1046, source 1056.
 import 'dart:io';
 
 import 'package:openzap/features/quick_launch/domain/quick_launch_error.dart';

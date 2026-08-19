@@ -40,7 +40,7 @@ void main() {
       await launcher.launch(QuickLaunchTarget.youtube);
 
       expect(probe.lastUrl, 'http://192.168.0.101:56789/apps/SmartCenter');
-      expect(probe.lastBody, contains("code='1063'"));
+      expect(probe.lastBody, contains("code='1062'"));
     });
 
     test('sends the Netflix shortcut key', () async {
