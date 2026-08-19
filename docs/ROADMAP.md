@@ -13,7 +13,8 @@ Items and priorities may change as the project evolves.
   control, live status, sleep timer, settings, TR/EN localization) validated
   against a real VESTEL 50U9510M (MB180).
 - 48 tests pass, `flutter analyze` clean, Windows debug build succeeds.
-- Open gaps: 7681 status channel unverified on MB180, quick launcher and
+- Open gaps: live status tracking not working on MB180 (no frames pushed on
+  the 7681 channel; default off, marked "in development"), quick launcher and
   Wake-on-LAN not started, Android not started.
 
 ---
@@ -83,10 +84,11 @@ Done:
 * 7681 status/events (`VestelTvStatus`) implemented with parser
 * Device pairing covered by last-device persistence + manual device list
 
-Pending:
+In development / not working on MB180:
 
-* 7681 frame format on MB180 still unverified (tool prints raw frames for
-  diagnosis)
+* Live status tracking: the TV opens the 7681 WebSocket but never pushes
+  frames (tested: power on/off, app launch, source change). Tracking is off by
+  default and hidden from the UI when disabled.
 
 ---
 
