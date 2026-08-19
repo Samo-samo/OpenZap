@@ -122,9 +122,14 @@ class VestelDeviceDiscovery implements DeviceDiscovery {
 }
 
 Future<List<String>> _resolveCandidateHosts() async {
-  final defaultRouteHosts = await _defaultRouteSubnetHosts();
-  if (defaultRouteHosts != null) {
-    return defaultRouteHosts;
+  // The default-route trick relies on `route print`, which only exists on
+  // Windows. On other platforms (e.g. Android) enumerate the interfaces
+  // directly; a phone's WiFi adapter is the relevant one.
+  if (Platform.isWindows) {
+    final defaultRouteHosts = await _defaultRouteSubnetHosts();
+    if (defaultRouteHosts != null) {
+      return defaultRouteHosts;
+    }
   }
   final hosts = <String>{};
   final interfaces = await NetworkInterface.list(
