@@ -66,3 +66,5 @@ config.yaml
 
 .DS_Store
 Thumbs.db
+# Kotlin build artifacts
+android/.kotlin/
