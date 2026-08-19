@@ -8,18 +8,17 @@ Items and priorities may change as the project evolves.
 
 ## Current status
 
-- Release: v0.4.0 pre-alpha. First release builds available: Windows
-  (`build/windows/x64/runner/Release`) and Android (`app-release.apk`, signed
-  with the project keystore). No tagged GitHub releases yet.
-- Working Windows and Android builds with a minimal Riverpod UI (device
-  discovery, remote control, live status, sleep timer, settings, apps screen,
+- Release: v0.5.0 pre-alpha. Tagged `v0.5.0` with GitHub release assets for
+  Windows (`openzap-0.5.0-windows-x64.zip`) and Android
+  (`openzap-0.5.0-android.apk`, signed with the project keystore).
+- Working Windows and Android builds with a Riverpod UI (device discovery,
+  remote control, sleep timer, settings, apps, layouts, quick controls,
   TR/EN localization) validated against a real VESTEL 50U9510M (MB180).
-- 57 tests pass, `flutter analyze` clean, Windows and Android release builds
+- 62 tests pass, `flutter analyze` clean, Windows and Android release builds
   succeed.
-- Open gaps: live status tracking not working on MB180 (no frames pushed on
-  the 7681 channel; default off, marked "in development"), quick launcher
-  uses the fixed default apps (YouTube, Netflix, HDMI, portal), Wake-on-LAN
-  not started (TV is on Wi-Fi).
+- Open gaps: live status tracking not working on MB180 (7681 silent; default
+  off, marked "in development"), Wake-on-LAN not started (TV is on Wi-Fi),
+  no live volume-level display (needs protocol research).
 
 ---
 
@@ -133,9 +132,16 @@ Skipped / not started (research done, see `.ai/vestel-protocol-notes.md`):
 
 ---
 
-# v0.5.0 — Android
+# v0.5.0 — Android & Device/App UX
 
-Status: Completed (brought forward with v0.4)
+Status: Completed (released)
+
+Goals:
+
+* Android support
+* Device management polish
+* App launcher
+* Settings/UX improvements
 
 Done:
 
@@ -144,22 +150,6 @@ Done:
 * Discovery fallback via `NetworkInterface` on Android (no `route print`)
 * Release signing with a project keystore (`android/key.properties` is
   gitignored)
-* Launcher icon generated for Android (adaptive) and Windows
-
----
-
-# v0.6.0 — Device & App UX
-
-Status: In Progress
-
-Goals:
-
-* Device management polish
-* App launcher
-* Settings/UX improvements
-
-Done:
-
 * Context menu on the device list (right-click on desktop, long-press on
   touch): save an unsaved device, rename or remove a saved one. Saved devices
   keep their (possibly renamed) name in the list and settings.
@@ -167,7 +157,8 @@ Done:
   input and the smart portal. On MB180 DIAL is unavailable (403), so launches
   use the virtual-remote shortcut keys (1062/1064/1056/1046).
 * Key test screen (Apps → Key test): send a raw key code or one of the known
-  shortcut keys to discover and verify codes from the TV room.
+  shortcut keys to discover and verify codes from the TV room; lists every
+  confirmed code in groups (navigation, apps & inputs, picture & audio).
 * Remote layout (settings): presets classic / compact / minimal plus a custom
   combination — each section (TV status, digits, sleep timer, quick controls)
   can be toggled independently.
@@ -175,10 +166,9 @@ Done:
   track, subtitle/audio, subtitles, favorites, settings, teletext — all
   confirmed codes).
 * Material You (dynamic color): optional wallpaper-based colors on Android 12+
-  via the `dynamic_color` package; the launcher icon gained a monochrome layer
-  so Android 13 themed icons match the wallpaper.
-* Key test screen now lists every confirmed code in groups (navigation, apps &
-  inputs, picture & audio).
+  via the `dynamic_color` package; consistent launcher icon set with an
+  Android 13 monochrome layer so themed icons match the wallpaper
+  (`tool/generate_icons.ps1` regenerates them from one glyph definition).
 * `tool/launch_app.dart` smoke test for app launch.
 
 Skipped / not started (research done, see `.ai/vestel-protocol-notes.md`):
@@ -192,7 +182,7 @@ Skipped / not started (research done, see `.ai/vestel-protocol-notes.md`):
 
 ---
 
-# v0.7.0 — Stabilization
+# v0.6.0 — Stabilization
 
 Status: Planned
 
