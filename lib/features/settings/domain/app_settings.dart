@@ -29,9 +29,9 @@ class AppSettings {
     this.themeMode = AppThemeMode.system,
     this.languageCode,
     this.sleepTimerHumanReadable = true,
-    this.sleepTimerShowMinutesInParens = true,
+    this.sleepTimerShowMinutesInParens = false,
     this.sleepTimerManualInput = false,
-    this.tvStatusTracking = true,
+    this.tvStatusTracking = false,
   });
 
   /// Command feedback mode.

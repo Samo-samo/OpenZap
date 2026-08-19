@@ -28,9 +28,9 @@ class SharedPreferencesSettingsStore implements SettingsStore {
       sleepTimerHumanReadable:
           prefs.getBool(_sleepTimerHumanReadableKey) ?? true,
       sleepTimerShowMinutesInParens:
-          prefs.getBool(_sleepTimerMinutesInParensKey) ?? true,
+          prefs.getBool(_sleepTimerMinutesInParensKey) ?? false,
       sleepTimerManualInput: prefs.getBool(_sleepTimerManualInputKey) ?? false,
-      tvStatusTracking: prefs.getBool(_tvStatusTrackingKey) ?? true,
+      tvStatusTracking: prefs.getBool(_tvStatusTrackingKey) ?? false,
     );
   }
 

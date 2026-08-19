@@ -19,7 +19,11 @@ class SettingsScreen extends ConsumerWidget {
     final commandFeedback =
         settings?.commandFeedback ?? CommandFeedback.errorsOnly;
     final themeMode = settings?.themeMode ?? AppThemeMode.system;
-    final languageCode = settings?.languageCode ?? 'system';
+    // No explicit "System" option: the current system locale is detected and
+    // preselected, and any pick stores a concrete language.
+    final systemLanguageCode =
+        Localizations.localeOf(context).languageCode == 'tr' ? 'tr' : 'en';
+    final languageCode = settings?.languageCode ?? systemLanguageCode;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settings)),
       body: ListView(
@@ -55,20 +59,12 @@ class SettingsScreen extends ConsumerWidget {
           RadioGroup<String>(
             groupValue: languageCode,
             onChanged: (value) {
-              if (value == null) {
-                return;
+              if (value != null) {
+                ref.read(settingsProvider.notifier).setLanguageCode(value);
               }
-              ref.read(settingsProvider.notifier).setLanguageCode(
-                    value == 'system' ? null : value,
-                  );
             },
             child: Column(
               children: [
-                RadioListTile<String>(
-                  title: Text(l10n.languageSystem),
-                  mouseCursor: SystemMouseCursors.click,
-                  value: 'system',
-                ),
                 RadioListTile<String>(
                   title: Text(l10n.languageTurkish),
                   mouseCursor: SystemMouseCursors.click,
@@ -141,7 +137,7 @@ class SettingsScreen extends ConsumerWidget {
             title: Text(l10n.tvStatusTracking),
             subtitle: Text(l10n.tvStatusTrackingDescription),
             mouseCursor: SystemMouseCursors.click,
-            value: settings?.tvStatusTracking ?? true,
+            value: settings?.tvStatusTracking ?? false,
             onChanged: (value) =>
                 ref.read(settingsProvider.notifier).setTvStatusTracking(value),
           ),

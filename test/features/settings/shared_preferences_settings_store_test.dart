@@ -45,7 +45,7 @@ void main() {
       final settings = await store.load();
 
       expect(settings.sleepTimerHumanReadable, isTrue);
-      expect(settings.sleepTimerShowMinutesInParens, isTrue);
+      expect(settings.sleepTimerShowMinutesInParens, isFalse);
       expect(settings.sleepTimerManualInput, isFalse);
     });
 
@@ -93,14 +93,14 @@ void main() {
       expect(settings.languageCode, isNull);
     });
 
-    test('round-trips status tracking and defaults to on', () async {
+    test('round-trips status tracking and defaults to off', () async {
       SharedPreferences.setMockInitialValues({});
       final store = SharedPreferencesSettingsStore();
 
-      expect((await store.load()).tvStatusTracking, isTrue);
-
-      await store.save(const AppSettings(tvStatusTracking: false));
       expect((await store.load()).tvStatusTracking, isFalse);
+
+      await store.save(const AppSettings(tvStatusTracking: true));
+      expect((await store.load()).tvStatusTracking, isTrue);
     });
   });
 }

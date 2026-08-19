@@ -290,8 +290,11 @@ class _CustomSleepTimerDialog extends StatefulWidget {
 }
 
 class _CustomSleepTimerDialogState extends State<_CustomSleepTimerDialog> {
-  static const double _minMinutes = 5;
+  static const double _minMinutes = 1;
   static const double _maxMinutes = 360;
+  // Slider positions: 0 -> 1 minute, then each step adds 5 minutes
+  // (1, 5, 10, ..., 360), so a freshly-dragged slider never lands on 6.
+  static const int _maxPosition = 72;
 
   late final TextEditingController _manualController;
   double _minutes = 30;
@@ -308,10 +311,19 @@ class _CustomSleepTimerDialogState extends State<_CustomSleepTimerDialog> {
     super.dispose();
   }
 
-  void _onSliderChanged(double value) {
+  int _positionOf(double minutes) =>
+      minutes <= _minMinutes ? 0 : (minutes / 5).round();
+
+  double _minutesOfPosition(double position) {
+    final pos = position.round();
+    return pos <= 0 ? _minMinutes : 5.0 * pos;
+  }
+
+  void _onSliderChanged(double position) {
+    final minutes = _minutesOfPosition(position);
     setState(() {
-      _minutes = value;
-      _manualController.text = value.round().toString();
+      _minutes = minutes;
+      _manualController.text = minutes.round().toString();
     });
   }
 
@@ -336,10 +348,10 @@ class _CustomSleepTimerDialogState extends State<_CustomSleepTimerDialog> {
         children: [
           Text(_sleepTimerLabel(l10n, widget.settings, _minutes.round())),
           Slider(
-            value: _minutes,
-            min: _minMinutes,
-            max: _maxMinutes,
-            divisions: ((_maxMinutes - _minMinutes) / 5).round(),
+            value: _positionOf(_minutes).toDouble(),
+            min: 0,
+            max: _maxPosition.toDouble(),
+            divisions: _maxPosition,
             label: _sleepTimerLabel(l10n, widget.settings, _minutes.round()),
             onChanged: _onSliderChanged,
           ),
@@ -363,8 +375,10 @@ class _CustomSleepTimerDialogState extends State<_CustomSleepTimerDialog> {
           child: Text(materialL10n.cancelButtonLabel),
         ),
         FilledButton(
-          onPressed: () =>
-              Navigator.of(context).pop(Duration(minutes: _minutes.round())),
+          onPressed: () {
+            final minutes = _minutes.round().clamp(1, _maxMinutes.round());
+            Navigator.of(context).pop(Duration(minutes: minutes));
+          },
           child: Text(materialL10n.okButtonLabel),
         ),
       ],
@@ -378,6 +392,11 @@ class _TvStatusChip extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+    final tracking =
+        ref.watch(settingsProvider.select((s) => s.valueOrNull?.tvStatusTracking ?? false));
+    if (!tracking) {
+      return const SizedBox.shrink();
+    }
     final status = ref.watch(tvStatusProvider).valueOrNull;
     final state = status?.powerState ?? TvPowerState.unknown;
     final (label, color) = switch (state) {
