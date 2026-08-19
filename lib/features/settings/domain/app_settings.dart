@@ -32,6 +32,7 @@ class AppSettings {
     this.sleepTimerShowMinutesInParens = false,
     this.sleepTimerManualInput = false,
     this.tvStatusTracking = false,
+    this.wifiWarningEnabled = true,
   });
 
   /// Command feedback mode.
@@ -58,6 +59,9 @@ class AppSettings {
   /// power state on the remote screen.
   final bool tvStatusTracking;
 
+  /// Whether the start screen shows the same-Wi-Fi warning banner.
+  final bool wifiWarningEnabled;
+
   AppSettings copyWith({
     CommandFeedback? commandFeedback,
     AppThemeMode? themeMode,
@@ -66,6 +70,7 @@ class AppSettings {
     bool? sleepTimerShowMinutesInParens,
     bool? sleepTimerManualInput,
     bool? tvStatusTracking,
+    bool? wifiWarningEnabled,
   }) {
     return AppSettings(
       commandFeedback: commandFeedback ?? this.commandFeedback,
@@ -78,6 +83,7 @@ class AppSettings {
       sleepTimerManualInput:
           sleepTimerManualInput ?? this.sleepTimerManualInput,
       tvStatusTracking: tvStatusTracking ?? this.tvStatusTracking,
+      wifiWarningEnabled: wifiWarningEnabled ?? this.wifiWarningEnabled,
     );
   }
 
@@ -90,16 +96,18 @@ class AppSettings {
       other.sleepTimerHumanReadable == sleepTimerHumanReadable &&
       other.sleepTimerShowMinutesInParens == sleepTimerShowMinutesInParens &&
       other.sleepTimerManualInput == sleepTimerManualInput &&
-      other.tvStatusTracking == tvStatusTracking;
+      other.tvStatusTracking == tvStatusTracking &&
+      other.wifiWarningEnabled == wifiWarningEnabled;
 
   @override
   int get hashCode => Object.hash(
-        commandFeedback,
-        themeMode,
-        languageCode,
-        sleepTimerHumanReadable,
-        sleepTimerShowMinutesInParens,
-        sleepTimerManualInput,
-        tvStatusTracking,
-      );
+    commandFeedback,
+    themeMode,
+    languageCode,
+    sleepTimerHumanReadable,
+    sleepTimerShowMinutesInParens,
+    sleepTimerManualInput,
+    tvStatusTracking,
+    wifiWarningEnabled,
+  );
 }

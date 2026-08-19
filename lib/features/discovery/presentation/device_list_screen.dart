@@ -5,6 +5,7 @@ import '../../../app/providers.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../device_settings/presentation/saved_devices_provider.dart';
 import '../../remote_control/presentation/remote_screen.dart';
+import '../../settings/presentation/settings_providers.dart';
 import '../../settings/presentation/settings_screen.dart';
 import '../domain/discovered_device.dart';
 import 'discovery_providers.dart';
@@ -30,36 +31,53 @@ class DeviceListScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: devices.when(
-        loading: () => _ScanningProgress(),
-        error: (error, _) => _CenteredText('${l10n.noDevicesFound}\n$error'),
-        data: (list) {
-        final saved =
-            ref.watch(savedDevicesProvider).valueOrNull ?? const [];
-        final knownIps = {for (final device in list) device.ipAddress};
-        final extras = [
-          for (final device in saved)
-            if (!knownIps.contains(device.ipAddress)) device,
-        ];
-        return ListView(
-          children: [
-            if (lastDevice != null) ...[
-              _RecentDeviceTile(
-                device: lastDevice,
-                onTap: () => _selectDevice(context, ref, lastDevice),
-              ),
-              const Divider(),
-            ],
-            for (final device in [...list, ...extras])
-              _DeviceTile(
-                device: device,
-                onTap: () => _selectDevice(context, ref, device),
-              ),
-            if (list.isEmpty && extras.isEmpty && lastDevice == null)
-              _CenteredText(l10n.noDevicesFound),
-          ],
-        );
-      },
+      body: Column(
+        children: [
+          if (ref.watch(
+            settingsProvider.select(
+              (s) => s.valueOrNull?.wifiWarningEnabled ?? true,
+            ),
+          ))
+            _WifiWarningBanner(
+              onDismiss: () => ref
+                  .read(settingsProvider.notifier)
+                  .setWifiWarningEnabled(false),
+            ),
+          Expanded(
+            child: devices.when(
+              loading: () => _ScanningProgress(),
+              error: (error, _) =>
+                  _CenteredText('${l10n.noDevicesFound}\n$error'),
+              data: (list) {
+                final saved =
+                    ref.watch(savedDevicesProvider).valueOrNull ?? const [];
+                final knownIps = {for (final device in list) device.ipAddress};
+                final extras = [
+                  for (final device in saved)
+                    if (!knownIps.contains(device.ipAddress)) device,
+                ];
+                return ListView(
+                  children: [
+                    if (lastDevice != null) ...[
+                      _RecentDeviceTile(
+                        device: lastDevice,
+                        onTap: () => _selectDevice(context, ref, lastDevice),
+                      ),
+                      const Divider(),
+                    ],
+                    for (final device in [...list, ...extras])
+                      _DeviceTile(
+                        device: device,
+                        onTap: () => _selectDevice(context, ref, device),
+                      ),
+                    if (list.isEmpty && extras.isEmpty && lastDevice == null)
+                      _CenteredText(l10n.noDevicesFound),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => ref.read(deviceListProvider.notifier).refresh(),
@@ -76,9 +94,9 @@ class DeviceListScreen extends ConsumerWidget {
   ) {
     ref.read(selectedDeviceProvider.notifier).state = device;
     ref.read(deviceStoreProvider).saveLastDevice(device);
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const RemoteScreen()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const RemoteScreen()));
   }
 }
 
@@ -101,6 +119,41 @@ class _DeviceTile extends StatelessWidget {
       trailing: const Icon(Icons.chevron_right),
       mouseCursor: SystemMouseCursors.click,
       onTap: onTap,
+    );
+  }
+}
+
+class _WifiWarningBanner extends StatelessWidget {
+  const _WifiWarningBanner({required this.onDismiss});
+
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Material(
+      color: Colors.amber.shade100,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+        child: Row(
+          children: [
+            Icon(Icons.wifi_off, color: Colors.amber.shade900),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                l10n.wifiWarningText,
+                style: TextStyle(color: Colors.amber.shade900),
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.close),
+              tooltip: l10n.wifiWarningDismiss,
+              color: Colors.amber.shade900,
+              onPressed: onDismiss,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -143,10 +196,7 @@ class _ScanningProgress extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              l10n.scanningProgress(
-                progress.scanned,
-                progress.total,
-              ),
+              l10n.scanningProgress(progress.scanned, progress.total),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),

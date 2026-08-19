@@ -51,6 +51,19 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settings => 'Ayarlar';
 
   @override
+  String get general => 'Genel';
+
+  @override
+  String get wifiWarningText =>
+      'Cihazınızın TV ile aynı Wi-Fi ağında olduğundan emin olun.';
+
+  @override
+  String get wifiWarningDismiss => 'Kapat';
+
+  @override
+  String get wifiWarningSwitch => 'Aynı ağ uyarısını göster';
+
+  @override
   String get appearance => 'Görünüm';
 
   @override

@@ -11,16 +11,15 @@ class SharedPreferencesSettingsStore implements SettingsStore {
   static const _sleepTimerMinutesInParensKey = 'sleep_timer_minutes_in_parens';
   static const _sleepTimerManualInputKey = 'sleep_timer_manual_input';
   static const _tvStatusTrackingKey = 'tv_status_tracking';
+  static const _wifiWarningEnabledKey = 'wifi_warning_enabled';
 
   @override
   Future<AppSettings> load() async {
     final prefs = await SharedPreferences.getInstance();
-    final mode = CommandFeedback.values.asNameMap()[prefs.getString(
-      _commandFeedbackKey,
-    )];
-    final theme = AppThemeMode.values.asNameMap()[prefs.getString(
-      _themeModeKey,
-    )];
+    final mode = CommandFeedback.values
+        .asNameMap()[prefs.getString(_commandFeedbackKey)];
+    final theme = AppThemeMode.values
+        .asNameMap()[prefs.getString(_themeModeKey)];
     return AppSettings(
       commandFeedback: mode ?? CommandFeedback.errorsOnly,
       themeMode: theme ?? AppThemeMode.system,
@@ -31,6 +30,7 @@ class SharedPreferencesSettingsStore implements SettingsStore {
           prefs.getBool(_sleepTimerMinutesInParensKey) ?? false,
       sleepTimerManualInput: prefs.getBool(_sleepTimerManualInputKey) ?? false,
       tvStatusTracking: prefs.getBool(_tvStatusTrackingKey) ?? false,
+      wifiWarningEnabled: prefs.getBool(_wifiWarningEnabledKey) ?? true,
     );
   }
 
@@ -58,5 +58,6 @@ class SharedPreferencesSettingsStore implements SettingsStore {
       settings.sleepTimerManualInput,
     );
     await prefs.setBool(_tvStatusTrackingKey, settings.tvStatusTracking);
+    await prefs.setBool(_wifiWarningEnabledKey, settings.wifiWarningEnabled);
   }
 }

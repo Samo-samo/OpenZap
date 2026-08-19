@@ -43,23 +43,14 @@ const _ddXml = '''
 </root>
 ''';
 
-VestelDeviceDiscovery _discovery(
-  _FakeProbe probe,
-  List<String> hosts,
-) {
-  return VestelDeviceDiscovery(
-    probe: probe,
-    hostResolver: () async => hosts,
-  );
+VestelDeviceDiscovery _discovery(_FakeProbe probe, List<String> hosts) {
+  return VestelDeviceDiscovery(probe: probe, hostResolver: () async => hosts);
 }
 
 void main() {
   group('VestelDeviceDiscovery', () {
     test('yields devices for responding hosts', () async {
-      final probe = _FakeProbe({
-        '192.168.1.10': _ddXml,
-        '192.168.1.11': null,
-      });
+      final probe = _FakeProbe({'192.168.1.10': _ddXml, '192.168.1.11': null});
       final discovery = _discovery(probe, ['192.168.1.10', '192.168.1.11']);
 
       final devices = await discovery.discover().toList();
@@ -73,17 +64,19 @@ void main() {
       expect(device.port, 56789);
     });
 
-    test('uses the host address as name when there is no friendlyName',
-        () async {
-      final probe = _FakeProbe({
-        '192.168.1.10': '<?xml version="1.0"?><root/>',
-      });
-      final discovery = _discovery(probe, ['192.168.1.10']);
+    test(
+      'uses the host address as name when there is no friendlyName',
+      () async {
+        final probe = _FakeProbe({
+          '192.168.1.10': '<?xml version="1.0"?><root/>',
+        });
+        final discovery = _discovery(probe, ['192.168.1.10']);
 
-      final devices = await discovery.discover().toList();
+        final devices = await discovery.discover().toList();
 
-      expect(devices.single.name, '192.168.1.10');
-    });
+        expect(devices.single.name, '192.168.1.10');
+      },
+    );
 
     test('probes every candidate host on every known port', () async {
       final probe = _FakeProbe({});
@@ -122,8 +115,7 @@ void main() {
       expect(probe.requestedUrls, contains(contains('192.168.1.254')));
     });
 
-    test('discovers a real device through the HTTP probe end-to-end',
-        () async {
+    test('discovers a real device through the HTTP probe end-to-end', () async {
       final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
       unawaited(() async {
         final request = await server.first;

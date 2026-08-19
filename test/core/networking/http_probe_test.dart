@@ -64,35 +64,37 @@ void main() {
       await probe.close();
     });
 
-    test('posts the body with the given headers and returns the response',
-        () async {
-      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
-      final probe = DartHttpProbe();
+    test(
+      'posts the body with the given headers and returns the response',
+      () async {
+        final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        final probe = DartHttpProbe();
 
-      unawaited(() async {
-        final request = await server.first;
-        expect(request.method, 'POST');
-        expect(request.uri.path, '/apps/SmartCenter');
-        expect(
-          request.headers.value('content-type'),
-          'text/plain; charset=ISO-8859-1',
+        unawaited(() async {
+          final request = await server.first;
+          expect(request.method, 'POST');
+          expect(request.uri.path, '/apps/SmartCenter');
+          expect(
+            request.headers.value('content-type'),
+            'text/plain; charset=ISO-8859-1',
+          );
+          expect(await utf8.decodeStream(request), contains("code='1016'"));
+          request.response.write('<ok/>');
+          await request.response.close();
+        }());
+
+        final body = await probe.post(
+          'http://127.0.0.1:${server.port}/apps/SmartCenter',
+          body: "<?xml version='1.0' ?><remote><key code='1016'/></remote>",
+          headers: const {'Content-Type': 'text/plain; charset=ISO-8859-1'},
+          timeout: const Duration(seconds: 2),
         );
-        expect(await utf8.decodeStream(request), contains("code='1016'"));
-        request.response.write('<ok/>');
-        await request.response.close();
-      }());
 
-      final body = await probe.post(
-        'http://127.0.0.1:${server.port}/apps/SmartCenter',
-        body: "<?xml version='1.0' ?><remote><key code='1016'/></remote>",
-        headers: const {'Content-Type': 'text/plain; charset=ISO-8859-1'},
-        timeout: const Duration(seconds: 2),
-      );
-
-      expect(body, '<ok/>');
-      await server.close(force: true);
-      await probe.close();
-    });
+        expect(body, '<ok/>');
+        await server.close(force: true);
+        await probe.close();
+      },
+    );
 
     test('returns null for a non-200 POST response', () async {
       final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);

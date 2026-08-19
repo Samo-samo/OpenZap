@@ -7,8 +7,9 @@ import '../domain/discovered_device.dart';
 
 /// Live scan progress (`scanned`/`total` candidate hosts), set while a
 /// discovery pass is running.
-final scanProgressProvider =
-    StateProvider<({int scanned, int total})?>((ref) => null);
+final scanProgressProvider = StateProvider<({int scanned, int total})?>(
+  (ref) => null,
+);
 
 /// Runs discovery passes and holds the latest results.
 ///
@@ -30,9 +31,11 @@ class DeviceDiscoveryNotifier extends AsyncNotifier<List<DiscoveredDevice>> {
     _results = [];
     final discovery = ref.read(deviceDiscoveryProvider);
     _subscription = discovery
-        .discover(onProgress: (scanned, total) {
-          progress.state = (scanned: scanned, total: total);
-        })
+        .discover(
+          onProgress: (scanned, total) {
+            progress.state = (scanned: scanned, total: total);
+          },
+        )
         .listen(
           _results.add,
           onError: (Object error, StackTrace stackTrace) {
@@ -58,5 +61,5 @@ class DeviceDiscoveryNotifier extends AsyncNotifier<List<DiscoveredDevice>> {
 
 final deviceListProvider =
     AsyncNotifierProvider<DeviceDiscoveryNotifier, List<DiscoveredDevice>>(
-  DeviceDiscoveryNotifier.new,
-);
+      DeviceDiscoveryNotifier.new,
+    );

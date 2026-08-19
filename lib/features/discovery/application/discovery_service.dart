@@ -11,7 +11,7 @@ import '../domain/discovery_error.dart';
 /// remaining strategies.
 class DiscoveryService {
   DiscoveryService({required List<DeviceDiscovery> strategies})
-      : _strategies = List.unmodifiable(strategies);
+    : _strategies = List.unmodifiable(strategies);
 
   final List<DeviceDiscovery> _strategies;
 

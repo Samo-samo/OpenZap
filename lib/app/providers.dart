@@ -57,8 +57,9 @@ final lastDeviceProvider = FutureProvider<DiscoveredDevice?>(
 /// Live status of the selected TV, or `null` when none is selected or when
 /// live status tracking is disabled in the settings.
 final tvStatusProvider = StreamProvider.autoDispose<TvStatus?>((ref) {
-  final tracking =
-      ref.watch(settingsProvider.select((s) => s.valueOrNull?.tvStatusTracking ?? true));
+  final tracking = ref.watch(
+    settingsProvider.select((s) => s.valueOrNull?.tvStatusTracking ?? true),
+  );
   final device = ref.watch(selectedDeviceProvider);
   if (!tracking || device == null) {
     return Stream.value(null);

@@ -21,9 +21,7 @@ void main() {
       SharedPreferences.setMockInitialValues({});
       final store = SharedPreferencesSettingsStore();
 
-      await store.save(
-        const AppSettings(commandFeedback: CommandFeedback.all),
-      );
+      await store.save(const AppSettings(commandFeedback: CommandFeedback.all));
       final loaded = await store.load();
 
       expect(loaded.commandFeedback, CommandFeedback.all);
@@ -72,10 +70,7 @@ void main() {
       final store = SharedPreferencesSettingsStore();
 
       await store.save(
-        const AppSettings(
-          themeMode: AppThemeMode.dark,
-          languageCode: 'tr',
-        ),
+        const AppSettings(themeMode: AppThemeMode.dark, languageCode: 'tr'),
       );
       final loaded = await store.load();
 
@@ -101,6 +96,16 @@ void main() {
 
       await store.save(const AppSettings(tvStatusTracking: true));
       expect((await store.load()).tvStatusTracking, isTrue);
+    });
+
+    test('wifi warning defaults to on and round-trips', () async {
+      SharedPreferences.setMockInitialValues({});
+      final store = SharedPreferencesSettingsStore();
+
+      expect((await store.load()).wifiWarningEnabled, isTrue);
+
+      await store.save(const AppSettings(wifiWarningEnabled: false));
+      expect((await store.load()).wifiWarningEnabled, isFalse);
     });
   });
 }

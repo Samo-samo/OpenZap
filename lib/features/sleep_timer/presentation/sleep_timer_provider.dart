@@ -58,5 +58,6 @@ class SleepTimerNotifier extends Notifier<Duration?> {
   }
 }
 
-final sleepTimerProvider =
-    NotifierProvider<SleepTimerNotifier, Duration?>(SleepTimerNotifier.new);
+final sleepTimerProvider = NotifierProvider<SleepTimerNotifier, Duration?>(
+  SleepTimerNotifier.new,
+);

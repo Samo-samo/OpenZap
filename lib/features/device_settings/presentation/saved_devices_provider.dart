@@ -24,5 +24,5 @@ class SavedDevicesNotifier extends AsyncNotifier<List<DiscoveredDevice>> {
 
 final savedDevicesProvider =
     AsyncNotifierProvider<SavedDevicesNotifier, List<DiscoveredDevice>>(
-  SavedDevicesNotifier.new,
-);
+      SavedDevicesNotifier.new,
+    );

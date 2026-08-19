@@ -211,16 +211,15 @@ class _SleepTimerControl extends ConsumerWidget {
         ],
       );
     }
-    final settings = ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    final settings =
+        ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
     return PopupMenuButton<Duration>(
       tooltip: l10n.sleepTimer,
       itemBuilder: (_) => [
         for (final option in _options)
           PopupMenuItem(
             value: option,
-            child: Text(
-              _sleepTimerLabel(l10n, settings, option.inMinutes),
-            ),
+            child: Text(_sleepTimerLabel(l10n, settings, option.inMinutes)),
           ),
         PopupMenuItem(
           value: _customSentinel,
@@ -392,8 +391,9 @@ class _TvStatusChip extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final tracking =
-        ref.watch(settingsProvider.select((s) => s.valueOrNull?.tvStatusTracking ?? false));
+    final tracking = ref.watch(
+      settingsProvider.select((s) => s.valueOrNull?.tvStatusTracking ?? false),
+    );
     if (!tracking) {
       return const SizedBox.shrink();
     }
@@ -464,8 +464,7 @@ class _DigitButton extends ConsumerWidget {
 
 /// Returns the digit for a digit key (enum order keeps digit0..digit9
 /// consecutive).
-String _digitLabel(RemoteKey key) =>
-    '${key.index - RemoteKey.digit0.index}';
+String _digitLabel(RemoteKey key) => '${key.index - RemoteKey.digit0.index}';
 
 Future<void> _sendKey(
   BuildContext context,
@@ -480,7 +479,7 @@ Future<void> _sendKey(
   final l10n = AppLocalizations.of(context)!;
   final feedback =
       ref.read(settingsProvider).valueOrNull?.commandFeedback ??
-          CommandFeedback.errorsOnly;
+      CommandFeedback.errorsOnly;
   try {
     await remote.sendKey(key);
     if (feedback == CommandFeedback.all) {

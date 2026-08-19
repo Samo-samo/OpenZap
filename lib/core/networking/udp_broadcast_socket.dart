@@ -46,9 +46,12 @@ class DartUdpBroadcastSocket implements UdpBroadcastSocket {
   Stream<Datagram> listen(Duration duration) {
     final socket = _requireSocket();
     return socket
-        .timeout(duration, onTimeout: (EventSink<RawSocketEvent> sink) {
-          sink.close();
-        })
+        .timeout(
+          duration,
+          onTimeout: (EventSink<RawSocketEvent> sink) {
+            sink.close();
+          },
+        )
         .map((_) => socket.receive())
         .where((datagram) => datagram != null)
         .cast<Datagram>();

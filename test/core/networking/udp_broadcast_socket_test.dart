@@ -15,7 +15,9 @@ void main() {
       final socket = DartUdpBroadcastSocket();
 
       await socket.open();
-      final datagrams = await socket.listen(const Duration(milliseconds: 50)).toList();
+      final datagrams = await socket
+          .listen(const Duration(milliseconds: 50))
+          .toList();
       await socket.close();
 
       expect(datagrams, isEmpty);
@@ -24,10 +26,7 @@ void main() {
     test('broadcast requires an open socket', () async {
       final socket = DartUdpBroadcastSocket();
 
-      expect(
-        () => socket.broadcast([1, 2, 3], port: 4567),
-        throwsStateError,
-      );
+      expect(() => socket.broadcast([1, 2, 3], port: 4567), throwsStateError);
     });
   });
 }

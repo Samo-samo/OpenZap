@@ -31,10 +31,12 @@ DiscoveredDevice _device(String ipAddress, {String name = 'TV'}) {
 void main() {
   group('DiscoveryService', () {
     test('yields devices from all strategies', () async {
-      final service = DiscoveryService(strategies: [
-        _FakeDiscovery([_device('192.168.1.10')]),
-        _FakeDiscovery([_device('192.168.1.11')]),
-      ]);
+      final service = DiscoveryService(
+        strategies: [
+          _FakeDiscovery([_device('192.168.1.10')]),
+          _FakeDiscovery([_device('192.168.1.11')]),
+        ],
+      );
 
       final devices = await service.discover().toList();
 
@@ -42,10 +44,12 @@ void main() {
     });
 
     test('deduplicates devices by IP address', () async {
-      final service = DiscoveryService(strategies: [
-        _FakeDiscovery([_device('192.168.1.10', name: 'TV 1')]),
-        _FakeDiscovery([_device('192.168.1.10', name: 'TV 2')]),
-      ]);
+      final service = DiscoveryService(
+        strategies: [
+          _FakeDiscovery([_device('192.168.1.10', name: 'TV 1')]),
+          _FakeDiscovery([_device('192.168.1.10', name: 'TV 2')]),
+        ],
+      );
 
       final devices = await service.discover().toList();
 
@@ -55,13 +59,14 @@ void main() {
 
     test('reports strategy failures without stopping the others', () async {
       final reported = <DiscoveryError>[];
-      final service = DiscoveryService(strategies: [
-        _FakeDiscovery([], error: const DiscoveryError('boom')),
-        _FakeDiscovery([_device('192.168.1.10')]),
-      ]);
+      final service = DiscoveryService(
+        strategies: [
+          _FakeDiscovery([], error: const DiscoveryError('boom')),
+          _FakeDiscovery([_device('192.168.1.10')]),
+        ],
+      );
 
-      final devices =
-          await service.discover(onError: reported.add).toList();
+      final devices = await service.discover(onError: reported.add).toList();
 
       expect(reported, hasLength(1));
       expect(devices, hasLength(1));

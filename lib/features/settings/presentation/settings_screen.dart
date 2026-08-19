@@ -28,6 +28,15 @@ class SettingsScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(l10n.settings)),
       body: ListView(
         children: [
+          _SectionHeader(l10n.general),
+          SwitchListTile(
+            title: Text(l10n.wifiWarningSwitch),
+            mouseCursor: SystemMouseCursors.click,
+            value: settings?.wifiWarningEnabled ?? true,
+            onChanged: (value) => ref
+                .read(settingsProvider.notifier)
+                .setWifiWarningEnabled(value),
+          ),
           _SectionHeader(l10n.appearance),
           RadioGroup<AppThemeMode>(
             groupValue: themeMode,
@@ -114,8 +123,9 @@ class SettingsScreen extends ConsumerWidget {
             title: Text(l10n.sleepTimerSwitchHumanReadable),
             mouseCursor: SystemMouseCursors.click,
             value: settings?.sleepTimerHumanReadable ?? true,
-            onChanged: (value) =>
-                ref.read(settingsProvider.notifier).setSleepTimerHumanReadable(value),
+            onChanged: (value) => ref
+                .read(settingsProvider.notifier)
+                .setSleepTimerHumanReadable(value),
           ),
           SwitchListTile(
             title: Text(l10n.sleepTimerSwitchMinutesInParens),
@@ -129,8 +139,9 @@ class SettingsScreen extends ConsumerWidget {
             title: Text(l10n.sleepTimerSwitchManualInput),
             mouseCursor: SystemMouseCursors.click,
             value: settings?.sleepTimerManualInput ?? false,
-            onChanged: (value) =>
-                ref.read(settingsProvider.notifier).setSleepTimerManualInput(value),
+            onChanged: (value) => ref
+                .read(settingsProvider.notifier)
+                .setSleepTimerManualInput(value),
           ),
           _SectionHeader(l10n.tvStatusTracking),
           SwitchListTile(
@@ -142,7 +153,9 @@ class SettingsScreen extends ConsumerWidget {
                 ref.read(settingsProvider.notifier).setTvStatusTracking(value),
           ),
           _SectionHeader(l10n.devices),
-          ref.watch(savedDevicesProvider).when(
+          ref
+              .watch(savedDevicesProvider)
+              .when(
                 loading: () => const Padding(
                   padding: EdgeInsets.all(16),
                   child: Center(child: CircularProgressIndicator()),

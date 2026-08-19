@@ -92,9 +92,7 @@ class VestelTvStatus implements TvStatusService {
     final status = RegExp(r'tv_status:(\d+)').firstMatch(message);
     if (status != null) {
       return TvStatus(
-        powerState: status.group(1) == '1'
-            ? TvPowerState.on
-            : TvPowerState.off,
+        powerState: status.group(1) == '1' ? TvPowerState.on : TvPowerState.off,
       );
     }
     return null;

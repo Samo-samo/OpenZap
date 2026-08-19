@@ -77,9 +77,11 @@ void main() {
 
       final devices = await store.loadDevices();
       expect(devices, hasLength(2));
-      expect(devices.map((d) => d.ipAddress), containsAll(['192.168.1.10', '192.168.1.11']));
-      final updated =
-          devices.firstWhere((d) => d.ipAddress == '192.168.1.10');
+      expect(
+        devices.map((d) => d.ipAddress),
+        containsAll(['192.168.1.10', '192.168.1.11']),
+      );
+      final updated = devices.firstWhere((d) => d.ipAddress == '192.168.1.10');
       expect(updated.name, 'Living Room TV 2');
     });
 

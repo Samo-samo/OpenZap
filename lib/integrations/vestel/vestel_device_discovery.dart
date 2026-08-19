@@ -49,9 +49,12 @@ class VestelDeviceDiscovery implements DeviceDiscovery {
     this.deviceDescriptionPorts = _deviceDescriptionPorts,
     this.probeTimeout = const Duration(milliseconds: 500),
     this.maxConcurrency = 30,
-  })  : _probe = probe ?? DartHttpProbe(),
-        _hostResolver = hostResolver ??
-            (subnets != null ? () => _hostsFromSubnets(subnets) : _resolveCandidateHosts);
+  }) : _probe = probe ?? DartHttpProbe(),
+       _hostResolver =
+           hostResolver ??
+           (subnets != null
+               ? () => _hostsFromSubnets(subnets)
+               : _resolveCandidateHosts);
 
   final HttpProbe _probe;
   final Future<List<String>> Function() _hostResolver;
@@ -75,10 +78,11 @@ class VestelDeviceDiscovery implements DeviceDiscovery {
       final end = i + batchSize > hosts.length ? hosts.length : i + batchSize;
       final batch = hosts.sublist(i, end);
       final bodies = await Future.wait([
-        for (final host in batch) _probeHost(host, () {
-          scanned++;
-          onProgress?.call(scanned, hosts.length);
-        }),
+        for (final host in batch)
+          _probeHost(host, () {
+            scanned++;
+            onProgress?.call(scanned, hosts.length);
+          }),
       ]);
       for (var j = 0; j < batch.length; j++) {
         final body = bodies[j];

@@ -30,9 +30,7 @@ class SharedPreferencesDeviceStore implements DeviceStore {
     }
     try {
       final list = jsonDecode(raw) as List<dynamic>;
-      return [
-        for (final entry in list) ?_decodeDevice(jsonEncode(entry)),
-      ];
+      return [for (final entry in list) ?_decodeDevice(jsonEncode(entry))];
     } on FormatException {
       return const [];
     }
@@ -86,10 +84,10 @@ class SharedPreferencesDeviceStore implements DeviceStore {
   }
 
   static String _encodeDevice(DiscoveredDevice device) => jsonEncode({
-        'name': device.name,
-        'ip': device.ipAddress,
-        'port': device.port,
-        'manufacturer': device.manufacturer,
-        'model': device.model,
-      });
+    'name': device.name,
+    'ip': device.ipAddress,
+    'port': device.port,
+    'manufacturer': device.manufacturer,
+    'model': device.model,
+  });
 }

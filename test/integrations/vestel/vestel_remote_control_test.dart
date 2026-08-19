@@ -37,17 +37,21 @@ class _FakeProbe implements HttpProbe {
 
 void main() {
   group('VestelRemoteControl', () {
-    test('posts the volume-up key code to the SmartCenter endpoint',
-        () async {
+    test('posts the volume-up key code to the SmartCenter endpoint', () async {
       final probe = _FakeProbe()..response = '';
       final remote = VestelRemoteControl(host: '192.168.0.101', probe: probe);
 
       await remote.sendKey(RemoteKey.volumeUp);
 
       expect(probe.lastUrl, 'http://192.168.0.101:56789/apps/SmartCenter');
-      expect(probe.lastBody, "<?xml version='1.0' ?><remote><key code='1016'/></remote>");
-      expect(probe.lastHeaders?['Content-Type'],
-          'text/plain; charset=ISO-8859-1');
+      expect(
+        probe.lastBody,
+        "<?xml version='1.0' ?><remote><key code='1016'/></remote>",
+      );
+      expect(
+        probe.lastHeaders?['Content-Type'],
+        'text/plain; charset=ISO-8859-1',
+      );
       expect(probe.lastHeaders?['Connection'], 'Keep-Alive');
     });
 
@@ -87,18 +91,12 @@ void main() {
         final request = await server.first;
         expect(request.method, 'POST');
         expect(request.uri.path, '/apps/SmartCenter');
-        expect(
-          await utf8.decodeStream(request),
-          contains("code='1016'"),
-        );
+        expect(await utf8.decodeStream(request), contains("code='1016'"));
         request.response.statusCode = HttpStatus.ok;
         await request.response.close();
       }());
 
-      final remote = VestelRemoteControl(
-        host: '127.0.0.1',
-        port: server.port,
-      );
+      final remote = VestelRemoteControl(host: '127.0.0.1', port: server.port);
 
       await remote.sendKey(RemoteKey.volumeUp);
       await server.close(force: true);

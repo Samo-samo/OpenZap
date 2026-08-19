@@ -51,6 +51,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings => 'Settings';
 
   @override
+  String get general => 'General';
+
+  @override
+  String get wifiWarningText =>
+      'Make sure your device is on the same Wi-Fi network as the TV.';
+
+  @override
+  String get wifiWarningDismiss => 'Dismiss';
+
+  @override
+  String get wifiWarningSwitch => 'Show the same-network warning';
+
+  @override
   String get appearance => 'Appearance';
 
   @override

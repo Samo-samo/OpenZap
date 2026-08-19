@@ -33,8 +33,9 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
   }
 
   Future<void> setSleepTimerShowMinutesInParens(bool value) async {
-    final settings =
-        state.value!.copyWith(sleepTimerShowMinutesInParens: value);
+    final settings = state.value!.copyWith(
+      sleepTimerShowMinutesInParens: value,
+    );
     state = AsyncData(settings);
     await ref.read(settingsStoreProvider).save(settings);
   }
@@ -50,9 +51,14 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     state = AsyncData(settings);
     await ref.read(settingsStoreProvider).save(settings);
   }
+
+  Future<void> setWifiWarningEnabled(bool value) async {
+    final settings = state.value!.copyWith(wifiWarningEnabled: value);
+    state = AsyncData(settings);
+    await ref.read(settingsStoreProvider).save(settings);
+  }
 }
 
-final settingsProvider =
-    AsyncNotifierProvider<SettingsNotifier, AppSettings>(
+final settingsProvider = AsyncNotifierProvider<SettingsNotifier, AppSettings>(
   SettingsNotifier.new,
 );

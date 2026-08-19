@@ -23,10 +23,7 @@ void main() {
       final server = await _serve([
         "<event><tv_state value='PLAYER_PORTAL'/></event>",
       ]);
-      final service = VestelTvStatus(
-        host: 'localhost',
-        port: server.port,
-      );
+      final service = VestelTvStatus(host: 'localhost', port: server.port);
 
       final status = await service.watch().first;
 
@@ -41,10 +38,7 @@ void main() {
         "<tv_state value='NOSIGNAL'>",
         'tv_status:1',
       ]);
-      final service = VestelTvStatus(
-        host: 'localhost',
-        port: server.port,
-      );
+      final service = VestelTvStatus(host: 'localhost', port: server.port);
 
       final statuses = await service.watch().take(2).toList();
 
@@ -57,13 +51,8 @@ void main() {
     });
 
     test('parses empty tv_state as off', () async {
-      final server = await _serve([
-        "<tv_state value=''/>",
-      ]);
-      final service = VestelTvStatus(
-        host: 'localhost',
-        port: server.port,
-      );
+      final server = await _serve(["<tv_state value=''/>"]);
+      final service = VestelTvStatus(host: 'localhost', port: server.port);
 
       final status = await service.watch().first;
 
