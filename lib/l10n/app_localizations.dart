@@ -215,8 +215,38 @@ abstract class AppLocalizations {
   /// No description provided for @sleepTimerMinutes.
   ///
   /// In en, this message translates to:
-  /// **'{minutes} minutes'**
+  /// **'{minutes, plural, one{1 minute} other{{minutes} minutes}}'**
   String sleepTimerMinutes(int minutes);
+
+  /// No description provided for @sleepTimerHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours, plural, one{1 hour} other{{hours} hours}}'**
+  String sleepTimerHours(int hours);
+
+  /// No description provided for @minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'minutes'**
+  String get minutes;
+
+  /// No description provided for @sleepTimerSwitchHumanReadable.
+  ///
+  /// In en, this message translates to:
+  /// **'Show durations as hours and minutes'**
+  String get sleepTimerSwitchHumanReadable;
+
+  /// No description provided for @sleepTimerSwitchMinutesInParens.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the total in parentheses'**
+  String get sleepTimerSwitchMinutesInParens;
+
+  /// No description provided for @sleepTimerSwitchManualInput.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual minute entry in the custom dialog'**
+  String get sleepTimerSwitchManualInput;
 
   /// No description provided for @sleepTimerRemaining.
   ///

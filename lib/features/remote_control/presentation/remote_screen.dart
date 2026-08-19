@@ -211,13 +211,16 @@ class _SleepTimerControl extends ConsumerWidget {
         ],
       );
     }
+    final settings = ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
     return PopupMenuButton<Duration>(
       tooltip: l10n.sleepTimer,
       itemBuilder: (_) => [
         for (final option in _options)
           PopupMenuItem(
             value: option,
-            child: Text(l10n.sleepTimerMinutes(option.inMinutes)),
+            child: Text(
+              _sleepTimerLabel(l10n, settings, option.inMinutes),
+            ),
           ),
         PopupMenuItem(
           value: _customSentinel,
@@ -240,9 +243,11 @@ class _SleepTimerControl extends ConsumerWidget {
   }
 
   Future<void> _pickCustom(BuildContext context, WidgetRef ref) async {
+    final settings =
+        ref.read(settingsProvider).valueOrNull ?? const AppSettings();
     final duration = await showDialog<Duration>(
       context: context,
-      builder: (_) => const _CustomSleepTimerDialog(),
+      builder: (_) => _CustomSleepTimerDialog(settings: settings),
     );
     if (duration != null) {
       ref.read(sleepTimerProvider.notifier).start(duration);
@@ -250,8 +255,34 @@ class _SleepTimerControl extends ConsumerWidget {
   }
 }
 
+/// Formats a sleep-timer duration for display.
+///
+/// With [AppSettings.sleepTimerHumanReadable] enabled, durations of an hour
+/// or more read as "2 hours 5 minutes", with the flat total in parentheses
+/// when [AppSettings.sleepTimerShowMinutesInParens] is enabled.
+String _sleepTimerLabel(
+  AppLocalizations l10n,
+  AppSettings settings,
+  int minutes,
+) {
+  final hours = minutes ~/ 60;
+  final rest = minutes % 60;
+  if (settings.sleepTimerHumanReadable && hours > 0) {
+    final base = rest == 0
+        ? l10n.sleepTimerHours(hours)
+        : '${l10n.sleepTimerHours(hours)} ${l10n.sleepTimerMinutes(rest)}';
+    if (settings.sleepTimerShowMinutesInParens) {
+      return '$base (${l10n.sleepTimerMinutes(minutes)})';
+    }
+    return base;
+  }
+  return l10n.sleepTimerMinutes(minutes);
+}
+
 class _CustomSleepTimerDialog extends StatefulWidget {
-  const _CustomSleepTimerDialog();
+  const _CustomSleepTimerDialog({required this.settings});
+
+  final AppSettings settings;
 
   @override
   State<_CustomSleepTimerDialog> createState() =>
@@ -262,7 +293,37 @@ class _CustomSleepTimerDialogState extends State<_CustomSleepTimerDialog> {
   static const double _minMinutes = 5;
   static const double _maxMinutes = 360;
 
+  late final TextEditingController _manualController;
   double _minutes = 30;
+
+  @override
+  void initState() {
+    super.initState();
+    _manualController = TextEditingController(text: '30');
+  }
+
+  @override
+  void dispose() {
+    _manualController.dispose();
+    super.dispose();
+  }
+
+  void _onSliderChanged(double value) {
+    setState(() {
+      _minutes = value;
+      _manualController.text = value.round().toString();
+    });
+  }
+
+  void _onManualChanged(String text) {
+    final value = int.tryParse(text);
+    if (value == null) {
+      return;
+    }
+    setState(() {
+      _minutes = value.clamp(1, _maxMinutes.round()).toDouble();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -273,15 +334,27 @@ class _CustomSleepTimerDialogState extends State<_CustomSleepTimerDialog> {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(l10n.sleepTimerMinutes(_minutes.round())),
+          Text(_sleepTimerLabel(l10n, widget.settings, _minutes.round())),
           Slider(
             value: _minutes,
             min: _minMinutes,
             max: _maxMinutes,
-            divisions: (_maxMinutes - _minMinutes) ~/ 5,
-            label: l10n.sleepTimerMinutes(_minutes.round()),
-            onChanged: (value) => setState(() => _minutes = value),
+            divisions: ((_maxMinutes - _minMinutes) / 5).round(),
+            label: _sleepTimerLabel(l10n, widget.settings, _minutes.round()),
+            onChanged: _onSliderChanged,
           ),
+          if (widget.settings.sleepTimerManualInput) ...[
+            const SizedBox(height: 8),
+            TextField(
+              controller: _manualController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: l10n.minutes,
+                border: const OutlineInputBorder(),
+              ),
+              onChanged: _onManualChanged,
+            ),
+          ],
         ],
       ),
       actions: [

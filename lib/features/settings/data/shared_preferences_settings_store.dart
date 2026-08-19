@@ -5,6 +5,9 @@ import '../domain/settings_store.dart';
 
 class SharedPreferencesSettingsStore implements SettingsStore {
   static const _commandFeedbackKey = 'command_feedback';
+  static const _sleepTimerHumanReadableKey = 'sleep_timer_human_readable';
+  static const _sleepTimerMinutesInParensKey = 'sleep_timer_minutes_in_parens';
+  static const _sleepTimerManualInputKey = 'sleep_timer_manual_input';
 
   @override
   Future<AppSettings> load() async {
@@ -12,12 +15,31 @@ class SharedPreferencesSettingsStore implements SettingsStore {
     final mode = CommandFeedback.values.asNameMap()[prefs.getString(
       _commandFeedbackKey,
     )];
-    return AppSettings(commandFeedback: mode ?? CommandFeedback.errorsOnly);
+    return AppSettings(
+      commandFeedback: mode ?? CommandFeedback.errorsOnly,
+      sleepTimerHumanReadable:
+          prefs.getBool(_sleepTimerHumanReadableKey) ?? true,
+      sleepTimerShowMinutesInParens:
+          prefs.getBool(_sleepTimerMinutesInParensKey) ?? true,
+      sleepTimerManualInput: prefs.getBool(_sleepTimerManualInputKey) ?? false,
+    );
   }
 
   @override
   Future<void> save(AppSettings settings) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_commandFeedbackKey, settings.commandFeedback.name);
+    await prefs.setBool(
+      _sleepTimerHumanReadableKey,
+      settings.sleepTimerHumanReadable,
+    );
+    await prefs.setBool(
+      _sleepTimerMinutesInParensKey,
+      settings.sleepTimerShowMinutesInParens,
+    );
+    await prefs.setBool(
+      _sleepTimerManualInputKey,
+      settings.sleepTimerManualInput,
+    );
   }
 }

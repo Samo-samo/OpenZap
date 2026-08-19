@@ -13,6 +13,25 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     state = AsyncData(settings);
     await ref.read(settingsStoreProvider).save(settings);
   }
+
+  Future<void> setSleepTimerHumanReadable(bool value) async {
+    final settings = state.value!.copyWith(sleepTimerHumanReadable: value);
+    state = AsyncData(settings);
+    await ref.read(settingsStoreProvider).save(settings);
+  }
+
+  Future<void> setSleepTimerShowMinutesInParens(bool value) async {
+    final settings =
+        state.value!.copyWith(sleepTimerShowMinutesInParens: value);
+    state = AsyncData(settings);
+    await ref.read(settingsStoreProvider).save(settings);
+  }
+
+  Future<void> setSleepTimerManualInput(bool value) async {
+    final settings = state.value!.copyWith(sleepTimerManualInput: value);
+    state = AsyncData(settings);
+    await ref.read(settingsStoreProvider).save(settings);
+  }
 }
 
 final settingsProvider =

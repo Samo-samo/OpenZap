@@ -71,8 +71,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String sleepTimerMinutes(int minutes) {
-    return '$minutes minutes';
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes minutes',
+      one: '1 minute',
+    );
+    return '$_temp0';
   }
+
+  @override
+  String sleepTimerHours(int hours) {
+    String _temp0 = intl.Intl.pluralLogic(
+      hours,
+      locale: localeName,
+      other: '$hours hours',
+      one: '1 hour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get minutes => 'minutes';
+
+  @override
+  String get sleepTimerSwitchHumanReadable =>
+      'Show durations as hours and minutes';
+
+  @override
+  String get sleepTimerSwitchMinutesInParens => 'Show the total in parentheses';
+
+  @override
+  String get sleepTimerSwitchManualInput =>
+      'Manual minute entry in the custom dialog';
 
   @override
   String get sleepTimerRemaining => 'TV turns off in';

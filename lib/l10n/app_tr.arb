@@ -37,6 +37,18 @@
       }
     }
   },
+  "sleepTimerHours": "{hours} saat",
+  "@sleepTimerHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "minutes": "dakika",
+  "sleepTimerSwitchHumanReadable": "Süreleri saat ve dakika olarak göster",
+  "sleepTimerSwitchMinutesInParens": "Toplamı parantez içinde göster",
+  "sleepTimerSwitchManualInput": "Özel iletişim kutusunda manuel dakika girişi",
   "sleepTimerRemaining": "TV kapanıyor",
   "sleepTimerCustom": "Özel…",
   "customSleepTimerTitle": "Özel uyku zamanlayıcısı",

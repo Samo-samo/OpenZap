@@ -11,23 +11,16 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final settings = ref.watch(settingsProvider);
+    final settings = ref.watch(settingsProvider).valueOrNull;
     final commandFeedback =
-        settings.valueOrNull?.commandFeedback ?? CommandFeedback.errorsOnly;
+        settings?.commandFeedback ?? CommandFeedback.errorsOnly;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settings)),
       body: ListView(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(l10n.commandFeedback, style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 4),
-                Text(l10n.commandFeedbackDescription, style: Theme.of(context).textTheme.bodySmall),
-              ],
-            ),
+          _SectionHeader(
+            l10n.commandFeedback,
+            description: l10n.commandFeedbackDescription,
           ),
           RadioGroup<CommandFeedback>(
             groupValue: commandFeedback,
@@ -56,6 +49,54 @@ class SettingsScreen extends ConsumerWidget {
               ],
             ),
           ),
+          _SectionHeader(l10n.sleepTimer),
+          SwitchListTile(
+            title: Text(l10n.sleepTimerSwitchHumanReadable),
+            mouseCursor: SystemMouseCursors.click,
+            value: settings?.sleepTimerHumanReadable ?? true,
+            onChanged: (value) =>
+                ref.read(settingsProvider.notifier).setSleepTimerHumanReadable(value),
+          ),
+          SwitchListTile(
+            title: Text(l10n.sleepTimerSwitchMinutesInParens),
+            mouseCursor: SystemMouseCursors.click,
+            value: settings?.sleepTimerShowMinutesInParens ?? true,
+            onChanged: (value) => ref
+                .read(settingsProvider.notifier)
+                .setSleepTimerShowMinutesInParens(value),
+          ),
+          SwitchListTile(
+            title: Text(l10n.sleepTimerSwitchManualInput),
+            mouseCursor: SystemMouseCursors.click,
+            value: settings?.sleepTimerManualInput ?? false,
+            onChanged: (value) =>
+                ref.read(settingsProvider.notifier).setSleepTimerManualInput(value),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader(this.text, {this.description});
+
+  final String text;
+  final String? description;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(text, style: theme.textTheme.titleMedium),
+          if (description != null) ...[
+            const SizedBox(height: 4),
+            Text(description!, style: theme.textTheme.bodySmall),
+          ],
         ],
       ),
     );

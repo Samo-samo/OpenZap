@@ -29,7 +29,7 @@
   "feedbackAll": "Successes and errors",
   "feedbackNone": "Off",
   "sleepTimer": "Sleep timer",
-  "sleepTimerMinutes": "{minutes} minutes",
+  "sleepTimerMinutes": "{minutes, plural, one{1 minute} other{{minutes} minutes}}",
   "@sleepTimerMinutes": {
     "placeholders": {
       "minutes": {
@@ -37,6 +37,18 @@
       }
     }
   },
+  "sleepTimerHours": "{hours, plural, one{1 hour} other{{hours} hours}}",
+  "@sleepTimerHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "minutes": "minutes",
+  "sleepTimerSwitchHumanReadable": "Show durations as hours and minutes",
+  "sleepTimerSwitchMinutesInParens": "Show the total in parentheses",
+  "sleepTimerSwitchManualInput": "Manual minute entry in the custom dialog",
   "sleepTimerRemaining": "TV turns off in",
   "sleepTimerCustom": "Custom…",
   "customSleepTimerTitle": "Custom sleep timer",

@@ -75,6 +75,26 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String sleepTimerHours(int hours) {
+    return '$hours saat';
+  }
+
+  @override
+  String get minutes => 'dakika';
+
+  @override
+  String get sleepTimerSwitchHumanReadable =>
+      'Süreleri saat ve dakika olarak göster';
+
+  @override
+  String get sleepTimerSwitchMinutesInParens =>
+      'Toplamı parantez içinde göster';
+
+  @override
+  String get sleepTimerSwitchManualInput =>
+      'Özel iletişim kutusunda manuel dakika girişi';
+
+  @override
   String get sleepTimerRemaining => 'TV kapanıyor';
 
   @override

@@ -37,5 +37,34 @@ void main() {
 
       expect(settings.commandFeedback, CommandFeedback.errorsOnly);
     });
+
+    test('defaults sleep-timer display settings', () async {
+      SharedPreferences.setMockInitialValues({});
+      final store = SharedPreferencesSettingsStore();
+
+      final settings = await store.load();
+
+      expect(settings.sleepTimerHumanReadable, isTrue);
+      expect(settings.sleepTimerShowMinutesInParens, isTrue);
+      expect(settings.sleepTimerManualInput, isFalse);
+    });
+
+    test('round-trips sleep-timer display settings', () async {
+      SharedPreferences.setMockInitialValues({});
+      final store = SharedPreferencesSettingsStore();
+
+      await store.save(
+        const AppSettings(
+          sleepTimerHumanReadable: false,
+          sleepTimerShowMinutesInParens: false,
+          sleepTimerManualInput: true,
+        ),
+      );
+      final loaded = await store.load();
+
+      expect(loaded.sleepTimerHumanReadable, isFalse);
+      expect(loaded.sleepTimerShowMinutesInParens, isFalse);
+      expect(loaded.sleepTimerManualInput, isTrue);
+    });
   });
 }
