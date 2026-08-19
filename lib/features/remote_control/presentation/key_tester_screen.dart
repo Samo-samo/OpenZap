@@ -30,6 +30,13 @@ class _KeyTesterScreenState extends ConsumerState<KeyTesterScreen> {
     (1065, 'Web browser'),
     (1053, 'Home menu'),
     (1060, 'Teletext'),
+    (1011, 'Picture format'),
+    (1014, 'Picture mode'),
+    (1015, 'Subtitle/audio'),
+    (1031, 'Subtitles'),
+    (1035, 'Audio track'),
+    (1040, 'Favorites'),
+    (1066, 'Settings'),
   ];
 
   @override
