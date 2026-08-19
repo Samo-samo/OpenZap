@@ -4,12 +4,14 @@ import '../features/device_settings/data/shared_preferences_device_store.dart';
 import '../features/device_settings/domain/device_store.dart';
 import '../features/discovery/domain/device_discovery.dart';
 import '../features/discovery/domain/discovered_device.dart';
+import '../features/quick_launch/domain/quick_launch_service.dart';
 import '../features/remote_control/domain/remote_control.dart';
 import '../features/settings/data/shared_preferences_settings_store.dart';
 import '../features/settings/domain/settings_store.dart';
 import '../features/settings/presentation/settings_providers.dart';
 import '../features/tv_status/domain/tv_status.dart';
 import '../features/tv_status/domain/tv_status_service.dart';
+import '../integrations/vestel/vestel_app_launcher.dart';
 import '../integrations/vestel/vestel_device_discovery.dart';
 import '../integrations/vestel/vestel_remote_control.dart';
 import '../integrations/vestel/vestel_tv_status.dart';
@@ -49,6 +51,18 @@ final settingsStoreProvider = Provider<SettingsStore>(
   (ref) => SharedPreferencesSettingsStore(),
 );
 
+/// Quick-launch (apps/inputs) for the selected TV, or `null` when none is
+/// selected.
+final quickLaunchProvider = Provider<QuickLaunchService?>((ref) {
+  final device = ref.watch(selectedDeviceProvider);
+  if (device == null) {
+    return null;
+  }
+  final launcher = VestelAppLauncher(host: device.ipAddress, port: device.port);
+  ref.onDispose(() => launcher.close());
+  return launcher;
+});
+
 /// The device last controlled across app launches, if any.
 final lastDeviceProvider = FutureProvider<DiscoveredDevice?>(
   (ref) => ref.watch(deviceStoreProvider).loadLastDevice(),
@@ -58,7 +72,7 @@ final lastDeviceProvider = FutureProvider<DiscoveredDevice?>(
 /// live status tracking is disabled in the settings.
 final tvStatusProvider = StreamProvider.autoDispose<TvStatus?>((ref) {
   final tracking = ref.watch(
-    settingsProvider.select((s) => s.valueOrNull?.tvStatusTracking ?? true),
+    settingsProvider.select((s) => s.valueOrNull?.tvStatusTracking ?? false),
   );
   final device = ref.watch(selectedDeviceProvider);
   if (!tracking || device == null) {

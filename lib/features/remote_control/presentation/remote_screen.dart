@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../quick_launch/presentation/apps_screen.dart';
 import '../../settings/domain/app_settings.dart';
 import '../../settings/presentation/settings_providers.dart';
 import '../../sleep_timer/presentation/sleep_timer_provider.dart';
@@ -26,7 +27,18 @@ class RemoteScreen extends ConsumerWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text(device.name)),
+      appBar: AppBar(
+        title: Text(device.name),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.apps),
+            tooltip: l10n.appsTitle,
+            onPressed: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute<void>(builder: (_) => const AppsScreen())),
+          ),
+        ],
+      ),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 480),

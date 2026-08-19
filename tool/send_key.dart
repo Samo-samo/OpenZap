@@ -35,8 +35,10 @@ Future<void> main(List<String> arguments) async {
         }
       }
       if (key == null) {
-        _print('Unknown key "$raw". Available: '
-            '${RemoteKey.values.map((k) => k.name).join(', ')}');
+        _print(
+          'Unknown key "$raw". Available: '
+          '${RemoteKey.values.map((k) => k.name).join(', ')}',
+        );
         exitCode = 64;
         return;
       }
