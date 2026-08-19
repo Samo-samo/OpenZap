@@ -12,13 +12,14 @@ Items and priorities may change as the project evolves.
   (`build/windows/x64/runner/Release`) and Android (`app-release.apk`, signed
   with the project keystore). No tagged GitHub releases yet.
 - Working Windows and Android builds with a minimal Riverpod UI (device
-  discovery, remote control, live status, sleep timer, settings, TR/EN
-  localization) validated against a real VESTEL 50U9510M (MB180).
-- 49 tests pass, `flutter analyze` clean, Windows and Android release builds
+  discovery, remote control, live status, sleep timer, settings, apps screen,
+  TR/EN localization) validated against a real VESTEL 50U9510M (MB180).
+- 57 tests pass, `flutter analyze` clean, Windows and Android release builds
   succeed.
 - Open gaps: live status tracking not working on MB180 (no frames pushed on
-  the 7681 channel; default off, marked "in development"), quick launcher and
-  Wake-on-LAN not started.
+  the 7681 channel; default off, marked "in development"), quick launcher
+  uses the fixed default apps (YouTube, Netflix, HDMI, portal), Wake-on-LAN
+  not started (TV is on Wi-Fi).
 
 ---
 
@@ -147,7 +148,38 @@ Done:
 
 ---
 
-# v0.6.0 — Stabilization
+# v0.6.0 — Device & App UX
+
+Status: In Progress
+
+Goals:
+
+* Device management polish
+* App launcher
+* Settings/UX improvements
+
+Done:
+
+* Context menu on the device list (right-click on desktop, long-press on
+  touch): save an unsaved device, rename or remove a saved one. Saved devices
+  keep their (possibly renamed) name in the list and settings.
+* Apps screen (remote screen → Apps): quick-launch YouTube, Netflix, HDMI
+  input and the smart portal through DIAL (`POST /apps/{id}`) and the
+  INPUT_SOURCE key (1056).
+* `tool/launch_app.dart` smoke test for app launch.
+
+Skipped / not started (research done, see `.ai/vestel-protocol-notes.md`):
+
+* Custom app list (add/remove/reorder apps in the Apps screen) — defaults are
+  fixed for now.
+* Remote layout presets / customizable key arrangement — idea only.
+* Wake-on-LAN — deferred: the TV is on Wi-Fi, where magic packets are
+  unreliable; revisit if the TV is wired.
+* Live status research — deferred; the 7681 channel pushes nothing on MB180.
+
+---
+
+# v0.7.0 — Stabilization
 
 Status: Planned
 
