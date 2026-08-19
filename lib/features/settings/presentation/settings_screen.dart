@@ -41,6 +41,14 @@ class SettingsScreen extends ConsumerWidget {
                 .setWifiWarningEnabled(value),
           ),
           _SectionHeader(l10n.appearance),
+          SwitchListTile(
+            title: Text(l10n.dynamicColorSwitch),
+            subtitle: Text(l10n.dynamicColorSwitchDescription),
+            mouseCursor: SystemMouseCursors.click,
+            value: settings?.dynamicColor ?? true,
+            onChanged: (value) =>
+                ref.read(settingsProvider.notifier).setDynamicColor(value),
+          ),
           RadioGroup<AppThemeMode>(
             groupValue: themeMode,
             onChanged: (value) {

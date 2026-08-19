@@ -6,6 +6,7 @@ import '../domain/settings_store.dart';
 class SharedPreferencesSettingsStore implements SettingsStore {
   static const _commandFeedbackKey = 'command_feedback';
   static const _themeModeKey = 'theme_mode';
+  static const _dynamicColorKey = 'dynamic_color';
   static const _showTvStatusKey = 'show_tv_status';
   static const _showDigitsKey = 'show_digits';
   static const _showSleepTimerKey = 'show_sleep_timer';
@@ -27,6 +28,7 @@ class SharedPreferencesSettingsStore implements SettingsStore {
     return AppSettings(
       commandFeedback: mode ?? CommandFeedback.errorsOnly,
       themeMode: theme ?? AppThemeMode.system,
+      dynamicColor: prefs.getBool(_dynamicColorKey) ?? true,
       showTvStatus: prefs.getBool(_showTvStatusKey) ?? true,
       showDigits: prefs.getBool(_showDigitsKey) ?? true,
       showSleepTimer: prefs.getBool(_showSleepTimerKey) ?? true,
@@ -47,6 +49,7 @@ class SharedPreferencesSettingsStore implements SettingsStore {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_commandFeedbackKey, settings.commandFeedback.name);
     await prefs.setString(_themeModeKey, settings.themeMode.name);
+    await prefs.setBool(_dynamicColorKey, settings.dynamicColor);
     await prefs.setBool(_showTvStatusKey, settings.showTvStatus);
     await prefs.setBool(_showDigitsKey, settings.showDigits);
     await prefs.setBool(_showSleepTimerKey, settings.showSleepTimer);

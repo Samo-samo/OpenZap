@@ -20,6 +20,12 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     await ref.read(settingsStoreProvider).save(settings);
   }
 
+  Future<void> setDynamicColor(bool value) async {
+    final settings = state.value!.copyWith(dynamicColor: value);
+    state = AsyncData(settings);
+    await ref.read(settingsStoreProvider).save(settings);
+  }
+
   Future<void> setRemoteLayout(RemoteLayout value) async {
     final settings = applyRemoteLayoutPreset(value, state.value!);
     state = AsyncData(settings);

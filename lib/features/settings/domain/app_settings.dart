@@ -93,6 +93,7 @@ class AppSettings {
   const AppSettings({
     this.commandFeedback = CommandFeedback.errorsOnly,
     this.themeMode = AppThemeMode.system,
+    this.dynamicColor = true,
     this.showTvStatus = true,
     this.showDigits = true,
     this.showSleepTimer = true,
@@ -110,6 +111,10 @@ class AppSettings {
 
   /// Color theme mode.
   final AppThemeMode themeMode;
+
+  /// Whether the app uses the system's Material You dynamic color scheme
+  /// (wallpaper-based, Android 12+) when available.
+  final bool dynamicColor;
 
   /// Whether the remote screen shows the TV status chip.
   final bool showTvStatus;
@@ -148,6 +153,7 @@ class AppSettings {
   AppSettings copyWith({
     CommandFeedback? commandFeedback,
     AppThemeMode? themeMode,
+    bool? dynamicColor,
     bool? showTvStatus,
     bool? showDigits,
     bool? showSleepTimer,
@@ -162,6 +168,7 @@ class AppSettings {
     return AppSettings(
       commandFeedback: commandFeedback ?? this.commandFeedback,
       themeMode: themeMode ?? this.themeMode,
+      dynamicColor: dynamicColor ?? this.dynamicColor,
       showTvStatus: showTvStatus ?? this.showTvStatus,
       showDigits: showDigits ?? this.showDigits,
       showSleepTimer: showSleepTimer ?? this.showSleepTimer,
@@ -183,6 +190,7 @@ class AppSettings {
       other is AppSettings &&
       other.commandFeedback == commandFeedback &&
       other.themeMode == themeMode &&
+      other.dynamicColor == dynamicColor &&
       other.showTvStatus == showTvStatus &&
       other.showDigits == showDigits &&
       other.showSleepTimer == showSleepTimer &&
@@ -198,6 +206,7 @@ class AppSettings {
   int get hashCode => Object.hash(
     commandFeedback,
     themeMode,
+    dynamicColor,
     showTvStatus,
     showDigits,
     showSleepTimer,

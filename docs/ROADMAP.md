@@ -174,6 +174,11 @@ Done:
 * Quick controls on the remote screen (picture format, picture mode, audio
   track, subtitle/audio, subtitles, favorites, settings, teletext — all
   confirmed codes).
+* Material You (dynamic color): optional wallpaper-based colors on Android 12+
+  via the `dynamic_color` package; the launcher icon gained a monochrome layer
+  so Android 13 themed icons match the wallpaper.
+* Key test screen now lists every confirmed code in groups (navigation, apps &
+  inputs, picture & audio).
 * `tool/launch_app.dart` smoke test for app launch.
 
 Skipped / not started (research done, see `.ai/vestel-protocol-notes.md`):

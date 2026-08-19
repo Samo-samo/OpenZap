@@ -1,3 +1,4 @@
+import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,20 +30,31 @@ class _AppRoot extends ConsumerWidget {
       AppThemeMode.dark => ThemeMode.dark,
     };
     final languageCode = settings?.languageCode;
-    return MaterialApp(
-      title: 'OpenZap',
-      theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
-      themeMode: themeMode,
-      locale: languageCode == null ? null : Locale(languageCode),
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: const DeviceListScreen(),
+    final useDynamicColor = settings?.dynamicColor ?? true;
+    return DynamicColorBuilder(
+      builder: (lightDynamic, darkDynamic) {
+        final light = useDynamicColor && lightDynamic != null
+            ? AppTheme.build(lightDynamic)
+            : AppTheme.light;
+        final dark = useDynamicColor && darkDynamic != null
+            ? AppTheme.build(darkDynamic)
+            : AppTheme.dark;
+        return MaterialApp(
+          title: 'OpenZap',
+          theme: light,
+          darkTheme: dark,
+          themeMode: themeMode,
+          locale: languageCode == null ? null : Locale(languageCode),
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const DeviceListScreen(),
+        );
+      },
     );
   }
 }

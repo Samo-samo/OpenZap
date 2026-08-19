@@ -42,6 +42,8 @@ dependencies:
   intl: any
   # Persists the last used TV across launches (device management, v0.4).
   shared_preferences: ^2.3.0
+  # Material You wallpaper colors on Android 12+ (dynamic_color support, v0.5).
+  dynamic_color: ^1.7.0
 
 dev_dependencies:
   flutter_test:
@@ -64,6 +66,7 @@ flutter_launcher_icons:
   image_path: "assets/icon/app_icon.png"
   adaptive_icon_background: "#0C193C"
   adaptive_icon_foreground: "assets/icon/app_icon_foreground.png"
+  monochrome: "assets/icon/app_icon_monochrome.png"
   windows:
     generate: true
     image_path: "assets/icon/app_icon.png"
