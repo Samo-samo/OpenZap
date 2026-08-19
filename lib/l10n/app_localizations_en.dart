@@ -176,6 +176,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get layoutSections => 'Sections';
 
   @override
+  String get dynamicColorSwitch => 'Dynamic color (Material You)';
+
+  @override
+  String get dynamicColorSwitchDescription =>
+      'Use the wallpaper-based colors on Android 12 and newer.';
+
+  @override
+  String get keyGroupNavigation => 'Navigation';
+
+  @override
+  String get keyGroupAppsInputs => 'Apps & inputs';
+
+  @override
+  String get keyGroupPictureAudio => 'Picture & audio';
+
+  @override
+  String get keyNameHome => 'Home';
+
+  @override
+  String get keyNameFastAccess => 'Fast access';
+
+  @override
+  String get keyNameSourceList => 'Source list';
+
+  @override
+  String get keyNameWebBrowser => 'Web browser';
+
+  @override
+  String get keyNameNetworkType => 'Network type';
+
+  @override
+  String get keyNameHybrid => 'Hybrid broadcast';
+
+  @override
   String get layoutClassic => 'Classic';
 
   @override

@@ -422,6 +422,72 @@ abstract class AppLocalizations {
   /// **'Sections'**
   String get layoutSections;
 
+  /// No description provided for @dynamicColorSwitch.
+  ///
+  /// In en, this message translates to:
+  /// **'Dynamic color (Material You)'**
+  String get dynamicColorSwitch;
+
+  /// No description provided for @dynamicColorSwitchDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the wallpaper-based colors on Android 12 and newer.'**
+  String get dynamicColorSwitchDescription;
+
+  /// No description provided for @keyGroupNavigation.
+  ///
+  /// In en, this message translates to:
+  /// **'Navigation'**
+  String get keyGroupNavigation;
+
+  /// No description provided for @keyGroupAppsInputs.
+  ///
+  /// In en, this message translates to:
+  /// **'Apps & inputs'**
+  String get keyGroupAppsInputs;
+
+  /// No description provided for @keyGroupPictureAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Picture & audio'**
+  String get keyGroupPictureAudio;
+
+  /// No description provided for @keyNameHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get keyNameHome;
+
+  /// No description provided for @keyNameFastAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Fast access'**
+  String get keyNameFastAccess;
+
+  /// No description provided for @keyNameSourceList.
+  ///
+  /// In en, this message translates to:
+  /// **'Source list'**
+  String get keyNameSourceList;
+
+  /// No description provided for @keyNameWebBrowser.
+  ///
+  /// In en, this message translates to:
+  /// **'Web browser'**
+  String get keyNameWebBrowser;
+
+  /// No description provided for @keyNameNetworkType.
+  ///
+  /// In en, this message translates to:
+  /// **'Network type'**
+  String get keyNameNetworkType;
+
+  /// No description provided for @keyNameHybrid.
+  ///
+  /// In en, this message translates to:
+  /// **'Hybrid broadcast'**
+  String get keyNameHybrid;
+
   /// No description provided for @layoutClassic.
   ///
   /// In en, this message translates to:

@@ -21,24 +21,6 @@ class KeyTesterScreen extends ConsumerStatefulWidget {
 class _KeyTesterScreenState extends ConsumerState<KeyTesterScreen> {
   final _codeController = TextEditingController();
 
-  /// (code, label) — labels confirmed on-device (MB180).
-  static const _presets = <(int, String)>[
-    (1062, 'YouTube'),
-    (1064, 'Netflix'),
-    (1046, 'Fast access / portal'),
-    (1056, 'Source list'),
-    (1065, 'Web browser'),
-    (1053, 'Home menu'),
-    (1060, 'Teletext'),
-    (1011, 'Picture format'),
-    (1014, 'Picture mode'),
-    (1015, 'Subtitle/audio'),
-    (1031, 'Subtitles'),
-    (1035, 'Audio track'),
-    (1040, 'Favorites'),
-    (1066, 'Settings'),
-  ];
-
   @override
   void dispose() {
     _codeController.dispose();
@@ -119,21 +101,86 @@ class _KeyTesterScreenState extends ConsumerState<KeyTesterScreen> {
           const SizedBox(height: 24),
           Text(l10n.presetKeys, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final (code, guess) in _presets)
-                ActionChip(
-                  avatar: const Icon(Icons.key, size: 16),
-                  label: Text('$code · $guess'),
-                  mouseCursor: SystemMouseCursors.click,
-                  onPressed: () => _send(code),
-                ),
-            ],
-          ),
+          ..._buildGroups(l10n),
         ],
       ),
     );
+  }
+
+  /// All confirmed codes as reference groups; every code is tappable to send
+  /// it again (e.g. to re-verify a function).
+  List<Widget> _buildGroups(AppLocalizations l10n) {
+    return [
+      for (final (title, entries) in _confirmedCodes(l10n)) ...[
+        Text(title, style: Theme.of(context).textTheme.titleSmall),
+        const SizedBox(height: 4),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final (code, label) in entries)
+              ActionChip(
+                avatar: const Icon(Icons.key, size: 16),
+                label: Text('$code · $label'),
+                mouseCursor: SystemMouseCursors.click,
+                onPressed: () => _send(code),
+              ),
+          ],
+        ),
+        const SizedBox(height: 16),
+      ],
+    ];
+  }
+
+  /// (group title, (code, label)) pairs for every code confirmed on the TV.
+  List<(String, List<(int, String)>)> _confirmedCodes(AppLocalizations l10n) {
+    return [
+      (
+        l10n.keyGroupNavigation,
+        [
+          for (var digit = 0; digit <= 9; digit++) (1000 + digit, '$digit'),
+          (1010, l10n.tooltipBack),
+          (1012, l10n.tooltipPower),
+          (1013, l10n.tooltipMute),
+          (1016, l10n.tooltipVolumeUp),
+          (1017, l10n.tooltipVolumeDown),
+          (1018, l10n.tooltipInfo),
+          (1019, l10n.tooltipUp),
+          (1020, l10n.tooltipDown),
+          (1021, l10n.tooltipLeft),
+          (1022, l10n.tooltipRight),
+          (1032, l10n.tooltipChannelUp),
+          (1033, l10n.tooltipChannelDown),
+          (1037, l10n.tooltipExit),
+          (1053, l10n.tooltipOk),
+          (1053, l10n.keyNameHome),
+        ],
+      ),
+      (
+        l10n.keyGroupAppsInputs,
+        [
+          (1046, l10n.keyNameFastAccess),
+          (1056, l10n.keyNameSourceList),
+          (1062, l10n.appYouTube),
+          (1064, l10n.appNetflix),
+          (1065, l10n.keyNameWebBrowser),
+          (1063, l10n.keyNameNetworkType),
+          (1055, l10n.keyNameHybrid),
+        ],
+      ),
+      (
+        l10n.keyGroupPictureAudio,
+        [
+          (1011, l10n.tooltipPictureFormat),
+          (1014, l10n.tooltipPictureMode),
+          (1015, l10n.tooltipSubtitleAudio),
+          (1031, l10n.tooltipSubtitles),
+          (1035, l10n.tooltipAudioTrack),
+          (1040, l10n.tooltipFavorites),
+          (1060, l10n.tooltipTeletext),
+          (1066, l10n.tooltipSettings),
+        ],
+      ),
+    ];
   }
 }

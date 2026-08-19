@@ -176,6 +176,40 @@ class AppLocalizationsTr extends AppLocalizations {
   String get layoutSections => 'Bölümler';
 
   @override
+  String get dynamicColorSwitch => 'Dinamik renk (Material You)';
+
+  @override
+  String get dynamicColorSwitchDescription =>
+      'Android 12 ve sonrasında duvar kâğıdı tabanlı renkleri kullan.';
+
+  @override
+  String get keyGroupNavigation => 'Gezinme';
+
+  @override
+  String get keyGroupAppsInputs => 'Uygulamalar ve girişler';
+
+  @override
+  String get keyGroupPictureAudio => 'Görüntü ve ses';
+
+  @override
+  String get keyNameHome => 'Ana menü';
+
+  @override
+  String get keyNameFastAccess => 'Hızlı erişim';
+
+  @override
+  String get keyNameSourceList => 'Kaynak listesi';
+
+  @override
+  String get keyNameWebBrowser => 'Web tarayıcı';
+
+  @override
+  String get keyNameNetworkType => 'Yayın ağ türü';
+
+  @override
+  String get keyNameHybrid => 'Hibrit yayın';
+
+  @override
   String get layoutClassic => 'Klasik';
 
   @override
