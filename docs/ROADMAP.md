@@ -6,9 +6,21 @@ Items and priorities may change as the project evolves.
 
 ---
 
+## Current status
+
+- Release: v0.4 pre-alpha (no tagged releases yet).
+- Working Windows build with a minimal Riverpod UI (device discovery, remote
+  control, live status, sleep timer, settings, TR/EN localization) validated
+  against a real VESTEL 50U9510M (MB180).
+- 48 tests pass, `flutter analyze` clean, Windows debug build succeeds.
+- Open gaps: 7681 status channel unverified on MB180, quick launcher and
+  Wake-on-LAN not started, Android not started.
+
+---
+
 # v0.1.0 — Foundation
 
-Status: In Progress
+Status: Completed
 
 Goals:
 
@@ -18,11 +30,18 @@ Goals:
 * Flutter foundation
 * Core infrastructure
 
+Done:
+
+* Clean Architecture skeleton (`app/ core/ features/ integrations/ shared/`)
+* `PRD.md`, `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`, `.ai/AI_CONTEXT.md`
+* Flutter 3.44 / Dart 3.12 project; Riverpod, ARB localization, lints
+* Core networking (`DartHttpProbe`, `DartUdpBroadcastSocket`)
+
 ---
 
 # v0.2.0 — Networking
 
-Status: Planned
+Status: Completed
 
 Goals:
 
@@ -31,11 +50,18 @@ Goals:
 * Protocol abstraction
 * Connection management
 
+Done:
+
+* Discovery abstraction (`DeviceDiscovery`) + `DiscoveryService`
+* HTTP probe + UDP broadcast socket in `core/networking`
+* Subnet scanning via `route print -4` (default-route subnet, 254 hosts)
+* Scan progress per host + cancellable batches
+
 ---
 
 # v0.3.0 — Vestel Integration
 
-Status: Planned
+Status: Completed (7681 verification pending)
 
 Goals:
 
@@ -48,11 +74,25 @@ Supported Brands:
 
 * Vestel Smart TV
 
+Done:
+
+* Confirmed protocol (dd.xml discovery, SmartCenter remote keys, fixed
+  Content-Length requirement)
+* Remote control (`VestelRemoteControl`) with all mapped keys
+* Command handling + feedback modes
+* 7681 status/events (`VestelTvStatus`) implemented with parser
+* Device pairing covered by last-device persistence + manual device list
+
+Pending:
+
+* 7681 frame format on MB180 still unverified (tool prints raw frames for
+  diagnosis)
+
 ---
 
 # v0.4.0 — User Experience
 
-Status: Planned
+Status: In Progress
 
 Goals:
 
@@ -63,6 +103,23 @@ Goals:
 * Settings
 * Localization
 * Themes
+
+Done:
+
+* Device management: discovery list, recent device, manual add/remove
+* Sleep timer: presets, custom slider, manual minute entry, hours/minutes
+  display options
+* Settings: command feedback, theme mode, language, sleep-timer display,
+  live status toggle, device management
+* Localization: full TR/EN ARB set
+* Themes: light/dark + system, pointer cursors on desktop
+* Snackbar feedback (success green, error red, immediate replace)
+
+Skipped / not started:
+
+* Quick launcher
+* Wake-on-LAN
+* Device reconnect/health checks for saved offline devices
 
 ---
 
@@ -132,4 +189,4 @@ Features:
 * Additional discovery methods
 * Automation features
 * Developer tools
-
+* Live volume-level display (needs protocol research)
