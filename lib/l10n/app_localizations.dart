@@ -410,18 +410,6 @@ abstract class AppLocalizations {
   /// **'Could not launch the app.'**
   String get appLaunchFailed;
 
-  /// No description provided for @remoteLayout.
-  ///
-  /// In en, this message translates to:
-  /// **'Remote layout'**
-  String get remoteLayout;
-
-  /// No description provided for @layoutSections.
-  ///
-  /// In en, this message translates to:
-  /// **'Sections'**
-  String get layoutSections;
-
   /// No description provided for @dynamicColorSwitch.
   ///
   /// In en, this message translates to:
@@ -451,6 +439,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Picture & audio'**
   String get keyGroupPictureAudio;
+
+  /// No description provided for @keyGroupBasics.
+  ///
+  /// In en, this message translates to:
+  /// **'Power & volume'**
+  String get keyGroupBasics;
+
+  /// No description provided for @layoutBlocks.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocks'**
+  String get layoutBlocks;
 
   /// No description provided for @keyNameHome.
   ///
@@ -505,30 +505,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Minimal'**
   String get layoutMinimal;
-
-  /// No description provided for @layoutSectionTvStatus.
-  ///
-  /// In en, this message translates to:
-  /// **'TV status'**
-  String get layoutSectionTvStatus;
-
-  /// No description provided for @layoutSectionDigits.
-  ///
-  /// In en, this message translates to:
-  /// **'Digit keys'**
-  String get layoutSectionDigits;
-
-  /// No description provided for @layoutSectionSleepTimer.
-  ///
-  /// In en, this message translates to:
-  /// **'Sleep timer'**
-  String get layoutSectionSleepTimer;
-
-  /// No description provided for @layoutSectionExtras.
-  ///
-  /// In en, this message translates to:
-  /// **'Quick controls'**
-  String get layoutSectionExtras;
 
   /// No description provided for @keyTesterTitle.
   ///
@@ -775,6 +751,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Teletext'**
   String get tooltipTeletext;
+
+  /// No description provided for @moreOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'More options'**
+  String get moreOptions;
+
+  /// No description provided for @editLayout.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit layout'**
+  String get editLayout;
+
+  /// No description provided for @layoutCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get layoutCustom;
+
+  /// No description provided for @addToLayout.
+  ///
+  /// In en, this message translates to:
+  /// **'Add buttons'**
+  String get addToLayout;
+
+  /// No description provided for @blockTvStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'TV status'**
+  String get blockTvStatus;
+
+  /// No description provided for @blockDigitsPad.
+  ///
+  /// In en, this message translates to:
+  /// **'Digit pad'**
+  String get blockDigitsPad;
+
+  /// No description provided for @resetLayout.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset layout'**
+  String get resetLayout;
+
+  /// No description provided for @removeButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get removeButton;
+
+  /// No description provided for @buttonSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Size'**
+  String get buttonSize;
+
+  /// No description provided for @layoutSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Layout saved'**
+  String get layoutSaved;
 }
 
 class _AppLocalizationsDelegate

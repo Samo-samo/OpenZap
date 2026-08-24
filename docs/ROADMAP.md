@@ -237,3 +237,11 @@ Features:
 * Automation features
 * Developer tools
 * Live volume-level display (needs protocol research)
+
+Engineering notes:
+
+* Full-grid layout refactor: presets and sections currently render through a
+  hybrid system (fixed section widgets + an optional custom grid). An attempt
+  at converting everything — including classic/compact/minimal presets — to
+  the grid model should be made on a branch; merge if the result feels
+  better. Candidate for the step right after the custom-layout feature.

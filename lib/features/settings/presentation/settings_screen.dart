@@ -19,9 +19,6 @@ class SettingsScreen extends ConsumerWidget {
     final commandFeedback =
         settings?.commandFeedback ?? CommandFeedback.errorsOnly;
     final themeMode = settings?.themeMode ?? AppThemeMode.system;
-    final remoteLayout = settings == null
-        ? RemoteLayout.classic
-        : matchingRemoteLayoutPreset(settings);
     // No explicit "System" option: the current system locale is detected and
     // preselected, and any pick stores a concrete language.
     final systemLanguageCode =
@@ -97,63 +94,6 @@ class SettingsScreen extends ConsumerWidget {
                 ),
               ],
             ),
-          ),
-          _SectionHeader(l10n.remoteLayout),
-          RadioGroup<RemoteLayout>(
-            groupValue: remoteLayout,
-            onChanged: (value) {
-              if (value != null) {
-                ref.read(settingsProvider.notifier).setRemoteLayout(value);
-              }
-            },
-            child: Column(
-              children: [
-                RadioListTile<RemoteLayout>(
-                  title: Text(l10n.layoutClassic),
-                  mouseCursor: SystemMouseCursors.click,
-                  value: RemoteLayout.classic,
-                ),
-                RadioListTile<RemoteLayout>(
-                  title: Text(l10n.layoutCompact),
-                  mouseCursor: SystemMouseCursors.click,
-                  value: RemoteLayout.compact,
-                ),
-                RadioListTile<RemoteLayout>(
-                  title: Text(l10n.layoutMinimal),
-                  mouseCursor: SystemMouseCursors.click,
-                  value: RemoteLayout.minimal,
-                ),
-              ],
-            ),
-          ),
-          _SectionHeader(l10n.layoutSections),
-          SwitchListTile(
-            title: Text(l10n.layoutSectionTvStatus),
-            mouseCursor: SystemMouseCursors.click,
-            value: settings?.showTvStatus ?? true,
-            onChanged: (value) =>
-                ref.read(settingsProvider.notifier).setShowTvStatus(value),
-          ),
-          SwitchListTile(
-            title: Text(l10n.layoutSectionDigits),
-            mouseCursor: SystemMouseCursors.click,
-            value: settings?.showDigits ?? true,
-            onChanged: (value) =>
-                ref.read(settingsProvider.notifier).setShowDigits(value),
-          ),
-          SwitchListTile(
-            title: Text(l10n.layoutSectionSleepTimer),
-            mouseCursor: SystemMouseCursors.click,
-            value: settings?.showSleepTimer ?? true,
-            onChanged: (value) =>
-                ref.read(settingsProvider.notifier).setShowSleepTimer(value),
-          ),
-          SwitchListTile(
-            title: Text(l10n.layoutSectionExtras),
-            mouseCursor: SystemMouseCursors.click,
-            value: settings?.showExtras ?? true,
-            onChanged: (value) =>
-                ref.read(settingsProvider.notifier).setShowExtras(value),
           ),
           _SectionHeader(
             l10n.commandFeedback,

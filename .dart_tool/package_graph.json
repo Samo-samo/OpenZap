@@ -5,7 +5,7 @@
   "packages": [
     {
       "name": "openzap",
-      "version": "0.4.0+1",
+      "version": "0.5.0+1",
       "dependencies": [
         "cupertino_icons",
         "dynamic_color",
@@ -57,6 +57,14 @@
         "stream_channel",
         "test_api",
         "vector_math"
+      ]
+    },
+    {
+      "name": "dynamic_color",
+      "version": "1.9.0",
+      "dependencies": [
+        "flutter",
+        "material_color_utilities"
       ]
     },
     {
@@ -254,6 +262,13 @@
       ]
     },
     {
+      "name": "material_color_utilities",
+      "version": "0.13.0",
+      "dependencies": [
+        "collection"
+      ]
+    },
+    {
       "name": "shared_preferences_windows",
       "version": "2.4.1",
       "dependencies": [
@@ -333,13 +348,6 @@
       "name": "sky_engine",
       "version": "0.0.0",
       "dependencies": []
-    },
-    {
-      "name": "material_color_utilities",
-      "version": "0.13.0",
-      "dependencies": [
-        "collection"
-      ]
     },
     {
       "name": "characters",
@@ -515,14 +523,6 @@
       "dependencies": [
         "meta",
         "path"
-      ]
-    },
-    {
-      "name": "dynamic_color",
-      "version": "1.9.0",
-      "dependencies": [
-        "flutter",
-        "material_color_utilities"
       ]
     }
   ],

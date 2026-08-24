@@ -150,5 +150,29 @@ void main() {
       await store.save(const AppSettings(wifiWarningEnabled: false));
       expect((await store.load()).wifiWarningEnabled, isFalse);
     });
+
+    test('custom layout defaults to inactive and empty', () async {
+      SharedPreferences.setMockInitialValues({});
+      final store = SharedPreferencesSettingsStore();
+
+      final settings = await store.load();
+
+      expect(settings.useCustomLayout, isFalse);
+      expect(settings.customLayoutJson, isNull);
+    });
+
+    test('round-trips the custom layout', () async {
+      SharedPreferences.setMockInitialValues({});
+      final store = SharedPreferencesSettingsStore();
+
+      const json = '{"version":1,"items":[]}';
+      await store.save(
+        const AppSettings(useCustomLayout: true, customLayoutJson: json),
+      );
+      final loaded = await store.load();
+
+      expect(loaded.useCustomLayout, isTrue);
+      expect(loaded.customLayoutJson, json);
+    });
   });
 }

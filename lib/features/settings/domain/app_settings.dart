@@ -98,6 +98,8 @@ class AppSettings {
     this.showDigits = true,
     this.showSleepTimer = true,
     this.showExtras = true,
+    this.useCustomLayout = false,
+    this.customLayoutJson,
     this.languageCode,
     this.sleepTimerHumanReadable = true,
     this.sleepTimerShowMinutesInParens = false,
@@ -129,6 +131,17 @@ class AppSettings {
   /// favorites, settings, teletext).
   final bool showExtras;
 
+  /// Whether the remote screen renders the custom grid layout instead of the
+  /// fixed sections.
+  final bool useCustomLayout;
+
+  /// Serialized JSON payload of the custom grid layout, or `null` when no
+  /// custom layout has been saved yet.
+  ///
+  /// Kept even while a preset is active so switching back to the custom mode
+  /// restores the last edited arrangement.
+  final String? customLayoutJson;
+
   /// App language (`tr`, `en`, ...), or `null` to follow the system locale.
   final String? languageCode;
 
@@ -149,7 +162,6 @@ class AppSettings {
 
   /// Whether the start screen shows the same-Wi-Fi warning banner.
   final bool wifiWarningEnabled;
-
   AppSettings copyWith({
     CommandFeedback? commandFeedback,
     AppThemeMode? themeMode,
@@ -158,6 +170,8 @@ class AppSettings {
     bool? showDigits,
     bool? showSleepTimer,
     bool? showExtras,
+    bool? useCustomLayout,
+    String? customLayoutJson,
     String? languageCode,
     bool? sleepTimerHumanReadable,
     bool? sleepTimerShowMinutesInParens,
@@ -173,6 +187,8 @@ class AppSettings {
       showDigits: showDigits ?? this.showDigits,
       showSleepTimer: showSleepTimer ?? this.showSleepTimer,
       showExtras: showExtras ?? this.showExtras,
+      useCustomLayout: useCustomLayout ?? this.useCustomLayout,
+      customLayoutJson: customLayoutJson ?? this.customLayoutJson,
       languageCode: languageCode ?? this.languageCode,
       sleepTimerHumanReadable:
           sleepTimerHumanReadable ?? this.sleepTimerHumanReadable,
@@ -195,6 +211,8 @@ class AppSettings {
       other.showDigits == showDigits &&
       other.showSleepTimer == showSleepTimer &&
       other.showExtras == showExtras &&
+      other.useCustomLayout == useCustomLayout &&
+      other.customLayoutJson == customLayoutJson &&
       other.languageCode == languageCode &&
       other.sleepTimerHumanReadable == sleepTimerHumanReadable &&
       other.sleepTimerShowMinutesInParens == sleepTimerShowMinutesInParens &&
@@ -211,6 +229,8 @@ class AppSettings {
     showDigits,
     showSleepTimer,
     showExtras,
+    useCustomLayout,
+    customLayoutJson,
     languageCode,
     sleepTimerHumanReadable,
     sleepTimerShowMinutesInParens,

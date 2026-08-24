@@ -11,6 +11,8 @@ class SharedPreferencesSettingsStore implements SettingsStore {
   static const _showDigitsKey = 'show_digits';
   static const _showSleepTimerKey = 'show_sleep_timer';
   static const _showExtrasKey = 'show_extras';
+  static const _useCustomLayoutKey = 'use_custom_layout';
+  static const _customLayoutJsonKey = 'custom_layout_json';
   static const _languageCodeKey = 'language_code';
   static const _sleepTimerHumanReadableKey = 'sleep_timer_human_readable';
   static const _sleepTimerMinutesInParensKey = 'sleep_timer_minutes_in_parens';
@@ -33,6 +35,8 @@ class SharedPreferencesSettingsStore implements SettingsStore {
       showDigits: prefs.getBool(_showDigitsKey) ?? true,
       showSleepTimer: prefs.getBool(_showSleepTimerKey) ?? true,
       showExtras: prefs.getBool(_showExtrasKey) ?? true,
+      useCustomLayout: prefs.getBool(_useCustomLayoutKey) ?? false,
+      customLayoutJson: prefs.getString(_customLayoutJsonKey),
       languageCode: prefs.getString(_languageCodeKey),
       sleepTimerHumanReadable:
           prefs.getBool(_sleepTimerHumanReadableKey) ?? true,
@@ -54,6 +58,13 @@ class SharedPreferencesSettingsStore implements SettingsStore {
     await prefs.setBool(_showDigitsKey, settings.showDigits);
     await prefs.setBool(_showSleepTimerKey, settings.showSleepTimer);
     await prefs.setBool(_showExtrasKey, settings.showExtras);
+    await prefs.setBool(_useCustomLayoutKey, settings.useCustomLayout);
+    final customLayoutJson = settings.customLayoutJson;
+    if (customLayoutJson == null) {
+      await prefs.remove(_customLayoutJsonKey);
+    } else {
+      await prefs.setString(_customLayoutJsonKey, customLayoutJson);
+    }
     final languageCode = settings.languageCode;
     if (languageCode == null) {
       await prefs.remove(_languageCodeKey);

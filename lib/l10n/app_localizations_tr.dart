@@ -170,12 +170,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get appLaunchFailed => 'Uygulama başlatılamadı.';
 
   @override
-  String get remoteLayout => 'Kumanda düzeni';
-
-  @override
-  String get layoutSections => 'Bölümler';
-
-  @override
   String get dynamicColorSwitch => 'Dinamik renk (Material You)';
 
   @override
@@ -190,6 +184,12 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get keyGroupPictureAudio => 'Görüntü ve ses';
+
+  @override
+  String get keyGroupBasics => 'Güç ve ses';
+
+  @override
+  String get layoutBlocks => 'Bloklar';
 
   @override
   String get keyNameHome => 'Ana menü';
@@ -217,18 +217,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get layoutMinimal => 'Minimal';
-
-  @override
-  String get layoutSectionTvStatus => 'TV durumu';
-
-  @override
-  String get layoutSectionDigits => 'Rakam tuşları';
-
-  @override
-  String get layoutSectionSleepTimer => 'Uyku zamanlayıcı';
-
-  @override
-  String get layoutSectionExtras => 'Hızlı kontroller';
 
   @override
   String get keyTesterTitle => 'Tuş testi';
@@ -363,4 +351,34 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get tooltipTeletext => 'Teletekst';
+
+  @override
+  String get moreOptions => 'Diğer seçenekler';
+
+  @override
+  String get editLayout => 'Düzeni düzenle';
+
+  @override
+  String get layoutCustom => 'Özel';
+
+  @override
+  String get addToLayout => 'Düğme ekle';
+
+  @override
+  String get blockTvStatus => 'TV durumu';
+
+  @override
+  String get blockDigitsPad => 'Rakam tuşları';
+
+  @override
+  String get resetLayout => 'Düzeni sıfırla';
+
+  @override
+  String get removeButton => 'Kaldır';
+
+  @override
+  String get buttonSize => 'Boyut';
+
+  @override
+  String get layoutSaved => 'Düzen kaydedildi';
 }

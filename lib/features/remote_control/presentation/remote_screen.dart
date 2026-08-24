@@ -10,6 +10,11 @@ import '../../sleep_timer/presentation/sleep_timer_provider.dart';
 import '../../tv_status/domain/tv_status.dart';
 import '../domain/remote_control_error.dart';
 import '../domain/remote_key.dart';
+import '../domain/remote_layout.dart';
+import 'key_tester_screen.dart';
+import 'layout_editor_screen.dart';
+import 'layout_grid_view.dart';
+import 'remote_key_icons.dart';
 
 class RemoteScreen extends ConsumerWidget {
   const RemoteScreen({super.key});
@@ -30,12 +35,66 @@ class RemoteScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(device.name),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.apps),
-            tooltip: l10n.appsTitle,
-            onPressed: () => Navigator.of(
-              context,
-            ).push(MaterialPageRoute<void>(builder: (_) => const AppsScreen())),
+          PopupMenuButton<String>(
+            tooltip: l10n.moreOptions,
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) => _onMenuSelected(context, ref, value),
+            itemBuilder: (context) {
+              final settings =
+                  ref.read(settingsProvider).valueOrNull ?? const AppSettings();
+              final preset = settings.useCustomLayout
+                  ? null
+                  : matchingRemoteLayoutPreset(settings);
+              return [
+                CheckedPopupMenuItem(
+                  value: 'classic',
+                  checked: preset == RemoteLayout.classic,
+                  child: Text(l10n.layoutClassic),
+                ),
+                CheckedPopupMenuItem(
+                  value: 'compact',
+                  checked: preset == RemoteLayout.compact,
+                  child: Text(l10n.layoutCompact),
+                ),
+                CheckedPopupMenuItem(
+                  value: 'minimal',
+                  checked: preset == RemoteLayout.minimal,
+                  child: Text(l10n.layoutMinimal),
+                ),
+                const PopupMenuDivider(),
+                CheckedPopupMenuItem(
+                  value: 'custom',
+                  checked: settings.useCustomLayout,
+                  enabled: settings.customLayoutJson != null,
+                  child: Text(l10n.layoutCustom),
+                ),
+                PopupMenuItem(
+                  value: 'edit',
+                  child: ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.edit_outlined),
+                    title: Text(l10n.editLayout),
+                  ),
+                ),
+                const PopupMenuDivider(),
+                PopupMenuItem(
+                  value: 'apps',
+                  child: ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.apps),
+                    title: Text(l10n.appsTitle),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'keytest',
+                  child: ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.keyboard_alt_outlined),
+                    title: Text(l10n.keyTesterTitle),
+                  ),
+                ),
+              ];
+            },
           ),
         ],
       ),
@@ -46,12 +105,91 @@ class RemoteScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(16),
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: _buildSections(context, ref, l10n),
+              children: _buildBody(context, ref, l10n),
             ),
           ),
         ),
       ),
     );
+  }
+
+  void _onMenuSelected(BuildContext context, WidgetRef ref, String value) {
+    final notifier = ref.read(settingsProvider.notifier);
+    switch (value) {
+      case 'classic':
+      case 'compact':
+      case 'minimal':
+        notifier.setRemoteLayout(RemoteLayout.values.byName(value));
+      case 'custom':
+        notifier.setUseCustomLayout(true);
+      case 'edit':
+        Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => const LayoutEditorScreen()),
+        );
+      case 'apps':
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute<void>(builder: (_) => const AppsScreen()));
+      case 'keytest':
+        Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => const KeyTesterScreen()),
+        );
+    }
+  }
+
+  /// Builds the remote screen contents: the custom grid layout when active,
+  /// otherwise the fixed sections.
+  List<Widget> _buildBody(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+  ) {
+    final settings =
+        ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    if (settings.useCustomLayout) {
+      final grid = RemoteGridLayout.tryFromJsonString(
+        settings.customLayoutJson,
+      );
+      if (grid != null && grid.items.isNotEmpty) {
+        return [
+          LayoutGridView(
+            grid: grid,
+            itemBuilder: (context, item) =>
+                _buildGridItem(context, ref, l10n, item),
+          ),
+          const SizedBox(height: 16),
+        ];
+      }
+    }
+    return _buildSections(context, ref, l10n);
+  }
+
+  Widget _buildGridItem(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+    LayoutItem item,
+  ) {
+    if (item.isKey) {
+      final longestSpan = item.effectiveRowSpan > item.effectiveColumnSpan
+          ? item.effectiveRowSpan
+          : item.effectiveColumnSpan;
+      return Tooltip(
+        message: remoteKeyLabel(item.remoteKey!, l10n),
+        child: SizedBox.expand(
+          child: IconButton.filled(
+            iconSize: 24.0 + 8.0 * (longestSpan - 1),
+            onPressed: () => _sendKey(context, ref, item.remoteKey!),
+            icon: Icon(remoteKeyIcon(item.remoteKey!)),
+          ),
+        ),
+      );
+    }
+    return switch (item.block!) {
+      LayoutBlock.tvStatus => const Center(child: _TvStatusChip()),
+      LayoutBlock.digitsPad => Center(child: _buildDigits()),
+      LayoutBlock.sleepTimer => const Center(child: _SleepTimerControl()),
+    };
   }
 
   /// Builds the remote sections according to the visibility settings:

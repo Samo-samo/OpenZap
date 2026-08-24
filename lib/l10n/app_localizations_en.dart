@@ -170,12 +170,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appLaunchFailed => 'Could not launch the app.';
 
   @override
-  String get remoteLayout => 'Remote layout';
-
-  @override
-  String get layoutSections => 'Sections';
-
-  @override
   String get dynamicColorSwitch => 'Dynamic color (Material You)';
 
   @override
@@ -190,6 +184,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get keyGroupPictureAudio => 'Picture & audio';
+
+  @override
+  String get keyGroupBasics => 'Power & volume';
+
+  @override
+  String get layoutBlocks => 'Blocks';
 
   @override
   String get keyNameHome => 'Home';
@@ -217,18 +217,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get layoutMinimal => 'Minimal';
-
-  @override
-  String get layoutSectionTvStatus => 'TV status';
-
-  @override
-  String get layoutSectionDigits => 'Digit keys';
-
-  @override
-  String get layoutSectionSleepTimer => 'Sleep timer';
-
-  @override
-  String get layoutSectionExtras => 'Quick controls';
 
   @override
   String get keyTesterTitle => 'Key test';
@@ -374,4 +362,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tooltipTeletext => 'Teletext';
+
+  @override
+  String get moreOptions => 'More options';
+
+  @override
+  String get editLayout => 'Edit layout';
+
+  @override
+  String get layoutCustom => 'Custom';
+
+  @override
+  String get addToLayout => 'Add buttons';
+
+  @override
+  String get blockTvStatus => 'TV status';
+
+  @override
+  String get blockDigitsPad => 'Digit pad';
+
+  @override
+  String get resetLayout => 'Reset layout';
+
+  @override
+  String get removeButton => 'Remove';
+
+  @override
+  String get buttonSize => 'Size';
+
+  @override
+  String get layoutSaved => 'Layout saved';
 }

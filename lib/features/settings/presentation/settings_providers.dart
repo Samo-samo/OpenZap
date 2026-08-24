@@ -27,31 +27,28 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
   }
 
   Future<void> setRemoteLayout(RemoteLayout value) async {
-    final settings = applyRemoteLayoutPreset(value, state.value!);
+    final settings = applyRemoteLayoutPreset(
+      value,
+      state.value!.copyWith(useCustomLayout: false),
+    );
     state = AsyncData(settings);
     await ref.read(settingsStoreProvider).save(settings);
   }
 
-  Future<void> setShowTvStatus(bool value) async {
-    final settings = state.value!.copyWith(showTvStatus: value);
+  /// Activates or deactivates the custom grid layout. Deactivation keeps the
+  /// saved layout around for later.
+  Future<void> setUseCustomLayout(bool value) async {
+    final settings = state.value!.copyWith(useCustomLayout: value);
     state = AsyncData(settings);
     await ref.read(settingsStoreProvider).save(settings);
   }
 
-  Future<void> setShowDigits(bool value) async {
-    final settings = state.value!.copyWith(showDigits: value);
-    state = AsyncData(settings);
-    await ref.read(settingsStoreProvider).save(settings);
-  }
-
-  Future<void> setShowSleepTimer(bool value) async {
-    final settings = state.value!.copyWith(showSleepTimer: value);
-    state = AsyncData(settings);
-    await ref.read(settingsStoreProvider).save(settings);
-  }
-
-  Future<void> setShowExtras(bool value) async {
-    final settings = state.value!.copyWith(showExtras: value);
+  /// Persists an edited custom layout and activates it.
+  Future<void> saveCustomLayout(String json) async {
+    final settings = state.value!.copyWith(
+      useCustomLayout: true,
+      customLayoutJson: json,
+    );
     state = AsyncData(settings);
     await ref.read(settingsStoreProvider).save(settings);
   }
