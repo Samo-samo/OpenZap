@@ -1,3 +1,6 @@
+import 'package:openzap/features/remote_control/domain/remote_layout.dart'
+    show SavedRemoteLayout;
+
 /// How the UI reports command delivery to the user.
 enum CommandFeedback {
   /// Show a message only when a command fails.
@@ -90,6 +93,8 @@ RemoteLayout? matchingRemoteLayoutPreset(AppSettings settings) {
 
 /// User-configurable application settings.
 class AppSettings {
+  static const Object _unset = Object();
+
   const AppSettings({
     this.commandFeedback = CommandFeedback.errorsOnly,
     this.themeMode = AppThemeMode.system,
@@ -98,8 +103,8 @@ class AppSettings {
     this.showDigits = true,
     this.showSleepTimer = true,
     this.showExtras = true,
-    this.useCustomLayout = false,
-    this.customLayoutJson,
+    this.savedLayouts = const [],
+    this.activeCustomLayoutId,
     this.languageCode,
     this.sleepTimerHumanReadable = true,
     this.sleepTimerShowMinutesInParens = false,
@@ -131,16 +136,12 @@ class AppSettings {
   /// favorites, settings, teletext).
   final bool showExtras;
 
-  /// Whether the remote screen renders the custom grid layout instead of the
-  /// fixed sections.
-  final bool useCustomLayout;
+  /// Saved custom grid layouts, in creation order.
+  final List<SavedRemoteLayout> savedLayouts;
 
-  /// Serialized JSON payload of the custom grid layout, or `null` when no
-  /// custom layout has been saved yet.
-  ///
-  /// Kept even while a preset is active so switching back to the custom mode
-  /// restores the last edited arrangement.
-  final String? customLayoutJson;
+  /// The currently active custom layout id, or `null` when a preset is
+  /// active.
+  final String? activeCustomLayoutId;
 
   /// App language (`tr`, `en`, ...), or `null` to follow the system locale.
   final String? languageCode;
@@ -170,8 +171,8 @@ class AppSettings {
     bool? showDigits,
     bool? showSleepTimer,
     bool? showExtras,
-    bool? useCustomLayout,
-    String? customLayoutJson,
+    List<SavedRemoteLayout>? savedLayouts,
+    Object? activeCustomLayoutId = _unset,
     String? languageCode,
     bool? sleepTimerHumanReadable,
     bool? sleepTimerShowMinutesInParens,
@@ -187,8 +188,10 @@ class AppSettings {
       showDigits: showDigits ?? this.showDigits,
       showSleepTimer: showSleepTimer ?? this.showSleepTimer,
       showExtras: showExtras ?? this.showExtras,
-      useCustomLayout: useCustomLayout ?? this.useCustomLayout,
-      customLayoutJson: customLayoutJson ?? this.customLayoutJson,
+      savedLayouts: savedLayouts ?? this.savedLayouts,
+      activeCustomLayoutId: activeCustomLayoutId == _unset
+          ? this.activeCustomLayoutId
+          : activeCustomLayoutId as String?,
       languageCode: languageCode ?? this.languageCode,
       sleepTimerHumanReadable:
           sleepTimerHumanReadable ?? this.sleepTimerHumanReadable,
@@ -211,8 +214,8 @@ class AppSettings {
       other.showDigits == showDigits &&
       other.showSleepTimer == showSleepTimer &&
       other.showExtras == showExtras &&
-      other.useCustomLayout == useCustomLayout &&
-      other.customLayoutJson == customLayoutJson &&
+      _layoutsEqual(other.savedLayouts, savedLayouts) &&
+      other.activeCustomLayoutId == activeCustomLayoutId &&
       other.languageCode == languageCode &&
       other.sleepTimerHumanReadable == sleepTimerHumanReadable &&
       other.sleepTimerShowMinutesInParens == sleepTimerShowMinutesInParens &&
@@ -229,8 +232,8 @@ class AppSettings {
     showDigits,
     showSleepTimer,
     showExtras,
-    useCustomLayout,
-    customLayoutJson,
+    Object.hashAll(savedLayouts),
+    activeCustomLayoutId,
     languageCode,
     sleepTimerHumanReadable,
     sleepTimerShowMinutesInParens,
@@ -238,4 +241,19 @@ class AppSettings {
     tvStatusTracking,
     wifiWarningEnabled,
   );
+
+  static bool _layoutsEqual(
+    List<SavedRemoteLayout> a,
+    List<SavedRemoteLayout> b,
+  ) {
+    if (a.length != b.length) {
+      return false;
+    }
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
 }

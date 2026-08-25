@@ -770,6 +770,42 @@ abstract class AppLocalizations {
   /// **'Custom'**
   String get layoutCustom;
 
+  /// No description provided for @newLayout.
+  ///
+  /// In en, this message translates to:
+  /// **'New layout'**
+  String get newLayout;
+
+  /// No description provided for @manageLayouts.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage layouts'**
+  String get manageLayouts;
+
+  /// No description provided for @renameLayoutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename layout'**
+  String get renameLayoutTitle;
+
+  /// No description provided for @nameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get nameLabel;
+
+  /// No description provided for @showGrid.
+  ///
+  /// In en, this message translates to:
+  /// **'Show grid'**
+  String get showGrid;
+
+  /// No description provided for @hideGrid.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide grid'**
+  String get hideGrid;
+
   /// No description provided for @addToLayout.
   ///
   /// In en, this message translates to:

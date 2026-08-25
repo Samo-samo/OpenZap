@@ -362,6 +362,24 @@ class AppLocalizationsTr extends AppLocalizations {
   String get layoutCustom => 'Özel';
 
   @override
+  String get newLayout => 'Yeni düzen';
+
+  @override
+  String get manageLayouts => 'Düzenleri yönet';
+
+  @override
+  String get renameLayoutTitle => 'Düzeni yeniden adlandır';
+
+  @override
+  String get nameLabel => 'İsim';
+
+  @override
+  String get showGrid => 'Izgara göster';
+
+  @override
+  String get hideGrid => 'Izgarayı gizle';
+
+  @override
   String get addToLayout => 'Düğme ekle';
 
   @override

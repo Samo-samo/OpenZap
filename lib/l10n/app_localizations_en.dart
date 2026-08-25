@@ -373,6 +373,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get layoutCustom => 'Custom';
 
   @override
+  String get newLayout => 'New layout';
+
+  @override
+  String get manageLayouts => 'Manage layouts';
+
+  @override
+  String get renameLayoutTitle => 'Rename layout';
+
+  @override
+  String get nameLabel => 'Name';
+
+  @override
+  String get showGrid => 'Show grid';
+
+  @override
+  String get hideGrid => 'Hide grid';
+
+  @override
   String get addToLayout => 'Add buttons';
 
   @override

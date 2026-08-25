@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +8,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:openzap/app/providers.dart';
 import 'package:openzap/features/discovery/domain/discovered_device.dart';
+import 'package:openzap/features/remote_control/domain/remote_key.dart';
+import 'package:openzap/features/remote_control/domain/remote_layout.dart';
 import 'package:openzap/features/remote_control/presentation/layout_editor_screen.dart';
 import 'package:openzap/features/remote_control/presentation/remote_screen.dart';
 import 'package:openzap/l10n/app_localizations.dart';
@@ -17,6 +21,25 @@ void main() {
     port: 56789,
     manufacturer: 'Vestel',
   );
+
+  /// Builds the prefs payload for one saved layout containing [items].
+  Map<String, Object> layoutPrefs({
+    required List<LayoutItem> items,
+    String id = 'l1',
+    String name = 'Salon',
+    bool active = true,
+    int columns = kLayoutGridColumns,
+  }) {
+    final gridJson = jsonEncode(
+      RemoteGridLayout(items, columns: columns).toJson(),
+    );
+    return {
+      'custom_layouts_v1': jsonEncode([
+        SavedRemoteLayout(id: id, name: name, gridJson: gridJson).toJson(),
+      ]),
+      if (active) 'active_custom_layout_id': id,
+    };
+  }
 
   Widget wrap() => ProviderScope(
     overrides: [selectedDeviceProvider.overrideWith((ref) => device)],
@@ -73,15 +96,15 @@ void main() {
     expect(find.byTooltip('Power'), findsOneWidget);
   });
 
-  testWidgets('custom layout renders the saved grid', (tester) async {
-    SharedPreferences.setMockInitialValues({
-      'use_custom_layout': true,
-      'custom_layout_json':
-          '{"version":1,"items":['
-          '{"type":"key","key":"power","row":0,"column":0},'
-          '{"type":"block","block":"sleepTimer","row":1,"column":0}'
-          ']}',
-    });
+  testWidgets('active custom layout renders the saved grid', (tester) async {
+    SharedPreferences.setMockInitialValues(
+      layoutPrefs(
+        items: [
+          LayoutItem.key(remoteKey: RemoteKey.power, row: 0, column: 0),
+          LayoutItem.block(block: LayoutBlock.sleepTimer, row: 1, column: 0),
+        ],
+      ),
+    );
     await tester.pumpWidget(wrap());
     await tester.pumpAndSettle();
 
@@ -91,7 +114,7 @@ void main() {
     expect(find.byTooltip('Picture format'), findsNothing);
   });
 
-  testWidgets('more menu offers presets, editing, apps and key test', (
+  testWidgets('more menu offers presets, layouts and management', (
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({});
@@ -104,23 +127,67 @@ void main() {
     expect(find.text('Classic'), findsOneWidget);
     expect(find.text('Compact'), findsOneWidget);
     expect(find.text('Minimal'), findsOneWidget);
-    expect(find.text('Custom'), findsOneWidget);
-    expect(find.text('Edit layout'), findsOneWidget);
+    expect(find.text('New layout'), findsOneWidget);
+    expect(find.text('Manage layouts'), findsOneWidget);
     expect(find.text('Apps'), findsOneWidget);
     expect(find.text('Key test'), findsOneWidget);
   });
 
-  testWidgets('edit layout opens the layout editor', (tester) async {
+  testWidgets('saved layouts appear in the menu and activate', (tester) async {
+    SharedPreferences.setMockInitialValues(
+      layoutPrefs(items: const [], active: false),
+    );
+    await tester.pumpWidget(wrap());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('More options'));
+    await tester.pumpAndSettle();
+    expect(find.text('Salon'), findsOneWidget);
+
+    await tester.tap(find.text('Salon'));
+    await tester.pumpAndSettle();
+
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString('active_custom_layout_id'), 'l1');
+  });
+
+  testWidgets('create layout opens the editor with a template', (tester) async {
     SharedPreferences.setMockInitialValues({});
     await tester.pumpWidget(wrap());
     await tester.pumpAndSettle();
 
     await tester.tap(find.byTooltip('More options'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Edit layout'));
+    await tester.tap(find.text('New layout'));
     await tester.pumpAndSettle();
 
     expect(find.byType(LayoutEditorScreen), findsOneWidget);
-    expect(find.text('Add buttons'), findsOneWidget);
+    // Default template content: power button tooltip is present in the
+    // editor preview as well.
+    expect(find.text('Custom 1'), findsOneWidget);
+  });
+
+  testWidgets('editor corner badges appear on selection', (tester) async {
+    SharedPreferences.setMockInitialValues(
+      layoutPrefs(
+        items: [LayoutItem.key(remoteKey: RemoteKey.power, row: 0, column: 0)],
+      ),
+    );
+    await tester.pumpWidget(wrap());
+    await tester.pumpAndSettle();
+
+    // Open the editor through the management sheet.
+    await tester.tap(find.byTooltip('More options'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Manage layouts'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Edit layout').first);
+    await tester.pumpAndSettle();
+
+    // Tap the power tile to select it; both corner badges show up.
+    await tester.tap(find.byTooltip('Power').last);
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Size'), findsOneWidget);
+    expect(find.byTooltip('Remove'), findsOneWidget);
   });
 }

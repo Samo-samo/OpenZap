@@ -10,13 +10,16 @@ import '../domain/remote_layout.dart';
 import 'layout_grid_view.dart';
 import 'remote_key_icons.dart';
 
-/// Full-screen editor for the custom remote layout.
+/// Full-screen editor for a saved custom remote layout.
 ///
-/// Items can be dragged to free cells, resized (buttons: 1x1 up to 2x2),
-/// removed, and added from a palette. Saving persists the arrangement and
-/// activates the custom layout mode.
+/// Items can be dragged to free cells; selecting an item shows small badges
+/// on its corners for cycling the size (buttons: 1x1 up to 2x2) and removing
+/// it. New items come from the palette in the app bar. Saving persists the
+/// arrangement.
 class LayoutEditorScreen extends ConsumerStatefulWidget {
-  const LayoutEditorScreen({super.key});
+  const LayoutEditorScreen({super.key, required this.layoutId});
+
+  final String layoutId;
 
   @override
   ConsumerState<LayoutEditorScreen> createState() => _LayoutEditorScreenState();
@@ -24,7 +27,8 @@ class LayoutEditorScreen extends ConsumerStatefulWidget {
 
 class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
   static const double _gap = 8;
-  static const double _maxGridWidth = 480;
+  static const double _maxGridWidth = 960;
+  static const double _cellTarget = 60;
 
   static const _navigationKeys = <RemoteKey>[
     RemoteKey.up,
@@ -60,25 +64,42 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
   static const _sizes = [(1, 1), (2, 1), (1, 2), (2, 2)];
 
   late List<LayoutItem> _items;
+  String _name = '';
   int? _selectedIndex;
   int? _dragIndex;
   Offset _dragDelta = Offset.zero;
   (int, int)? _dragPreview;
+  bool _showGrid = true;
 
-  /// Rendered width of the grid area, captured while building.
-  double _availableGridWidth = _maxGridWidth;
+  /// Rendered width and column count of the grid, captured while building.
+  double _gridWidth = _maxGridWidth;
+  int _columns = kLayoutGridColumns;
+
+  SavedRemoteLayout? _savedLayout;
 
   @override
   void initState() {
     super.initState();
     final settings = ref.read(settingsProvider).valueOrNull;
-    final saved = RemoteGridLayout.tryFromJsonString(
-      settings?.customLayoutJson,
-    );
-    _items = (saved ?? RemoteGridLayout.defaultTemplate()).items.toList();
+    _savedLayout = settings?.savedLayouts
+        .where((layout) => layout.id == widget.layoutId)
+        .firstOrNull;
+    if (_savedLayout != null) {
+      _name = _savedLayout!.name;
+      _items =
+          RemoteGridLayout.tryFromJsonString(
+            _savedLayout!.gridJson,
+          )?.items.toList() ??
+          RemoteGridLayout.defaultTemplate().items.toList();
+    } else {
+      // The layout was deleted before the screen opened; nothing to edit.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          Navigator.of(context).pop();
+        }
+      });
+    }
   }
-
-  RemoteGridLayout get _grid => RemoteGridLayout(_items);
 
   void _select(int index) {
     setState(() {
@@ -101,7 +122,8 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
     if (index == null) {
       return;
     }
-    final step = LayoutGridView.cellSizeFor(_availableGridWidth, _gap) + _gap;
+    final step =
+        LayoutGridView.cellSizeFor(_gridWidth, _gap, columns: _columns) + _gap;
     final item = _items[index];
     setState(() {
       _dragDelta += details.delta;
@@ -113,10 +135,10 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
       if (targetColumn < 0) {
         targetColumn = 0;
       }
-      if (targetColumn + item.effectiveColumnSpan > kLayoutGridColumns) {
-        targetColumn = kLayoutGridColumns - item.effectiveColumnSpan;
+      if (targetColumn + item.effectiveColumnSpan > _columns) {
+        targetColumn = _columns - item.effectiveColumnSpan;
       }
-      _dragPreview = _grid.nearestFreeSpot(
+      _dragPreview = _currentGrid.nearestFreeSpot(
         row: targetRow,
         column: targetColumn,
         rowSpan: item.effectiveRowSpan,
@@ -142,6 +164,9 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
     });
   }
 
+  RemoteGridLayout get _currentGrid =>
+      RemoteGridLayout(_items, columns: _columns);
+
   void _cycleSize(int index) {
     final item = _items[index];
     if (!item.isKey) {
@@ -151,7 +176,7 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
       (s) => s.$1 == item.effectiveRowSpan && s.$2 == item.effectiveColumnSpan,
     );
     final next = _sizes[(currentIndex + 1) % _sizes.length];
-    final movedTo = _grid.nearestFreeSpot(
+    final movedTo = _currentGrid.nearestFreeSpot(
       row: item.row,
       column: item.column,
       rowSpan: next.$1,
@@ -176,7 +201,7 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
   }
 
   void _addItem(LayoutItem candidate) {
-    final spot = _grid.firstFreeSpot(
+    final spot = _currentGrid.firstFreeSpot(
       candidate.effectiveRowSpan,
       candidate.effectiveColumnSpan,
     );
@@ -196,8 +221,10 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
   }
 
   Future<void> _save() async {
-    final json = jsonEncode(_grid.toJson());
-    await ref.read(settingsProvider.notifier).saveCustomLayout(json);
+    final json = jsonEncode(_currentGrid.toJson());
+    await ref
+        .read(settingsProvider.notifier)
+        .saveCustomLayout(widget.layoutId, json);
     if (!mounted) {
       return;
     }
@@ -219,8 +246,18 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.editLayout),
+        title: Text(_name.isEmpty ? l10n.editLayout : _name),
         actions: [
+          IconButton(
+            icon: Icon(_showGrid ? Icons.grid_on : Icons.grid_off),
+            tooltip: _showGrid ? l10n.hideGrid : l10n.showGrid,
+            onPressed: () => setState(() => _showGrid = !_showGrid),
+          ),
+          IconButton(
+            icon: const Icon(Icons.add),
+            tooltip: l10n.addToLayout,
+            onPressed: () => _openPalette(context, l10n),
+          ),
           IconButton(
             icon: const Icon(Icons.restart_alt),
             tooltip: l10n.resetLayout,
@@ -233,80 +270,92 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: _maxGridWidth),
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      _availableGridWidth = constraints.maxWidth;
-                      return LayoutGridView(
-                        gap: _gap,
-                        grid: _grid,
-                        itemBuilder: (context, item) =>
-                            _buildEditableItem(context, item),
-                        offsetOverride: (item, origin) =>
-                            _items.indexOf(item) == _dragIndex
-                            ? origin + _dragDelta
-                            : origin,
-                        overlayBuilder: (context) => [
-                          if (_dragPreview case (final row, final column)?
-                              when _dragIndex != null)
-                            Builder(
-                              builder: (context) {
-                                final cell = LayoutGridView.cellSizeFor(
-                                  _availableGridWidth,
-                                  _gap,
-                                );
-                                final origin = Offset(
-                                  column * (cell + _gap),
-                                  row * (cell + _gap),
-                                );
-                                final size = LayoutGridView.sizeOf(
-                                  _items[_dragIndex!],
-                                  cell,
-                                  _gap,
-                                );
-                                return Positioned(
-                                  left: origin.dx,
-                                  top: origin.dy,
-                                  width: size.width,
-                                  height: size.height,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.primary,
-                                        width: 2,
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: _maxGridWidth),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                _gridWidth = constraints.maxWidth;
+                _columns = RemoteGridLayout.suggestedColumnCount(
+                  _gridWidth,
+                  _gap,
+                  cellTarget: _cellTarget,
+                );
+                final grid = _currentGrid;
+                final cell = LayoutGridView.cellSizeFor(
+                  _gridWidth,
+                  _gap,
+                  columns: _columns,
+                );
+                return LayoutGridView(
+                  gap: _gap,
+                  grid: grid,
+                  itemBuilder: (context, item) =>
+                      _buildEditableItem(context, item),
+                  offsetOverride: (item, origin) =>
+                      _items.indexOf(item) == _dragIndex
+                      ? origin + _dragDelta
+                      : origin,
+                  underlayBuilder: (context) =>
+                      _showGrid ? _buildGuides(grid, cell) : const [],
+                  overlayBuilder: (context) => [
+                    if (_dragPreview case (final row, final column)?
+                        when _dragIndex != null)
+                      Positioned(
+                        left: column * (cell + _gap),
+                        top: row * (cell + _gap),
+                        width: LayoutGridView.sizeOf(
+                          _items[_dragIndex!],
+                          cell,
+                          _gap,
+                        ).width,
+                        height: LayoutGridView.sizeOf(
+                          _items[_dragIndex!],
+                          cell,
+                          _gap,
+                        ).height,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Theme.of(context).colorScheme.primary,
+                              width: 2,
                             ),
-                        ],
-                      );
-                    },
-                  ),
-                ),
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Faint per-cell guides rendered under the items.
+  List<Widget> _buildGuides(RemoteGridLayout grid, double cell) {
+    final rows = LayoutGridView.rowCountFor(grid);
+    final lineColor = Theme.of(context).dividerColor.withValues(alpha: 0.4);
+    return [
+      for (var row = 0; row < rows; row++)
+        for (var column = 0; column < grid.columns; column++)
+          Positioned(
+            left: column * (cell + _gap),
+            top: row * (cell + _gap),
+            width: cell,
+            height: cell,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: lineColor),
               ),
             ),
           ),
-          if (_selectedIndex != null) _buildActionBar(context, l10n),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openPalette(context, l10n),
-        icon: const Icon(Icons.add),
-        label: Text(l10n.addToLayout),
-      ),
-    );
+    ];
   }
 
   Widget _buildEditableItem(BuildContext context, LayoutItem item) {
@@ -327,7 +376,7 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
         message: remoteKeyLabel(item.remoteKey!, l10n),
         child: SizedBox.expand(
           child: IconButton.filled(
-            iconSize: 24.0 + 8.0 * (longestSpan - 1),
+            iconSize: 20.0 + 4.0 * (longestSpan - 1),
             onPressed: () => _select(index),
             icon: Icon(remoteKeyIcon(item.remoteKey!)),
           ),
@@ -344,7 +393,7 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(_blockIcon(item.block!), size: 20),
+              Icon(_blockIcon(item.block!), size: 16),
               const SizedBox(width: 6),
               Flexible(child: Text(_blockLabel(item.block!, l10n))),
             ],
@@ -364,13 +413,60 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
         child: content,
       );
     }
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () => _select(index),
-      onPanStart: (_) => _startDrag(index),
-      onPanUpdate: _updateDrag,
-      onPanEnd: (_) => _endDrag(),
-      child: content,
+    return SizedBox.expand(
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => _select(index),
+            onPanStart: (_) => _startDrag(index),
+            onPanUpdate: _updateDrag,
+            onPanEnd: (_) => _endDrag(),
+            child: content,
+          ),
+          if (selected && !dragging) ...[
+            Positioned(top: -9, left: -9, child: _removeBadge(l10n)),
+            if (item.isKey)
+              Positioned(top: -9, right: -9, child: _sizeBadge(l10n)),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _removeBadge(AppLocalizations l10n) => _cornerBadge(
+    icon: Icons.close,
+    tooltip: l10n.removeButton,
+    onTap: () => _remove(_selectedIndex!),
+  );
+
+  Widget _sizeBadge(AppLocalizations l10n) => _cornerBadge(
+    icon: Icons.zoom_out_map,
+    tooltip: l10n.buttonSize,
+    onTap: () => _cycleSize(_selectedIndex!),
+  );
+
+  Widget _cornerBadge({
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback onTap,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        elevation: 2,
+        color: Theme.of(context).colorScheme.primaryContainer,
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(5),
+            child: Icon(icon, size: 15),
+          ),
+        ),
+      ),
     );
   }
 
@@ -386,43 +482,6 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
         LayoutBlock.digitsPad => l10n.blockDigitsPad,
         LayoutBlock.sleepTimer => l10n.sleepTimer,
       };
-
-  Widget _buildActionBar(BuildContext context, AppLocalizations l10n) {
-    final index = _selectedIndex!;
-    final item = _items[index];
-    return Material(
-      elevation: 8,
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  item.isKey
-                      ? remoteKeyLabel(item.remoteKey!, l10n)
-                      : _blockLabel(item.block!, l10n),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              if (item.isKey)
-                IconButton(
-                  icon: const Icon(Icons.aspect_ratio),
-                  tooltip: l10n.buttonSize,
-                  onPressed: () => _cycleSize(index),
-                ),
-              IconButton(
-                icon: const Icon(Icons.delete_outline),
-                tooltip: l10n.removeButton,
-                onPressed: () => _remove(index),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   Future<void> _openPalette(BuildContext context, AppLocalizations l10n) {
     void addAndClose(LayoutItem candidate) {

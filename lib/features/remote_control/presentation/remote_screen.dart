@@ -14,6 +14,7 @@ import '../domain/remote_layout.dart';
 import 'key_tester_screen.dart';
 import 'layout_editor_screen.dart';
 import 'layout_grid_view.dart';
+import 'layout_manager_sheet.dart';
 import 'remote_key_icons.dart';
 
 class RemoteScreen extends ConsumerWidget {
@@ -42,9 +43,9 @@ class RemoteScreen extends ConsumerWidget {
             itemBuilder: (context) {
               final settings =
                   ref.read(settingsProvider).valueOrNull ?? const AppSettings();
-              final preset = settings.useCustomLayout
-                  ? null
-                  : matchingRemoteLayoutPreset(settings);
+              final preset = settings.activeCustomLayoutId == null
+                  ? matchingRemoteLayoutPreset(settings)
+                  : null;
               return [
                 CheckedPopupMenuItem(
                   value: 'classic',
@@ -62,18 +63,26 @@ class RemoteScreen extends ConsumerWidget {
                   child: Text(l10n.layoutMinimal),
                 ),
                 const PopupMenuDivider(),
-                CheckedPopupMenuItem(
-                  value: 'custom',
-                  checked: settings.useCustomLayout,
-                  enabled: settings.customLayoutJson != null,
-                  child: Text(l10n.layoutCustom),
-                ),
+                for (final layout in settings.savedLayouts)
+                  CheckedPopupMenuItem(
+                    value: 'layout:${layout.id}',
+                    checked: settings.activeCustomLayoutId == layout.id,
+                    child: Text(layout.name),
+                  ),
                 PopupMenuItem(
-                  value: 'edit',
+                  value: 'create',
                   child: ListTile(
                     contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.edit_outlined),
-                    title: Text(l10n.editLayout),
+                    leading: const Icon(Icons.add),
+                    title: Text(l10n.newLayout),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'manage',
+                  child: ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.tune),
+                    title: Text(l10n.manageLayouts),
                   ),
                 ),
                 const PopupMenuDivider(),
@@ -100,7 +109,7 @@ class RemoteScreen extends ConsumerWidget {
       ),
       body: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 480),
+          constraints: const BoxConstraints(maxWidth: 960),
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -113,19 +122,41 @@ class RemoteScreen extends ConsumerWidget {
     );
   }
 
-  void _onMenuSelected(BuildContext context, WidgetRef ref, String value) {
+  Future<void> _onMenuSelected(
+    BuildContext context,
+    WidgetRef ref,
+    String value,
+  ) async {
     final notifier = ref.read(settingsProvider.notifier);
+    if (value.startsWith('layout:')) {
+      await notifier.activateCustomLayout(value.substring('layout:'.length));
+      return;
+    }
     switch (value) {
       case 'classic':
       case 'compact':
       case 'minimal':
         notifier.setRemoteLayout(RemoteLayout.values.byName(value));
-      case 'custom':
-        notifier.setUseCustomLayout(true);
-      case 'edit':
-        Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: (_) => const LayoutEditorScreen()),
+      case 'create':
+        final l10n = AppLocalizations.of(context)!;
+        final count = (ref
+            .read(settingsProvider)
+            .valueOrNull
+            ?.savedLayouts
+            .length)!;
+        final id = await notifier.createCustomLayout(
+          '${l10n.layoutCustom} ${count + 1}',
         );
+        if (!context.mounted) {
+          return;
+        }
+        Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => LayoutEditorScreen(layoutId: id),
+          ),
+        );
+      case 'manage':
+        await showLayoutManagerSheet(context, ref);
       case 'apps':
         Navigator.of(
           context,
@@ -137,8 +168,8 @@ class RemoteScreen extends ConsumerWidget {
     }
   }
 
-  /// Builds the remote screen contents: the custom grid layout when active,
-  /// otherwise the fixed sections.
+  /// Builds the remote screen contents: the active custom grid layout when
+  /// one is selected, otherwise the fixed sections.
   List<Widget> _buildBody(
     BuildContext context,
     WidgetRef ref,
@@ -146,10 +177,14 @@ class RemoteScreen extends ConsumerWidget {
   ) {
     final settings =
         ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
-    if (settings.useCustomLayout) {
-      final grid = RemoteGridLayout.tryFromJsonString(
-        settings.customLayoutJson,
-      );
+    final activeId = settings.activeCustomLayoutId;
+    if (activeId != null) {
+      final saved = settings.savedLayouts
+          .where((layout) => layout.id == activeId)
+          .firstOrNull;
+      final grid = saved == null
+          ? null
+          : RemoteGridLayout.tryFromJsonString(saved.gridJson);
       if (grid != null && grid.items.isNotEmpty) {
         return [
           LayoutGridView(

@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:openzap/features/settings/data/shared_preferences_settings_store.dart';
 import 'package:openzap/features/settings/domain/app_settings.dart';
+import 'package:openzap/features/remote_control/domain/remote_layout.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -151,28 +152,73 @@ void main() {
       expect((await store.load()).wifiWarningEnabled, isFalse);
     });
 
-    test('custom layout defaults to inactive and empty', () async {
+    test('saved layouts default to empty', () async {
       SharedPreferences.setMockInitialValues({});
       final store = SharedPreferencesSettingsStore();
 
       final settings = await store.load();
 
-      expect(settings.useCustomLayout, isFalse);
-      expect(settings.customLayoutJson, isNull);
+      expect(settings.savedLayouts, isEmpty);
+      expect(settings.activeCustomLayoutId, isNull);
     });
 
-    test('round-trips the custom layout', () async {
+    test('round-trips saved layouts and the active id', () async {
       SharedPreferences.setMockInitialValues({});
       final store = SharedPreferencesSettingsStore();
 
-      const json = '{"version":1,"items":[]}';
+      const gridA = '{"version":1,"columns":4,"items":[]}';
+      const gridB = '{"version":1,"columns":6,"items":[]}';
       await store.save(
-        const AppSettings(useCustomLayout: true, customLayoutJson: json),
+        AppSettings(
+          savedLayouts: [
+            const SavedRemoteLayout(id: 'a', name: 'Salon', gridJson: gridA),
+            const SavedRemoteLayout(id: 'b', name: 'Mutfak', gridJson: gridB),
+          ],
+          activeCustomLayoutId: 'b',
+        ),
       );
       final loaded = await store.load();
 
-      expect(loaded.useCustomLayout, isTrue);
-      expect(loaded.customLayoutJson, json);
+      expect(loaded.savedLayouts, hasLength(2));
+      expect(loaded.savedLayouts[0].id, 'a');
+      expect(loaded.savedLayouts[0].name, 'Salon');
+      expect(loaded.savedLayouts[0].gridJson, gridA);
+      expect(loaded.savedLayouts[1].id, 'b');
+      expect(loaded.savedLayouts[1].gridJson, gridB);
+      expect(loaded.activeCustomLayoutId, 'b');
+    });
+
+    test('migrates the legacy single-layout keys once', () async {
+      SharedPreferences.setMockInitialValues({
+        'use_custom_layout': true,
+        'custom_layout_json':
+            '{"version":1,"items":[{"type":"key","key":"power","row":0,'
+            '"column":0}]}',
+      });
+      final store = SharedPreferencesSettingsStore();
+
+      final first = await store.load();
+      expect(first.savedLayouts, hasLength(1));
+      expect(first.savedLayouts.single.id, 'migrated');
+      expect(first.activeCustomLayoutId, 'migrated');
+
+      // Migration is persisted; loading again yields the same result.
+      final second = await store.load();
+      expect(second.savedLayouts.single.id, 'migrated');
+      expect(second.activeCustomLayoutId, 'migrated');
+    });
+
+    test('inactive legacy layout migrates without activation', () async {
+      SharedPreferences.setMockInitialValues({
+        'use_custom_layout': false,
+        'custom_layout_json': '{"version":1,"items":[]}',
+      });
+      final store = SharedPreferencesSettingsStore();
+
+      final settings = await store.load();
+
+      expect(settings.savedLayouts, hasLength(1));
+      expect(settings.activeCustomLayoutId, isNull);
     });
   });
 }

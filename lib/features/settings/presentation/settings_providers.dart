@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
+import '../../remote_control/domain/remote_layout.dart';
 import '../domain/app_settings.dart';
 
 /// Settings notifier backed by the persisted [SettingsStore].
@@ -29,25 +32,87 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
   Future<void> setRemoteLayout(RemoteLayout value) async {
     final settings = applyRemoteLayoutPreset(
       value,
-      state.value!.copyWith(useCustomLayout: false),
+      state.value!.copyWith(activeCustomLayoutId: null),
     );
     state = AsyncData(settings);
     await ref.read(settingsStoreProvider).save(settings);
   }
 
-  /// Activates or deactivates the custom grid layout. Deactivation keeps the
-  /// saved layout around for later.
-  Future<void> setUseCustomLayout(bool value) async {
-    final settings = state.value!.copyWith(useCustomLayout: value);
+  /// Activates a saved custom layout, or deactivates back to the last preset
+  /// when [id] is `null`.
+  Future<void> activateCustomLayout(String? id) async {
+    final settings = state.value!.copyWith(
+      activeCustomLayoutId: () {
+        if (id == null) {
+          return null;
+        }
+        final exists = state.value!.savedLayouts.any(
+          (layout) => layout.id == id,
+        );
+        return exists ? id : null;
+      }(),
+    );
     state = AsyncData(settings);
     await ref.read(settingsStoreProvider).save(settings);
   }
 
-  /// Persists an edited custom layout and activates it.
-  Future<void> saveCustomLayout(String json) async {
+  /// Creates an empty saved layout slot and returns its id.
+  Future<String> createCustomLayout(String name) async {
+    final id = 'layout-${DateTime.now().microsecondsSinceEpoch}';
     final settings = state.value!.copyWith(
-      useCustomLayout: true,
-      customLayoutJson: json,
+      savedLayouts: [
+        ...state.value!.savedLayouts,
+        SavedRemoteLayout(
+          id: id,
+          name: name,
+          gridJson: jsonEncode(RemoteGridLayout.defaultTemplate().toJson()),
+        ),
+      ],
+      activeCustomLayoutId: null,
+    );
+    state = AsyncData(settings);
+    await ref.read(settingsStoreProvider).save(settings);
+    return id;
+  }
+
+  Future<void> renameCustomLayout(String id, String name) async {
+    final settings = state.value!.copyWith(
+      savedLayouts: [
+        for (final layout in state.value!.savedLayouts)
+          if (layout.id == id) layout.copyWith(name: name) else layout,
+      ],
+    );
+    state = AsyncData(settings);
+    await ref.read(settingsStoreProvider).save(settings);
+  }
+
+  /// Persists an edited layout. [activate] also switches to it immediately.
+  Future<void> saveCustomLayout(
+    String id,
+    String json, {
+    bool activate = true,
+  }) async {
+    final current = state.value!;
+    final settings = current.copyWith(
+      savedLayouts: [
+        for (final layout in current.savedLayouts)
+          if (layout.id == id) layout.copyWith(gridJson: json) else layout,
+      ],
+      activeCustomLayoutId: activate ? id : current.activeCustomLayoutId,
+    );
+    state = AsyncData(settings);
+    await ref.read(settingsStoreProvider).save(settings);
+  }
+
+  Future<void> deleteCustomLayout(String id) async {
+    final current = state.value!;
+    final wasActive = current.activeCustomLayoutId == id;
+    final settings = current.copyWith(
+      savedLayouts: [
+        for (final layout in current.savedLayouts)
+          if (layout.id != id) layout,
+      ],
+      activeCustomLayoutId: wasActive ? null : current.activeCustomLayoutId,
     );
     state = AsyncData(settings);
     await ref.read(settingsStoreProvider).save(settings);

@@ -2,8 +2,12 @@ import 'dart:convert';
 
 import 'remote_key.dart';
 
-/// Number of columns in the custom remote layout grid.
+/// Default number of columns in the custom remote layout grid.
 const int kLayoutGridColumns = 4;
+
+/// Minimum/maximum supported column counts.
+const int kLayoutGridMinColumns = 2;
+const int kLayoutGridMaxColumns = 12;
 
 /// Special (non-key) building blocks that can be placed on the grid.
 enum LayoutBlock { tvStatus, digitsPad, sleepTimer }
@@ -170,12 +174,32 @@ class LayoutItem {
       Object.hash(remoteKey, block, row, column, rowSpan, columnSpan);
 }
 
-/// An arrangement of [LayoutItem]s on the custom remote layout grid.
+/// An arrangement of [LayoutItem]s on a custom remote layout grid.
 class RemoteGridLayout {
-  RemoteGridLayout(Iterable<LayoutItem> items)
-    : items = List.unmodifiable(items);
+  RemoteGridLayout(
+    Iterable<LayoutItem> items, {
+    this.columns = kLayoutGridColumns,
+  }) : assert(
+         columns >= kLayoutGridMinColumns && columns <= kLayoutGridMaxColumns,
+       ),
+       items = List.unmodifiable(items);
 
   final List<LayoutItem> items;
+
+  /// Number of columns this arrangement was designed for. Renderers may use
+  /// fewer/more columns per screen width; items beyond the visible columns
+  /// are simply not shown there.
+  final int columns;
+
+  /// Suggested column count for [maxWidth], aiming at roughly 60 px cells.
+  static int suggestedColumnCount(
+    double maxWidth,
+    double gap, {
+    double cellTarget = 60,
+  }) {
+    final count = ((maxWidth + gap) / (cellTarget + gap)).floor();
+    return count.clamp(kLayoutGridMinColumns, kLayoutGridMaxColumns).toInt();
+  }
 
   /// The cells (as `row:column` strings) occupied by [item].
   static Set<String> cellsOf(LayoutItem item) => {
@@ -193,7 +217,7 @@ class RemoteGridLayout {
     required int columnSpan,
     Object? ignore,
   }) {
-    if (column < 0 || column + columnSpan > kLayoutGridColumns || row < 0) {
+    if (column < 0 || column + columnSpan > columns || row < 0) {
       return false;
     }
     final candidate = <String>{
@@ -219,7 +243,7 @@ class RemoteGridLayout {
       maxRow = maxRow > item.row ? maxRow : item.row;
     }
     for (var row = 0; row <= maxRow + 8; row++) {
-      for (var column = 0; column < kLayoutGridColumns; column++) {
+      for (var column = 0; column < columns; column++) {
         if (canPlace(
           row: row,
           column: column,
@@ -293,7 +317,7 @@ class RemoteGridLayout {
   }) {
     if (row < 0 ||
         column < 0 ||
-        column + columnSpan > kLayoutGridColumns ||
+        column + columnSpan > columns ||
         !canPlace(
           row: row,
           column: column,
@@ -337,6 +361,7 @@ class RemoteGridLayout {
 
   Map<String, Object?> toJson() => {
     'version': 1,
+    'columns': columns,
     'items': [for (final item in items) item.toJson()],
   };
 
@@ -350,6 +375,7 @@ class RemoteGridLayout {
     if (rawItems is! List<Object?>) {
       return null;
     }
+    final columns = (json['columns'] as num?)?.round() ?? kLayoutGridColumns;
     final parsed = <LayoutItem>[];
     for (final raw in rawItems) {
       final item = LayoutItem.tryFromJson(raw);
@@ -362,14 +388,19 @@ class RemoteGridLayout {
     final occupiedCells = <String>{};
     for (final item in parsed) {
       final cells = cellsOf(item);
-      if (item.column + item.effectiveColumnSpan > kLayoutGridColumns ||
+      if (item.column + item.effectiveColumnSpan > columns ||
           cells.any(occupiedCells.contains)) {
         continue;
       }
       occupiedCells.addAll(cells);
       kept.add(item);
     }
-    return RemoteGridLayout(kept);
+    return RemoteGridLayout(
+      kept,
+      columns: columns
+          .clamp(kLayoutGridMinColumns, kLayoutGridMaxColumns)
+          .toInt(),
+    );
   }
 
   static RemoteGridLayout? tryFromJsonString(String? source) {
@@ -387,7 +418,9 @@ class RemoteGridLayout {
 
   @override
   bool operator ==(Object other) {
-    if (other is! RemoteGridLayout || other.items.length != items.length) {
+    if (other is! RemoteGridLayout ||
+        other.items.length != items.length ||
+        other.columns != columns) {
       return false;
     }
     for (var i = 0; i < items.length; i++) {
@@ -399,5 +432,84 @@ class RemoteGridLayout {
   }
 
   @override
-  int get hashCode => Object.hashAll(items);
+  int get hashCode => Object.hash(columns, Object.hashAll(items));
 }
+
+/// A named, persisted custom layout.
+class SavedRemoteLayout {
+  const SavedRemoteLayout({
+    required this.id,
+    required this.name,
+    required this.gridJson,
+  });
+
+  /// Stable identifier (also used as the active-layout reference).
+  final String id;
+
+  /// User-visible name.
+  final String name;
+
+  /// Serialized [RemoteGridLayout] JSON.
+  final String gridJson;
+
+  SavedRemoteLayout copyWith({String? name, String? gridJson}) =>
+      SavedRemoteLayout(
+        id: id,
+        name: name ?? this.name,
+        gridJson: gridJson ?? this.gridJson,
+      );
+
+  Map<String, Object?> toJson() => {'id': id, 'name': name, 'grid': gridJson};
+
+  static SavedRemoteLayout? tryFromJson(Object? json) {
+    if (json is! Map<Object?, Object?>) {
+      return null;
+    }
+    final id = json['id'];
+    final grid = json['grid'];
+    if (id is! String || id.isEmpty || grid is! String || grid.isEmpty) {
+      return null;
+    }
+    final rawName = json['name'];
+    return SavedRemoteLayout(
+      id: id,
+      name: rawName is String && rawName.isNotEmpty ? rawName : id,
+      gridJson: grid,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is SavedRemoteLayout &&
+      other.id == id &&
+      other.name == name &&
+      other.gridJson == gridJson;
+
+  @override
+  int get hashCode => Object.hash(id, name, gridJson);
+}
+
+/// Serializes/deserializes the saved-layout list for the settings store.
+List<SavedRemoteLayout> parseSavedLayouts(String source) {
+  Object? decoded;
+  try {
+    decoded = jsonDecode(source);
+  } on FormatException {
+    return const [];
+  }
+  if (decoded is! List<Object?>) {
+    return const [];
+  }
+  final parsed = <SavedRemoteLayout>[];
+  final seenIds = <String>{};
+  for (final entry in decoded) {
+    final layout = SavedRemoteLayout.tryFromJson(entry);
+    if (layout != null && seenIds.add(layout.id)) {
+      parsed.add(layout);
+    }
+  }
+  return parsed;
+}
+
+String serializeSavedLayouts(List<SavedRemoteLayout> layouts) =>
+    jsonEncode([for (final layout in layouts) layout.toJson()]);
