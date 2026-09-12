@@ -182,17 +182,38 @@ Skipped / not started (research done, see `.ai/vestel-protocol-notes.md`):
 
 ---
 
-# v0.6.0 — Stabilization
+# v0.6.0 — Custom Remote Layouts
 
-Status: Planned
+Status: In progress (layout work landed, release pending)
 
 Goals:
 
+* Free-form custom remote layouts
+* Layout editor with guides, resize, undo/redo and zoom
 * Performance improvements
 * Bug fixes
 * Documentation improvements
 * Test coverage
 * API stabilization
+
+Done:
+
+* Multiple named custom layouts: create, switch (remote screen three-dot
+  menu with adaptive density), manage (rename, delete, export/import via
+  clipboard).
+* Layout editor: drag with alignment guides + canvas-edge snap, resize handle
+  on desktop + pinch on touch, aspect-ratio lock, snap toggle, undo/redo,
+  canvas zoom (Ctrl+wheel / empty-area pinch), reset-to-template.
+* Layout selection moved out of Settings into the remote screen menu; TR/EN
+  strings kept in sync.
+
+Known issues:
+
+* Canvas zoom-out can leave the viewport stranded showing half-cut buttons at
+  content edges — workaround: the zoom reset button in the editor toolbar.
+* Live status tracking still non-functional on MB180 (7681 silent; default
+  off, marked "in development").
+* Wake-on-LAN not implemented (TV is on Wi-Fi).
 
 ---
 
