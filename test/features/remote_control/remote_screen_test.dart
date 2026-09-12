@@ -1,8 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -38,9 +37,10 @@ void main() {
     };
   }
 
-  Widget wrap() => ProviderScope(
+  Widget wrap({TargetPlatform? platform}) => ProviderScope(
     overrides: [selectedDeviceProvider.overrideWith((ref) => device)],
     child: MaterialApp(
+      theme: platform == null ? null : ThemeData(platform: platform),
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
@@ -229,12 +229,13 @@ void main() {
   });
 
   testWidgets('editor corner badges appear on selection', (tester) async {
+    // The resize badge is desktop-only.
     SharedPreferences.setMockInitialValues(
       layoutPrefs(
         items: [LayoutItem.key(remoteKey: RemoteKey.power, x: 8, y: 8)],
       ),
     );
-    await tester.pumpWidget(wrap());
+    await tester.pumpWidget(wrap(platform: TargetPlatform.windows));
     await tester.pumpAndSettle();
 
     // Open the editor through the management sheet.

@@ -75,11 +75,16 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
   final List<List<LayoutItem>> _undoStack = [];
   final List<List<LayoutItem>> _redoStack = [];
 
-  // Move-drag state.
+  // Move-drag state (pointer-tracked so touch drags never lose to page scroll).
   int? _dragIndex;
+  int? _dragPointer;
   Offset _dragStart = Offset.zero;
   Offset _dragDelta = Offset.zero;
+  Offset _dragLastLocal = Offset.zero;
   AlignmentSnap _snap = AlignmentSnap.none;
+
+  /// While true, page scrolling is locked (a tile gesture is in progress).
+  bool _scrollLock = false;
 
   // Resize-handle state (pointer id tracked so multi-touch stays sane).
   int? _resizePointer;
@@ -263,16 +268,18 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
 
   // ----- move -----
 
-  void _startDrag(int index, DragStartDetails details) {
-    // A drag starting on the resize handle belongs to the handle. The badge
+  void _startDrag(int index, Offset globalPosition, int pointer) {
+    if (_dragPointer != null || index >= _items.length) {
+      return;
+    }    // A drag starting on the resize handle belongs to the handle. The badge
     // is a ~25px circle overflowing the tile's bottom-right corner, so the
     // skip zone covers that corner.
     final box = _canvasBox;
     if (box == null) {
       return;
     }
-    if (_selectedIndex == index && index < _items.length) {
-      final local = box.globalToLocal(details.globalPosition);
+    if (_selectedIndex == index && _showResizeHandle(context)) {
+      final local = box.globalToLocal(globalPosition);
       final item = _items[index];
       // Constant on-screen size regardless of zoom.
       final corner = 26 / _zoom;
@@ -283,15 +290,18 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
     final item = _items[index];
     _pushHistory();
     setState(() {
+      _dragPointer = pointer;
       _dragIndex = index;
       _dragStart = Offset(item.x, item.y);
       _dragDelta = Offset.zero;
+      _dragLastLocal = box.globalToLocal(globalPosition);
       _snap = AlignmentSnap.none;
       _selectedIndex = null;
+      _scrollLock = true;
     });
   }
 
-  void _updateDrag(DragUpdateDetails details) {
+  void _updateDragBy(Offset delta) {
     final index = _dragIndex;
     if (index == null || index >= _items.length) {
       return;
@@ -302,8 +312,7 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
     }
     final item = _items[index];
     setState(() {
-      // Deltas arrive in screen pixels; the canvas may be zoomed.
-      _dragDelta += details.delta / _zoom;
+      _dragDelta += delta;
       var x = (_dragStart.dx + _dragDelta.dx)
           .clamp(0, kMaxCanvasExtent)
           .toDouble();
@@ -325,15 +334,48 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
     });
   }
 
+  void _dragPointerDown(int index, PointerDownEvent event) {
+    if (event.kind == PointerDeviceKind.mouse &&
+        event.buttons != kPrimaryButton) {
+      return;
+    }
+    _startDrag(index, event.position, event.pointer);
+  }
+
+  void _dragPointerMove(int index, PointerMoveEvent event) {
+    if (_dragPointer != event.pointer || _dragIndex != index) {
+      return;
+    }
+    final box = _canvasBox;
+    if (box == null) {
+      return;
+    }
+    // globalToLocal inverts the canvas zoom, so deltas are canvas pixels.
+    final local = box.globalToLocal(event.position);
+    final delta = local - _dragLastLocal;
+    _dragLastLocal = local;
+    _updateDragBy(delta);
+  }
+
+  void _dragPointerUp(int pointer) {
+    if (_dragPointer == pointer) {
+      _endDrag();
+    }
+  }
+
   void _endDrag() {
-    if (_dragIndex == null) {
+    if (_dragIndex == null && _dragPointer == null) {
       return;
     }
     _dropUnchangedHistory();
     setState(() {
       _dragIndex = null;
+      _dragPointer = null;
       _dragDelta = Offset.zero;
       _snap = AlignmentSnap.none;
+      if (_pinchPointers.length < 2 && _resizePointer == null) {
+        _scrollLock = false;
+      }
     });
   }
 
@@ -354,6 +396,7 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
       _resizeIndex = index;
       _resizeStartLocal = box.globalToLocal(globalPosition);
       _resizeBase = (item.width, item.height);
+      _scrollLock = true;
     });
   }
 
@@ -444,6 +487,9 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
         _resizeIndex = null;
         _resizeBase = null;
         _sizeSnap = null;
+        if (_pinchPointers.length < 2 && _dragPointer == null) {
+          _scrollLock = false;
+        }
       });
     }
   }
@@ -466,6 +512,7 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
         _pinchCanvas = true;
         _pinchStartDist = startDist;
         _zoomStart = _zoom;
+        _scrollLock = true;
       });
       return;
     }
@@ -480,6 +527,7 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
       _selectedIndex = target;
       _pinchStartDist = startDist;
       _pinchBase = (item.width, item.height);
+      _scrollLock = true;
     });
   }
 
@@ -517,13 +565,21 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
     _pinchPointers.remove(pointer);
     if (_pinchPointers.length < 2) {
       if (_pinchCanvas) {
-        setState(() => _pinchCanvas = false);
+        setState(() {
+          _pinchCanvas = false;
+          if (_dragPointer == null && _resizePointer == null) {
+            _scrollLock = false;
+          }
+        });
       } else if (_pinchIndex != null) {
         _dropUnchangedHistory();
         setState(() {
           _pinchIndex = null;
           _pinchBase = null;
           _sizeSnap = null;
+          if (_dragPointer == null && _resizePointer == null) {
+            _scrollLock = false;
+          }
         });
       }
     }
@@ -647,12 +703,15 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
                         .toDouble();
                 return SingleChildScrollView(
                   controller: _vScroll,
-                  physics: _ctrlHeld
+                  physics: _ctrlHeld || _scrollLock
                       ? const NeverScrollableScrollPhysics()
                       : const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.all(16),
                   child: SingleChildScrollView(
                     controller: _hScroll,
+                    physics: _scrollLock
+                        ? const NeverScrollableScrollPhysics()
+                        : const AlwaysScrollableScrollPhysics(),
                     scrollDirection: Axis.horizontal,
                     child: SizedBox(
                       width: baseWidth * _zoom,
@@ -718,46 +777,54 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
         top: false,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          child: Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.undo),
-                tooltip: l10n.undoAction,
-                onPressed: _undoStack.isEmpty ? null : _undo,
-              ),
-              IconButton(
-                icon: const Icon(Icons.redo),
-                tooltip: l10n.redoAction,
-                onPressed: _redoStack.isEmpty ? null : _redo,
-              ),
-              if ((_zoom - 1).abs() > 0.001)
+          // Horizontally scrollable so narrow screens never overflow.
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
                 IconButton(
-                  icon: const Icon(Icons.zoom_out_map),
-                  tooltip: l10n.resetZoom,
-                  onPressed: () => _applyZoom(1),
+                  icon: const Icon(Icons.undo),
+                  tooltip: l10n.undoAction,
+                  onPressed: _undoStack.isEmpty ? null : _undo,
                 ),
-              if (label != null)
-                Expanded(child: Text(label, overflow: TextOverflow.ellipsis))
-              else
-                const Spacer(),
-              FilterChip(
-                avatar: const Icon(Icons.aspect_ratio, size: 18),
-                label: Text(l10n.aspectLock),
-                tooltip: l10n.aspectLock,
-                selected: _lockAspect,
-                showCheckmark: false,
-                onSelected: (value) => setState(() => _lockAspect = value),
-              ),
-              const SizedBox(width: 8),
-              FilterChip(
-                avatar: const Icon(Icons.align_horizontal_center, size: 18),
-                label: Text(l10n.snapGuides),
-                tooltip: l10n.snapGuides,
-                selected: _snapEnabled,
-                showCheckmark: false,
-                onSelected: (value) => setState(() => _snapEnabled = value),
-              ),
-            ],
+                IconButton(
+                  icon: const Icon(Icons.redo),
+                  tooltip: l10n.redoAction,
+                  onPressed: _redoStack.isEmpty ? null : _redo,
+                ),
+                if ((_zoom - 1).abs() > 0.001)
+                  IconButton(
+                    icon: const Icon(Icons.zoom_out_map),
+                    tooltip: l10n.resetZoom,
+                    onPressed: () => _applyZoom(1),
+                  ),
+                if (label != null)
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 140),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Text(label, overflow: TextOverflow.ellipsis),
+                    ),
+                  ),
+                FilterChip(
+                  avatar: const Icon(Icons.aspect_ratio, size: 18),
+                  label: Text(l10n.aspectLock),
+                  tooltip: l10n.aspectLock,
+                  selected: _lockAspect,
+                  showCheckmark: false,
+                  onSelected: (value) => setState(() => _lockAspect = value),
+                ),
+                const SizedBox(width: 8),
+                FilterChip(
+                  avatar: const Icon(Icons.align_horizontal_center, size: 18),
+                  label: Text(l10n.snapGuides),
+                  tooltip: l10n.snapGuides,
+                  selected: _snapEnabled,
+                  showCheckmark: false,
+                  onSelected: (value) => setState(() => _snapEnabled = value),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -863,11 +930,14 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
           GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: () => _select(index),
-            onPanStart: (details) => _startDrag(index, details),
-            onPanUpdate: _updateDrag,
-            onPanEnd: (_) => _endDrag(),
-            onPanCancel: _endDrag,
-            child: content,
+            child: Listener(
+              behavior: HitTestBehavior.translucent,
+              onPointerDown: (event) => _dragPointerDown(index, event),
+              onPointerMove: (event) => _dragPointerMove(index, event),
+              onPointerUp: (event) => _dragPointerUp(event.pointer),
+              onPointerCancel: (event) => _dragPointerUp(event.pointer),
+              child: content,
+            ),
           ),
           if (selected && !dragging)
             Positioned(
@@ -879,7 +949,7 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
                 onTap: () => _remove(index),
               ),
             ),
-          if (selected && !dragging)
+          if (selected && !dragging && _showResizeHandle(context))
             Positioned(
               bottom: -11,
               right: -11,
@@ -901,6 +971,13 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
         ],
       ),
     );
+  }
+
+  /// The resize handle badge is desktop-only: on touch devices pinch covers
+  /// resizing and the badge would only get in the way of taps.
+  bool _showResizeHandle(BuildContext context) {
+    final platform = Theme.of(context).platform;
+    return platform != TargetPlatform.android && platform != TargetPlatform.iOS;
   }
 
   Widget _cornerBadge({
