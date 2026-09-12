@@ -63,6 +63,12 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
   String _name = '';
   int? _selectedIndex;
 
+  /// Whether resize operations preserve the tile's aspect ratio.
+  bool _lockAspect = true;
+
+  /// Whether dragged tiles snap to alignment guides.
+  bool _snapEnabled = true;
+
   // Move-drag state.
   int? _dragIndex;
   Offset _dragStart = Offset.zero;
@@ -162,11 +168,13 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
           .clamp(0, kMaxCanvasExtent)
           .toDouble();
       final candidate = item.moveTo(x, y);
-      _snap = AlignmentSnap.compute(
-        moving: candidate,
-        others: _items,
-        ignore: item,
-      );
+      _snap = _snapEnabled
+          ? AlignmentSnap.compute(
+              moving: candidate,
+              others: _items,
+              ignore: item,
+            )
+          : AlignmentSnap.none;
       x = (x + _snap.dx).clamp(0, kMaxCanvasExtent).toDouble();
       y = (y + _snap.dy).clamp(0, kMaxCanvasExtent).toDouble();
       _items[index] = item.moveTo(x, y);
@@ -217,12 +225,25 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
       return;
     }
     final local = box.globalToLocal(globalPosition);
-    final width = (base.$1 + local.dx - _resizeStartLocal.dx)
-        .clamp(kMinTileExtent, kMaxTileExtent)
-        .toDouble();
-    final height = (base.$2 + local.dy - _resizeStartLocal.dy)
-        .clamp(kMinTileExtent, kMaxTileExtent)
-        .toDouble();
+    final dw = local.dx - _resizeStartLocal.dx;
+    final dh = local.dy - _resizeStartLocal.dy;
+    double width;
+    double height;
+    if (_lockAspect) {
+      // Uniform scale from the dominant axis, preserving the ratio.
+      final scaleW = (base.$1 + dw) / base.$1;
+      final scaleH = (base.$2 + dh) / base.$2;
+      final scale = scaleW > scaleH ? scaleW : scaleH;
+      width = (base.$1 * scale)
+          .clamp(kMinTileExtent, kMaxTileExtent)
+          .toDouble();
+      height = (base.$2 * scale)
+          .clamp(kMinTileExtent, kMaxTileExtent)
+          .toDouble();
+    } else {
+      width = (base.$1 + dw).clamp(kMinTileExtent, kMaxTileExtent).toDouble();
+      height = (base.$2 + dh).clamp(kMinTileExtent, kMaxTileExtent).toDouble();
+    }
     setState(() {
       _items[index] = _items[index].resizeTo(width, height);
     });
@@ -385,29 +406,79 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: _maxCanvasWidth),
-            child: Listener(
-              behavior: HitTestBehavior.translucent,
-              onPointerDown: (event) =>
-                  _pinchDown(event.pointer, event.position),
-              onPointerMove: (event) =>
-                  _pinchMove(event.pointer, event.position),
-              onPointerUp: (event) => _pinchUp(event.pointer),
-              onPointerCancel: (event) => _pinchUp(event.pointer),
-              child: Container(
-                key: _canvasKey,
-                child: FreeLayoutView(
-                  layout: FreeRemoteLayout(_items),
-                  itemBuilder: (context, index, item) =>
-                      _buildEditableItem(context, index, item),
-                  underlayBuilder: (context) => _buildGuides(),
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: _maxCanvasWidth),
+                  child: Listener(
+                    behavior: HitTestBehavior.translucent,
+                    onPointerDown: (event) =>
+                        _pinchDown(event.pointer, event.position),
+                    onPointerMove: (event) =>
+                        _pinchMove(event.pointer, event.position),
+                    onPointerUp: (event) => _pinchUp(event.pointer),
+                    onPointerCancel: (event) => _pinchUp(event.pointer),
+                    child: Container(
+                      key: _canvasKey,
+                      child: FreeLayoutView(
+                        layout: FreeRemoteLayout(_items),
+                        itemBuilder: (context, index, item) =>
+                            _buildEditableItem(context, index, item),
+                        underlayBuilder: (context) => _buildGuides(),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
+          ),
+          _buildToolbar(l10n),
+        ],
+      ),
+    );
+  }
+
+  /// Bottom toolbar with the editor-wide toggles and the selected tile name.
+  /// Identical on touch and desktop.
+  Widget _buildToolbar(AppLocalizations l10n) {
+    final index = _selectedIndex;
+    final String? label = index != null && index >= 0 && index < _items.length
+        ? (_items[index].isKey
+              ? remoteKeyLabel(_items[index].remoteKey!, l10n)
+              : _blockLabel(_items[index].block!, l10n))
+        : null;
+    return Material(
+      elevation: 8,
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          child: Row(
+            children: [
+              if (label != null)
+                Expanded(child: Text(label, overflow: TextOverflow.ellipsis))
+              else
+                const Spacer(),
+              FilterChip(
+                avatar: const Icon(Icons.aspect_ratio, size: 18),
+                label: Text(l10n.aspectLock),
+                tooltip: l10n.aspectLock,
+                selected: _lockAspect,
+                onSelected: (value) => setState(() => _lockAspect = value),
+              ),
+              const SizedBox(width: 8),
+              FilterChip(
+                avatar: const Icon(Icons.align_horizontal_center, size: 18),
+                label: Text(l10n.snapGuides),
+                tooltip: l10n.snapGuides,
+                selected: _snapEnabled,
+                onSelected: (value) => setState(() => _snapEnabled = value),
+              ),
+            ],
           ),
         ),
       ),

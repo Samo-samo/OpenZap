@@ -392,5 +392,11 @@ class AppLocalizationsTr extends AppLocalizations {
   String get resizeButton => 'Yeniden boyutlandır';
 
   @override
+  String get aspectLock => 'Oranı koru';
+
+  @override
+  String get snapGuides => 'Hizalama';
+
+  @override
   String get layoutSaved => 'Düzen kaydedildi';
 }

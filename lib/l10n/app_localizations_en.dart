@@ -403,5 +403,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resizeButton => 'Resize';
 
   @override
+  String get aspectLock => 'Keep ratio';
+
+  @override
+  String get snapGuides => 'Snap';
+
+  @override
   String get layoutSaved => 'Layout saved';
 }

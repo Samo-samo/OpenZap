@@ -153,5 +153,7 @@
   "resetLayout": "Düzeni sıfırla",
   "removeButton": "Kaldır",
   "resizeButton": "Yeniden boyutlandır",
+  "aspectLock": "Oranı koru",
+  "snapGuides": "Hizalama",
   "layoutSaved": "Düzen kaydedildi"
 }

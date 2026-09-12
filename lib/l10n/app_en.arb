@@ -153,5 +153,7 @@
   "resetLayout": "Reset layout",
   "removeButton": "Remove",
   "resizeButton": "Resize",
+  "aspectLock": "Keep ratio",
+  "snapGuides": "Snap",
   "layoutSaved": "Layout saved"
 }

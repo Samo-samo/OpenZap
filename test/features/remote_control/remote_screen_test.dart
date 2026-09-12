@@ -164,6 +164,33 @@ void main() {
     expect(find.text('Custom 1'), findsOneWidget);
   });
 
+  testWidgets('editor toolbar toggles default to on', (tester) async {
+    SharedPreferences.setMockInitialValues(
+      layoutPrefs(
+        items: [LayoutItem.key(remoteKey: RemoteKey.power, x: 8, y: 8)],
+      ),
+    );
+    await tester.pumpWidget(wrap());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('More options'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Manage layouts'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Edit layout').first);
+    await tester.pumpAndSettle();
+
+    FilterChip chip(String label) => tester.widget<FilterChip>(
+      find.ancestor(of: find.text(label), matching: find.byType(FilterChip)),
+    );
+    expect(chip('Keep ratio').selected, isTrue);
+    expect(chip('Snap').selected, isTrue);
+
+    await tester.tap(find.text('Snap'));
+    await tester.pumpAndSettle();
+    expect(chip('Snap').selected, isFalse);
+  });
+
   testWidgets('editor corner badges appear on selection', (tester) async {
     SharedPreferences.setMockInitialValues(
       layoutPrefs(

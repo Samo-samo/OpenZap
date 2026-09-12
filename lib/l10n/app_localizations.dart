@@ -830,6 +830,18 @@ abstract class AppLocalizations {
   /// **'Resize'**
   String get resizeButton;
 
+  /// No description provided for @aspectLock.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep ratio'**
+  String get aspectLock;
+
+  /// No description provided for @snapGuides.
+  ///
+  /// In en, this message translates to:
+  /// **'Snap'**
+  String get snapGuides;
+
   /// No description provided for @layoutSaved.
   ///
   /// In en, this message translates to:
