@@ -551,6 +551,120 @@ class AlignmentSnap {
   }
 }
 
+/// Result of snapping a resized tile's dimensions against its neighbours.
+///
+/// Width snaps to nearby tile widths and to values aligning the right edge
+/// with neighbours' edges/centers; height behaves symmetrically.
+class SizeSnap {
+  const SizeSnap({
+    required this.width,
+    required this.height,
+    this.verticalLines = const [],
+    this.horizontalLines = const [],
+  });
+
+  final double width;
+  final double height;
+
+  /// X positions of the vertical guide lines to draw.
+  final List<double> verticalLines;
+
+  /// Y positions of the horizontal guide lines to draw.
+  final List<double> horizontalLines;
+
+  static SizeSnap compute({
+    required LayoutItem item,
+    required double width,
+    required double height,
+    required Iterable<LayoutItem> others,
+    double threshold = kSnapThreshold,
+    LayoutItem? ignore,
+  }) {
+    double snappedW = width;
+    var bestWDist = threshold + 1;
+    double? snapX;
+    for (final candidate in _widthCandidates(item, others, ignore)) {
+      if (candidate < kMinTileExtent) {
+        continue;
+      }
+      final distance = (candidate - width).abs();
+      if (distance <= threshold && distance < bestWDist) {
+        bestWDist = distance;
+        snappedW = candidate;
+        snapX = item.x + candidate;
+      }
+    }
+    double snappedH = height;
+    var bestHDist = threshold + 1;
+    double? snapY;
+    for (final candidate in _heightCandidates(item, others, ignore)) {
+      if (candidate < kMinTileExtent) {
+        continue;
+      }
+      final distance = (candidate - height).abs();
+      if (distance <= threshold && distance < bestHDist) {
+        bestHDist = distance;
+        snappedH = candidate;
+        snapY = item.y + candidate;
+      }
+    }
+    return SizeSnap(
+      width: snappedW,
+      height: snappedH,
+      verticalLines: snapX == null ? const [] : [snapX],
+      horizontalLines: snapY == null ? const [] : [snapY],
+    );
+  }
+
+  static Iterable<double> _widthCandidates(
+    LayoutItem item,
+    Iterable<LayoutItem> others,
+    LayoutItem? ignore,
+  ) sync* {
+    for (final other in others) {
+      if (identical(other, ignore)) {
+        continue;
+      }
+      yield other.width;
+      yield other.right - item.x;
+      yield other.left - item.x;
+      yield other.centerX - item.x;
+    }
+  }
+
+  static Iterable<double> _heightCandidates(
+    LayoutItem item,
+    Iterable<LayoutItem> others,
+    LayoutItem? ignore,
+  ) sync* {
+    for (final other in others) {
+      if (identical(other, ignore)) {
+        continue;
+      }
+      yield other.height;
+      yield other.bottom - item.y;
+      yield other.top - item.y;
+      yield other.centerY - item.y;
+    }
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is SizeSnap &&
+      other.width == width &&
+      other.height == height &&
+      AlignmentSnap._doublesEqual(other.verticalLines, verticalLines) &&
+      AlignmentSnap._doublesEqual(other.horizontalLines, horizontalLines);
+
+  @override
+  int get hashCode => Object.hash(
+    width,
+    height,
+    Object.hashAll(verticalLines),
+    Object.hashAll(horizontalLines),
+  );
+}
+
 /// A named, persisted custom layout.
 class SavedRemoteLayout {
   const SavedRemoteLayout({

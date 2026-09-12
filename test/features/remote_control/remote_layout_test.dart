@@ -186,6 +186,119 @@ void main() {
     });
   });
 
+  group('SizeSnap', () {
+    test('snaps width to a neighbour width', () {
+      const item = LayoutItem.key(
+        remoteKey: RemoteKey.power,
+        x: 8,
+        y: 8,
+        width: 60,
+        height: 64,
+      );
+      const other = LayoutItem.key(
+        remoteKey: RemoteKey.mute,
+        x: 200,
+        y: 8,
+        width: 64,
+        height: 64,
+      );
+      final snap = SizeSnap.compute(
+        item: item,
+        width: 60,
+        height: 64,
+        others: [other],
+        ignore: item,
+      );
+      expect(snap.width, 64);
+      expect(snap.verticalLines, [8 + 64]);
+    });
+
+    test('snaps the right edge to a neighbour edge', () {
+      const item = LayoutItem.key(
+        remoteKey: RemoteKey.power,
+        x: 8,
+        y: 8,
+        width: 60,
+        height: 64,
+      );
+      // Other tile spans x=200..264; growing item to width 192 would put its
+      // right edge at 200 (other's left edge) — 4px short of 196? No:
+      // width 190 -> right edge 198, 2px from 200 -> snaps to 192.
+      const other = LayoutItem.key(
+        remoteKey: RemoteKey.mute,
+        x: 200,
+        y: 8,
+        width: 64,
+        height: 64,
+      );
+      final snap = SizeSnap.compute(
+        item: item,
+        width: 190,
+        height: 64,
+        others: [other],
+        ignore: item,
+      );
+      expect(snap.width, 192);
+      expect(snap.verticalLines, [200]);
+    });
+
+    test('ignores negative and tiny candidates', () {
+      const item = LayoutItem.key(
+        remoteKey: RemoteKey.power,
+        x: 200,
+        y: 8,
+        width: 60,
+        height: 64,
+      );
+      // Other sits left of the item with a far-off width: edge candidates
+      // would be negative and must not snap the width.
+      const other = LayoutItem.key(
+        remoteKey: RemoteKey.mute,
+        x: 8,
+        y: 8,
+        width: 100,
+        height: 64,
+      );
+      final snap = SizeSnap.compute(
+        item: item,
+        width: 60,
+        height: 64,
+        others: [other],
+        ignore: item,
+      );
+      expect(snap.width, 60);
+      expect(snap.verticalLines, isEmpty);
+    });
+
+    test('leaves far sizes alone', () {
+      const item = LayoutItem.key(
+        remoteKey: RemoteKey.power,
+        x: 8,
+        y: 8,
+        width: 60,
+        height: 64,
+      );
+      const other = LayoutItem.key(
+        remoteKey: RemoteKey.mute,
+        x: 300,
+        y: 300,
+        width: 100,
+        height: 100,
+      );
+      final snap = SizeSnap.compute(
+        item: item,
+        width: 60,
+        height: 64,
+        others: [other],
+        ignore: item,
+      );
+      expect(snap.width, 60);
+      expect(snap.height, 64);
+      expect(snap.verticalLines, isEmpty);
+      expect(snap.horizontalLines, isEmpty);
+    });
+  });
+
   test('default template stays within canvas bounds', () {
     final layout = FreeRemoteLayout.defaultTemplate();
     expect(layout.items, isNotEmpty);

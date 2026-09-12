@@ -81,6 +81,9 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
   Offset _resizeStartLocal = Offset.zero;
   (double, double)? _resizeBase;
 
+  // Latest resize snap, used to draw guide lines while resizing.
+  SizeSnap? _sizeSnap;
+
   // Pinch state: exactly two pointers scale the target tile.
   final Map<int, Offset> _pinchPointers = {};
   int? _pinchIndex;
@@ -234,18 +237,59 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
       final scaleW = (base.$1 + dw) / base.$1;
       final scaleH = (base.$2 + dh) / base.$2;
       final scale = scaleW > scaleH ? scaleW : scaleH;
-      width = (base.$1 * scale)
-          .clamp(kMinTileExtent, kMaxTileExtent)
-          .toDouble();
-      height = (base.$2 * scale)
-          .clamp(kMinTileExtent, kMaxTileExtent)
-          .toDouble();
+      width = base.$1 * scale;
+      height = base.$2 * scale;
     } else {
-      width = (base.$1 + dw).clamp(kMinTileExtent, kMaxTileExtent).toDouble();
-      height = (base.$2 + dh).clamp(kMinTileExtent, kMaxTileExtent).toDouble();
+      width = base.$1 + dw;
+      height = base.$2 + dh;
+    }
+    _applyResize(index, width, height);
+  }
+
+  /// Applies a resize with optional snap-to-neighbours and clamping.
+  ///
+  /// With the aspect lock on, a snapped axis rescales the other one to keep
+  /// the ratio; otherwise both axes snap independently.
+  void _applyResize(int index, double width, double height) {
+    if (index >= _items.length) {
+      return;
+    }
+    var w = width;
+    var h = height;
+    SizeSnap? sizeSnap;
+    if (_snapEnabled) {
+      final item = _items[index];
+      final snapped = SizeSnap.compute(
+        item: item,
+        width: w,
+        height: h,
+        others: _items,
+        ignore: item,
+      );
+      if (_lockAspect) {
+        if (snapped.width != w && w > 0) {
+          final scale = snapped.width / w;
+          w = snapped.width;
+          h = h * scale;
+          sizeSnap = snapped;
+        } else if (snapped.height != h && h > 0) {
+          final scale = snapped.height / h;
+          h = snapped.height;
+          w = w * scale;
+          sizeSnap = snapped;
+        }
+      } else if (snapped.width != width || snapped.height != height) {
+        w = snapped.width;
+        h = snapped.height;
+        sizeSnap = snapped;
+      }
     }
     setState(() {
-      _items[index] = _items[index].resizeTo(width, height);
+      _items[index] = _items[index].resizeTo(
+        w.clamp(kMinTileExtent, kMaxTileExtent).toDouble(),
+        h.clamp(kMinTileExtent, kMaxTileExtent).toDouble(),
+      );
+      _sizeSnap = sizeSnap;
     });
   }
 
@@ -255,6 +299,7 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
         _resizePointer = null;
         _resizeIndex = null;
         _resizeBase = null;
+        _sizeSnap = null;
       });
     }
   }
@@ -301,12 +346,8 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
       return;
     }
     final factor = dist / _pinchStartDist;
-    setState(() {
-      _items[index] = _items[index].resizeTo(
-        (base.$1 * factor).clamp(kMinTileExtent, kMaxTileExtent).toDouble(),
-        (base.$2 * factor).clamp(kMinTileExtent, kMaxTileExtent).toDouble(),
-      );
-    });
+    // Pinch is inherently uniform; snap still applies when enabled.
+    _applyResize(index, base.$1 * factor, base.$2 * factor);
   }
 
   void _pinchUp(int pointer) {
@@ -315,6 +356,7 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
       setState(() {
         _pinchIndex = null;
         _pinchBase = null;
+        _sizeSnap = null;
       });
     }
   }
@@ -468,6 +510,7 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
                 label: Text(l10n.aspectLock),
                 tooltip: l10n.aspectLock,
                 selected: _lockAspect,
+                showCheckmark: false,
                 onSelected: (value) => setState(() => _lockAspect = value),
               ),
               const SizedBox(width: 8),
@@ -476,6 +519,7 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
                 label: Text(l10n.snapGuides),
                 tooltip: l10n.snapGuides,
                 selected: _snapEnabled,
+                showCheckmark: false,
                 onSelected: (value) => setState(() => _snapEnabled = value),
               ),
             ],
@@ -485,14 +529,25 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
     );
   }
 
-  /// Alignment guide lines for the in-progress drag.
+  /// Alignment guide lines for the in-progress drag or resize.
   List<Widget> _buildGuides() {
-    if (_dragIndex == null) {
+    final sizeSnap = _sizeSnap;
+    final resizing =
+        (_resizePointer != null || _pinchIndex != null) && sizeSnap != null;
+    if (_dragIndex == null && !resizing) {
       return const [];
     }
     final color = Theme.of(context).colorScheme.primary;
+    final verticalLines = [
+      ..._snap.verticalLines,
+      if (resizing) ...sizeSnap.verticalLines,
+    ];
+    final horizontalLines = [
+      ..._snap.horizontalLines,
+      if (resizing) ...sizeSnap.horizontalLines,
+    ];
     return [
-      for (final x in _snap.verticalLines)
+      for (final x in verticalLines)
         Positioned(
           left: x,
           top: 0,
@@ -500,7 +555,7 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
           width: 1,
           child: ColoredBox(color: color),
         ),
-      for (final y in _snap.horizontalLines)
+      for (final y in horizontalLines)
         Positioned(
           top: y,
           left: 0,
