@@ -794,18 +794,6 @@ abstract class AppLocalizations {
   /// **'Name'**
   String get nameLabel;
 
-  /// No description provided for @showGrid.
-  ///
-  /// In en, this message translates to:
-  /// **'Show grid'**
-  String get showGrid;
-
-  /// No description provided for @hideGrid.
-  ///
-  /// In en, this message translates to:
-  /// **'Hide grid'**
-  String get hideGrid;
-
   /// No description provided for @addToLayout.
   ///
   /// In en, this message translates to:
@@ -836,11 +824,11 @@ abstract class AppLocalizations {
   /// **'Remove'**
   String get removeButton;
 
-  /// No description provided for @buttonSize.
+  /// No description provided for @resizeButton.
   ///
   /// In en, this message translates to:
-  /// **'Size'**
-  String get buttonSize;
+  /// **'Resize'**
+  String get resizeButton;
 
   /// No description provided for @layoutSaved.
   ///

@@ -65,7 +65,7 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
         SavedRemoteLayout(
           id: id,
           name: name,
-          gridJson: jsonEncode(RemoteGridLayout.defaultTemplate().toJson()),
+          gridJson: jsonEncode(FreeRemoteLayout.defaultTemplate().toJson()),
         ),
       ],
       activeCustomLayoutId: null,

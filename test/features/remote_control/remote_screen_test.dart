@@ -28,11 +28,8 @@ void main() {
     String id = 'l1',
     String name = 'Salon',
     bool active = true,
-    int columns = kLayoutGridColumns,
   }) {
-    final gridJson = jsonEncode(
-      RemoteGridLayout(items, columns: columns).toJson(),
-    );
+    final gridJson = jsonEncode(FreeRemoteLayout(items).toJson());
     return {
       'custom_layouts_v1': jsonEncode([
         SavedRemoteLayout(id: id, name: name, gridJson: gridJson).toJson(),
@@ -100,8 +97,8 @@ void main() {
     SharedPreferences.setMockInitialValues(
       layoutPrefs(
         items: [
-          LayoutItem.key(remoteKey: RemoteKey.power, row: 0, column: 0),
-          LayoutItem.block(block: LayoutBlock.sleepTimer, row: 1, column: 0),
+          LayoutItem.key(remoteKey: RemoteKey.power, x: 8, y: 8),
+          LayoutItem.block(block: LayoutBlock.sleepTimer, x: 8, y: 80),
         ],
       ),
     );
@@ -170,7 +167,7 @@ void main() {
   testWidgets('editor corner badges appear on selection', (tester) async {
     SharedPreferences.setMockInitialValues(
       layoutPrefs(
-        items: [LayoutItem.key(remoteKey: RemoteKey.power, row: 0, column: 0)],
+        items: [LayoutItem.key(remoteKey: RemoteKey.power, x: 8, y: 8)],
       ),
     );
     await tester.pumpWidget(wrap());
@@ -187,7 +184,7 @@ void main() {
     // Tap the power tile to select it; both corner badges show up.
     await tester.tap(find.byTooltip('Power').last);
     await tester.pumpAndSettle();
-    expect(find.byTooltip('Size'), findsOneWidget);
+    expect(find.byTooltip('Resize'), findsOneWidget);
     expect(find.byTooltip('Remove'), findsOneWidget);
   });
 }

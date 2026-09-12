@@ -7,15 +7,15 @@ import '../../../l10n/app_localizations.dart';
 import '../../settings/presentation/settings_providers.dart';
 import '../domain/remote_key.dart';
 import '../domain/remote_layout.dart';
-import 'layout_grid_view.dart';
+import 'free_layout_view.dart';
 import 'remote_key_icons.dart';
 
 /// Full-screen editor for a saved custom remote layout.
 ///
-/// Items can be dragged to free cells; selecting an item shows small badges
-/// on its corners for cycling the size (buttons: 1x1 up to 2x2) and removing
-/// it. New items come from the palette in the app bar. Saving persists the
-/// arrangement.
+/// Tiles are freely arranged on a canvas: drag to move (with alignment
+/// guides), resize with the corner handle (mouse and touch) or with a
+/// two-finger pinch (touch), remove with the top-left badge, and add new
+/// tiles from the palette in the app bar. Saving persists the arrangement.
 class LayoutEditorScreen extends ConsumerStatefulWidget {
   const LayoutEditorScreen({super.key, required this.layoutId});
 
@@ -26,9 +26,7 @@ class LayoutEditorScreen extends ConsumerStatefulWidget {
 }
 
 class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
-  static const double _gap = 8;
-  static const double _maxGridWidth = 960;
-  static const double _cellTarget = 60;
+  static const double _maxCanvasWidth = 960;
 
   static const _navigationKeys = <RemoteKey>[
     RemoteKey.up,
@@ -61,36 +59,42 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
     RemoteKey.teletext,
   ];
 
-  static const _sizes = [(1, 1), (2, 1), (1, 2), (2, 2)];
-
-  late List<LayoutItem> _items;
+  List<LayoutItem> _items = [];
   String _name = '';
   int? _selectedIndex;
+
+  // Move-drag state.
   int? _dragIndex;
+  Offset _dragStart = Offset.zero;
   Offset _dragDelta = Offset.zero;
-  (int, int)? _dragPreview;
-  bool _showGrid = true;
+  AlignmentSnap _snap = AlignmentSnap.none;
 
-  /// Rendered width and column count of the grid, captured while building.
-  double _gridWidth = _maxGridWidth;
-  int _columns = kLayoutGridColumns;
+  // Resize-handle state (pointer id tracked so multi-touch stays sane).
+  int? _resizePointer;
+  int? _resizeIndex;
+  Offset _resizeStartLocal = Offset.zero;
+  (double, double)? _resizeBase;
 
-  SavedRemoteLayout? _savedLayout;
+  // Pinch state: exactly two pointers scale the target tile.
+  final Map<int, Offset> _pinchPointers = {};
+  int? _pinchIndex;
+  double _pinchStartDist = 0;
+  (double, double)? _pinchBase;
+
+  final GlobalKey _canvasKey = GlobalKey();
 
   @override
   void initState() {
     super.initState();
     final settings = ref.read(settingsProvider).valueOrNull;
-    _savedLayout = settings?.savedLayouts
+    final saved = settings?.savedLayouts
         .where((layout) => layout.id == widget.layoutId)
         .firstOrNull;
-    if (_savedLayout != null) {
-      _name = _savedLayout!.name;
+    if (saved != null) {
+      _name = saved.name;
       _items =
-          RemoteGridLayout.tryFromJsonString(
-            _savedLayout!.gridJson,
-          )?.items.toList() ??
-          RemoteGridLayout.defaultTemplate().items.toList();
+          FreeRemoteLayout.tryFromJsonString(saved.gridJson)?.items.toList() ??
+          FreeRemoteLayout.defaultTemplate().items.toList();
     } else {
       // The layout was deleted before the screen opened; nothing to edit.
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -101,95 +105,224 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
     }
   }
 
+  RenderBox? get _canvasBox =>
+      _canvasKey.currentContext?.findRenderObject() as RenderBox?;
+
+  // ----- selection -----
+
   void _select(int index) {
     setState(() {
       _selectedIndex = _selectedIndex == index ? null : index;
     });
   }
 
-  void _startDrag(int index) {
+  // ----- move -----
+
+  void _startDrag(int index, DragStartDetails details) {
+    // A drag starting on the resize handle belongs to the handle. The badge
+    // is a ~25px circle overflowing the tile's bottom-right corner, so the
+    // skip zone covers that corner.
+    final box = _canvasBox;
+    if (box == null) {
+      return;
+    }
+    if (_selectedIndex == index && index < _items.length) {
+      final local = box.globalToLocal(details.globalPosition);
+      final item = _items[index];
+      if (local.dx >= item.right - 26 && local.dy >= item.bottom - 26) {
+        return;
+      }
+    }
     final item = _items[index];
     setState(() {
       _dragIndex = index;
+      _dragStart = Offset(item.x, item.y);
       _dragDelta = Offset.zero;
-      _dragPreview = (item.row, item.column);
+      _snap = AlignmentSnap.none;
       _selectedIndex = null;
     });
   }
 
   void _updateDrag(DragUpdateDetails details) {
     final index = _dragIndex;
-    if (index == null) {
+    if (index == null || index >= _items.length) {
       return;
     }
-    final step =
-        LayoutGridView.cellSizeFor(_gridWidth, _gap, columns: _columns) + _gap;
+    // A simultaneous pinch owns the gesture.
+    if (_pinchIndex != null) {
+      return;
+    }
     final item = _items[index];
     setState(() {
       _dragDelta += details.delta;
-      var targetRow = (item.row + _dragDelta.dy / step).round();
-      var targetColumn = (item.column + _dragDelta.dx / step).round();
-      if (targetRow < 0) {
-        targetRow = 0;
-      }
-      if (targetColumn < 0) {
-        targetColumn = 0;
-      }
-      if (targetColumn + item.effectiveColumnSpan > _columns) {
-        targetColumn = _columns - item.effectiveColumnSpan;
-      }
-      _dragPreview = _currentGrid.nearestFreeSpot(
-        row: targetRow,
-        column: targetColumn,
-        rowSpan: item.effectiveRowSpan,
-        columnSpan: item.effectiveColumnSpan,
+      var x = (_dragStart.dx + _dragDelta.dx)
+          .clamp(0, kMaxCanvasExtent)
+          .toDouble();
+      var y = (_dragStart.dy + _dragDelta.dy)
+          .clamp(0, kMaxCanvasExtent)
+          .toDouble();
+      final candidate = item.moveTo(x, y);
+      _snap = AlignmentSnap.compute(
+        moving: candidate,
+        others: _items,
         ignore: item,
       );
+      x = (x + _snap.dx).clamp(0, kMaxCanvasExtent).toDouble();
+      y = (y + _snap.dy).clamp(0, kMaxCanvasExtent).toDouble();
+      _items[index] = item.moveTo(x, y);
     });
   }
 
   void _endDrag() {
-    final index = _dragIndex;
-    final preview = _dragPreview;
-    if (index == null) {
+    if (_dragIndex == null) {
       return;
     }
     setState(() {
-      if (preview != null && index < _items.length) {
-        _items[index] = _items[index].moveTo(preview.$1, preview.$2);
-      }
       _dragIndex = null;
       _dragDelta = Offset.zero;
-      _dragPreview = null;
+      _snap = AlignmentSnap.none;
     });
   }
 
-  RemoteGridLayout get _currentGrid =>
-      RemoteGridLayout(_items, columns: _columns);
+  // ----- resize handle (mouse + touch) -----
 
-  void _cycleSize(int index) {
+  void _beginResize(int index, int pointer, Offset globalPosition) {
+    if (_resizePointer != null || index >= _items.length) {
+      return;
+    }
+    final box = _canvasBox;
+    if (box == null) {
+      return;
+    }
     final item = _items[index];
-    if (!item.isKey) {
-      return;
-    }
-    final currentIndex = _sizes.indexWhere(
-      (s) => s.$1 == item.effectiveRowSpan && s.$2 == item.effectiveColumnSpan,
-    );
-    final next = _sizes[(currentIndex + 1) % _sizes.length];
-    final movedTo = _currentGrid.nearestFreeSpot(
-      row: item.row,
-      column: item.column,
-      rowSpan: next.$1,
-      columnSpan: next.$2,
-      ignore: item,
-    );
-    if (movedTo == null) {
-      return;
-    }
     setState(() {
-      _items[index] = _items[index]
-          .moveTo(movedTo.$1, movedTo.$2)
-          .resizeTo(next.$1, next.$2);
+      _resizePointer = pointer;
+      _resizeIndex = index;
+      _resizeStartLocal = box.globalToLocal(globalPosition);
+      _resizeBase = (item.width, item.height);
+    });
+  }
+
+  void _updateResize(int pointer, Offset globalPosition) {
+    final index = _resizeIndex;
+    if (_resizePointer != pointer || index == null) {
+      return;
+    }
+    final box = _canvasBox;
+    final base = _resizeBase;
+    if (box == null || base == null) {
+      return;
+    }
+    if (index >= _items.length) {
+      return;
+    }
+    final local = box.globalToLocal(globalPosition);
+    final width = (base.$1 + local.dx - _resizeStartLocal.dx)
+        .clamp(kMinTileExtent, kMaxTileExtent)
+        .toDouble();
+    final height = (base.$2 + local.dy - _resizeStartLocal.dy)
+        .clamp(kMinTileExtent, kMaxTileExtent)
+        .toDouble();
+    setState(() {
+      _items[index] = _items[index].resizeTo(width, height);
+    });
+  }
+
+  void _endResize(int pointer) {
+    if (_resizePointer == pointer) {
+      setState(() {
+        _resizePointer = null;
+        _resizeIndex = null;
+        _resizeBase = null;
+      });
+    }
+  }
+
+  // ----- pinch resize (touch): two pointers scale the selected tile -----
+
+  void _pinchDown(int pointer, Offset globalPosition) {
+    _pinchPointers[pointer] = globalPosition;
+    if (_pinchPointers.length != 2 || _pinchIndex != null) {
+      return;
+    }
+    var target = _selectedIndex;
+    target ??= _topmostTileAt(globalPosition);
+    if (target == null) {
+      _pinchPointers.clear();
+      return;
+    }
+    final positions = _pinchPointers.values.toList();
+    final item = _items[target];
+    setState(() {
+      _pinchIndex = target;
+      _selectedIndex = target;
+      _pinchStartDist = (positions[0] - positions[1]).distance;
+      _pinchBase = (item.width, item.height);
+    });
+  }
+
+  void _pinchMove(int pointer, Offset globalPosition) {
+    if (!_pinchPointers.containsKey(pointer)) {
+      return;
+    }
+    _pinchPointers[pointer] = globalPosition;
+    final index = _pinchIndex;
+    final base = _pinchBase;
+    if (index == null || base == null || _pinchPointers.length != 2) {
+      return;
+    }
+    if (index >= _items.length) {
+      return;
+    }
+    final positions = _pinchPointers.values.toList();
+    final dist = (positions[0] - positions[1]).distance;
+    if (_pinchStartDist <= 0 || dist <= 0) {
+      return;
+    }
+    final factor = dist / _pinchStartDist;
+    setState(() {
+      _items[index] = _items[index].resizeTo(
+        (base.$1 * factor).clamp(kMinTileExtent, kMaxTileExtent).toDouble(),
+        (base.$2 * factor).clamp(kMinTileExtent, kMaxTileExtent).toDouble(),
+      );
+    });
+  }
+
+  void _pinchUp(int pointer) {
+    _pinchPointers.remove(pointer);
+    if (_pinchPointers.length < 2 && _pinchIndex != null) {
+      setState(() {
+        _pinchIndex = null;
+        _pinchBase = null;
+      });
+    }
+  }
+
+  /// Topmost item containing [globalPosition], or null.
+  int? _topmostTileAt(Offset globalPosition) {
+    final box = _canvasBox;
+    if (box == null) {
+      return null;
+    }
+    final local = box.globalToLocal(globalPosition);
+    for (var i = _items.length - 1; i >= 0; i--) {
+      final item = _items[i];
+      if (local.dx >= item.left &&
+          local.dx <= item.right &&
+          local.dy >= item.top &&
+          local.dy <= item.bottom) {
+        return i;
+      }
+    }
+    return null;
+  }
+
+  // ----- palette / reset / save -----
+
+  void _addItem(LayoutItem Function(double x, double y) factory) {
+    final (x, y) = FreeRemoteLayout(_items).appendSpot();
+    setState(() {
+      _items.add(factory(x, y));
     });
   }
 
@@ -200,28 +333,15 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
     });
   }
 
-  void _addItem(LayoutItem candidate) {
-    final spot = _currentGrid.firstFreeSpot(
-      candidate.effectiveRowSpan,
-      candidate.effectiveColumnSpan,
-    );
-    if (spot == null) {
-      return;
-    }
-    setState(() {
-      _items.add(candidate.moveTo(spot.$1, spot.$2));
-    });
-  }
-
   void _resetLayout() {
     setState(() {
-      _items = RemoteGridLayout.defaultTemplate().items.toList();
+      _items = FreeRemoteLayout.defaultTemplate().items.toList();
       _selectedIndex = null;
     });
   }
 
   Future<void> _save() async {
-    final json = jsonEncode(_currentGrid.toJson());
+    final json = jsonEncode(FreeRemoteLayout(_items).toJson());
     await ref
         .read(settingsProvider.notifier)
         .saveCustomLayout(widget.layoutId, json);
@@ -249,11 +369,6 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
         title: Text(_name.isEmpty ? l10n.editLayout : _name),
         actions: [
           IconButton(
-            icon: Icon(_showGrid ? Icons.grid_on : Icons.grid_off),
-            tooltip: _showGrid ? l10n.hideGrid : l10n.showGrid,
-            onPressed: () => setState(() => _showGrid = !_showGrid),
-          ),
-          IconButton(
             icon: const Icon(Icons.add),
             tooltip: l10n.addToLayout,
             onPressed: () => _openPalette(context, l10n),
@@ -274,61 +389,24 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
         padding: const EdgeInsets.all(16),
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: _maxGridWidth),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                _gridWidth = constraints.maxWidth;
-                _columns = RemoteGridLayout.suggestedColumnCount(
-                  _gridWidth,
-                  _gap,
-                  cellTarget: _cellTarget,
-                );
-                final grid = _currentGrid;
-                final cell = LayoutGridView.cellSizeFor(
-                  _gridWidth,
-                  _gap,
-                  columns: _columns,
-                );
-                return LayoutGridView(
-                  gap: _gap,
-                  grid: grid,
-                  itemBuilder: (context, item) =>
-                      _buildEditableItem(context, item),
-                  offsetOverride: (item, origin) =>
-                      _items.indexOf(item) == _dragIndex
-                      ? origin + _dragDelta
-                      : origin,
-                  underlayBuilder: (context) =>
-                      _showGrid ? _buildGuides(grid, cell) : const [],
-                  overlayBuilder: (context) => [
-                    if (_dragPreview case (final row, final column)?
-                        when _dragIndex != null)
-                      Positioned(
-                        left: column * (cell + _gap),
-                        top: row * (cell + _gap),
-                        width: LayoutGridView.sizeOf(
-                          _items[_dragIndex!],
-                          cell,
-                          _gap,
-                        ).width,
-                        height: LayoutGridView.sizeOf(
-                          _items[_dragIndex!],
-                          cell,
-                          _gap,
-                        ).height,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Theme.of(context).colorScheme.primary,
-                              width: 2,
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
-                );
-              },
+            constraints: const BoxConstraints(maxWidth: _maxCanvasWidth),
+            child: Listener(
+              behavior: HitTestBehavior.translucent,
+              onPointerDown: (event) =>
+                  _pinchDown(event.pointer, event.position),
+              onPointerMove: (event) =>
+                  _pinchMove(event.pointer, event.position),
+              onPointerUp: (event) => _pinchUp(event.pointer),
+              onPointerCancel: (event) => _pinchUp(event.pointer),
+              child: Container(
+                key: _canvasKey,
+                child: FreeLayoutView(
+                  layout: FreeRemoteLayout(_items),
+                  itemBuilder: (context, index, item) =>
+                      _buildEditableItem(context, index, item),
+                  underlayBuilder: (context) => _buildGuides(),
+                ),
+              ),
             ),
           ),
         ),
@@ -336,31 +414,34 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
     );
   }
 
-  /// Faint per-cell guides rendered under the items.
-  List<Widget> _buildGuides(RemoteGridLayout grid, double cell) {
-    final rows = LayoutGridView.rowCountFor(grid);
-    final lineColor = Theme.of(context).dividerColor.withValues(alpha: 0.4);
+  /// Alignment guide lines for the in-progress drag.
+  List<Widget> _buildGuides() {
+    if (_dragIndex == null) {
+      return const [];
+    }
+    final color = Theme.of(context).colorScheme.primary;
     return [
-      for (var row = 0; row < rows; row++)
-        for (var column = 0; column < grid.columns; column++)
-          Positioned(
-            left: column * (cell + _gap),
-            top: row * (cell + _gap),
-            width: cell,
-            height: cell,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: lineColor),
-              ),
-            ),
-          ),
+      for (final x in _snap.verticalLines)
+        Positioned(
+          left: x,
+          top: 0,
+          bottom: 0,
+          width: 1,
+          child: ColoredBox(color: color),
+        ),
+      for (final y in _snap.horizontalLines)
+        Positioned(
+          top: y,
+          left: 0,
+          right: 0,
+          height: 1,
+          child: ColoredBox(color: color),
+        ),
     ];
   }
 
-  Widget _buildEditableItem(BuildContext context, LayoutItem item) {
-    final index = _items.indexOf(item);
-    if (index < 0) {
+  Widget _buildEditableItem(BuildContext context, int index, LayoutItem item) {
+    if (index < 0 || index >= _items.length) {
       return const SizedBox.shrink();
     }
     final l10n = AppLocalizations.of(context)!;
@@ -369,14 +450,13 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
 
     Widget content;
     if (item.isKey) {
-      final longestSpan = item.effectiveRowSpan > item.effectiveColumnSpan
-          ? item.effectiveRowSpan
-          : item.effectiveColumnSpan;
+      final iconSize =
+          (item.width < item.height ? item.width : item.height) * 0.42;
       content = Tooltip(
         message: remoteKeyLabel(item.remoteKey!, l10n),
         child: SizedBox.expand(
           child: IconButton.filled(
-            iconSize: 20.0 + 4.0 * (longestSpan - 1),
+            iconSize: iconSize.clamp(18, 40),
             onPressed: () => _select(index),
             icon: Icon(remoteKeyIcon(item.remoteKey!)),
           ),
@@ -384,19 +464,21 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
       );
     } else {
       final theme = Theme.of(context);
-      content = Container(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.secondaryContainer,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Center(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(_blockIcon(item.block!), size: 16),
-              const SizedBox(width: 6),
-              Flexible(child: Text(_blockLabel(item.block!, l10n))),
-            ],
+      content = ClipRect(
+        child: Container(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.secondaryContainer,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Center(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(_blockIcon(item.block!), size: 16),
+                const SizedBox(width: 6),
+                Flexible(child: Text(_blockLabel(item.block!, l10n))),
+              ],
+            ),
           ),
         ),
       );
@@ -420,32 +502,45 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
           GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: () => _select(index),
-            onPanStart: (_) => _startDrag(index),
+            onPanStart: (details) => _startDrag(index, details),
             onPanUpdate: _updateDrag,
             onPanEnd: (_) => _endDrag(),
+            onPanCancel: _endDrag,
             child: content,
           ),
-          if (selected && !dragging) ...[
-            Positioned(top: -9, left: -9, child: _removeBadge(l10n)),
-            if (item.isKey)
-              Positioned(top: -9, right: -9, child: _sizeBadge(l10n)),
-          ],
+          if (selected && !dragging)
+            Positioned(
+              top: -11,
+              left: -11,
+              child: _cornerBadge(
+                icon: Icons.close,
+                tooltip: l10n.removeButton,
+                onTap: () => _remove(index),
+              ),
+            ),
+          if (selected && !dragging)
+            Positioned(
+              bottom: -11,
+              right: -11,
+              child: Listener(
+                behavior: HitTestBehavior.opaque,
+                onPointerDown: (event) =>
+                    _beginResize(index, event.pointer, event.position),
+                onPointerMove: (event) =>
+                    _updateResize(event.pointer, event.position),
+                onPointerUp: (event) => _endResize(event.pointer),
+                onPointerCancel: (event) => _endResize(event.pointer),
+                child: _cornerBadge(
+                  icon: Icons.open_in_full,
+                  tooltip: l10n.resizeButton,
+                  onTap: () {},
+                ),
+              ),
+            ),
         ],
       ),
     );
   }
-
-  Widget _removeBadge(AppLocalizations l10n) => _cornerBadge(
-    icon: Icons.close,
-    tooltip: l10n.removeButton,
-    onTap: () => _remove(_selectedIndex!),
-  );
-
-  Widget _sizeBadge(AppLocalizations l10n) => _cornerBadge(
-    icon: Icons.zoom_out_map,
-    tooltip: l10n.buttonSize,
-    onTap: () => _cycleSize(_selectedIndex!),
-  );
 
   Widget _cornerBadge({
     required IconData icon,
@@ -484,9 +579,9 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
       };
 
   Future<void> _openPalette(BuildContext context, AppLocalizations l10n) {
-    void addAndClose(LayoutItem candidate) {
+    void addAndClose(LayoutItem Function(double x, double y) factory) {
       Navigator.of(context).pop();
-      _addItem(candidate);
+      _addItem(factory);
     }
 
     Widget section(String title, List<Widget> children) => Column(
@@ -505,16 +600,24 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
       label: Text(remoteKeyLabel(key, l10n)),
       tooltip: remoteKeyLabel(key, l10n),
       onPressed: () =>
-          addAndClose(LayoutItem.key(remoteKey: key, row: 0, column: 0)),
+          addAndClose((x, y) => LayoutItem.key(remoteKey: key, x: x, y: y)),
     );
 
     Widget blockChip(String label, IconData icon, LayoutBlock block) {
+      final (defaultW, defaultH) = kLayoutBlockSizes[block]!;
       return ActionChip(
         avatar: Icon(icon, size: 18),
         label: Text(label),
         tooltip: label,
-        onPressed: () =>
-            addAndClose(LayoutItem.block(block: block, row: 0, column: 0)),
+        onPressed: () => addAndClose(
+          (x, y) => LayoutItem.block(
+            block: block,
+            x: x,
+            y: y,
+            width: defaultW,
+            height: defaultH,
+          ),
+        ),
       );
     }
 

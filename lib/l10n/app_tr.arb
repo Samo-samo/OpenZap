@@ -147,13 +147,11 @@
   "manageLayouts": "Düzenleri yönet",
   "renameLayoutTitle": "Düzeni yeniden adlandır",
   "nameLabel": "İsim",
-  "showGrid": "Izgara göster",
-  "hideGrid": "Izgarayı gizle",
   "addToLayout": "Düğme ekle",
   "blockTvStatus": "TV durumu",
   "blockDigitsPad": "Rakam tuşları",
   "resetLayout": "Düzeni sıfırla",
   "removeButton": "Kaldır",
-  "buttonSize": "Boyut",
+  "resizeButton": "Yeniden boyutlandır",
   "layoutSaved": "Düzen kaydedildi"
 }

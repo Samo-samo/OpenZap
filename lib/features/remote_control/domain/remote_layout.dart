@@ -2,110 +2,151 @@ import 'dart:convert';
 
 import 'remote_key.dart';
 
-/// Default number of columns in the custom remote layout grid.
-const int kLayoutGridColumns = 4;
+/// Minimum/maximum tile dimensions in logical pixels.
+const double kMinTileExtent = 40;
+const double kMaxTileExtent = 400;
 
-/// Minimum/maximum supported column counts.
-const int kLayoutGridMinColumns = 2;
-const int kLayoutGridMaxColumns = 12;
+/// Maximum accepted canvas coordinate; items beyond this are clamped or
+/// dropped on load so hostile payloads cannot freeze the UI.
+const double kMaxCanvasExtent = 4000;
 
-/// Special (non-key) building blocks that can be placed on the grid.
+/// Maximum number of tiles accepted per layout (bounds widget creation and
+/// per-frame scans against hostile payloads).
+const int kMaxLayoutItems = 500;
+
+/// Default size of a key button tile.
+const double kDefaultButtonSize = 64;
+
+/// Snap distance for alignment guides in logical pixels.
+const double kSnapThreshold = 6;
+
+/// Special (non-key) building blocks that can be placed on the canvas.
 enum LayoutBlock { tvStatus, digitsPad, sleepTimer }
 
-/// Default column/row span of each special block.
-const Map<LayoutBlock, (int, int)> kLayoutBlockSpans = {
-  LayoutBlock.tvStatus: (1, 2),
-  LayoutBlock.digitsPad: (2, 4),
-  LayoutBlock.sleepTimer: (1, 2),
+/// Default tile size of each special block.
+const Map<LayoutBlock, (double, double)> kLayoutBlockSizes = {
+  LayoutBlock.tvStatus: (170, 52),
+  LayoutBlock.digitsPad: (320, 176),
+  LayoutBlock.sleepTimer: (170, 52),
 };
 
-/// A single item placed on the custom remote layout grid: either a
+/// Cell size used when migrating version-1 grid layouts to the free canvas.
+const double _legacyCellSize = 72;
+const double _legacyGap = 8;
+
+/// A single item placed on the free-form layout canvas: either a
 /// [RemoteKey] button or a special [LayoutBlock].
 ///
-/// Buttons may span 1x1 up to 2x2 cells; special blocks have a fixed span
-/// ([kLayoutBlockSpans]).
+/// Positions and sizes are absolute logical pixels relative to the canvas
+/// origin (top-left). There is no grid; items can be freely arranged.
 class LayoutItem {
   const LayoutItem.key({
     required this.remoteKey,
-    required this.row,
-    required this.column,
-    this.rowSpan = 1,
-    this.columnSpan = 1,
+    required this.x,
+    required this.y,
+    this.width = kDefaultButtonSize,
+    this.height = kDefaultButtonSize,
   }) : block = null;
 
   const LayoutItem.block({
     required this.block,
-    required this.row,
-    required this.column,
+    required this.x,
+    required this.y,
+    double? width,
+    double? height,
   }) : remoteKey = null,
-       rowSpan = 1,
-       columnSpan = 1;
+       width = width ?? kDefaultButtonSize,
+       height = height ?? kDefaultButtonSize;
 
   final RemoteKey? remoteKey;
 
   final LayoutBlock? block;
 
-  /// Zero-based top row of the item on the grid.
-  final int row;
+  /// Left edge in logical pixels.
+  final double x;
 
-  /// Zero-based leftmost column of the item on the grid.
-  final int column;
+  /// Top edge in logical pixels.
+  final double y;
 
-  /// Height of the item in grid rows (buttons only).
-  final int rowSpan;
+  /// Tile width in logical pixels.
+  final double width;
 
-  /// Width of the item in grid columns (buttons only).
-  final int columnSpan;
+  /// Tile height in logical pixels.
+  final double height;
 
   bool get isKey => remoteKey != null;
 
-  /// Effective vertical span, taking the fixed block sizes into account.
-  int get effectiveRowSpan => isKey ? rowSpan : kLayoutBlockSpans[block!]!.$1;
-
-  /// Effective horizontal span, taking the fixed block sizes into account.
-  int get effectiveColumnSpan =>
-      isKey ? columnSpan : kLayoutBlockSpans[block!]!.$2;
-
-  LayoutItem moveTo(int row, int column) => isKey
+  LayoutItem moveTo(double x, double y) => isKey
       ? LayoutItem.key(
           remoteKey: remoteKey!,
-          row: row,
-          column: column,
-          rowSpan: rowSpan,
-          columnSpan: columnSpan,
+          x: x,
+          y: y,
+          width: width,
+          height: height,
         )
-      : LayoutItem.block(block: block!, row: row, column: column);
+      : LayoutItem.block(
+          block: block!,
+          x: x,
+          y: y,
+          width: width,
+          height: height,
+        );
 
-  LayoutItem resizeTo(int rowSpan, int columnSpan) => isKey
+  LayoutItem resizeTo(double width, double height) => isKey
       ? LayoutItem.key(
           remoteKey: remoteKey!,
-          row: row,
-          column: column,
-          rowSpan: rowSpan,
-          columnSpan: columnSpan,
+          x: x,
+          y: y,
+          width: width,
+          height: height,
         )
-      : this;
+      : LayoutItem.block(
+          block: block!,
+          x: x,
+          y: y,
+          width: width,
+          height: height,
+        );
+
+  double get left => x;
+  double get top => y;
+  double get right => x + width;
+  double get bottom => y + height;
+  double get centerX => x + width / 2;
+  double get centerY => y + height / 2;
 
   Map<String, Object?> toJson() => {
     'type': isKey ? 'key' : 'block',
     if (isKey) 'key': remoteKey!.name,
     if (!isKey) 'block': block!.name,
-    'row': row,
-    'column': column,
-    if (isKey) 'rowSpan': rowSpan,
-    if (isKey) 'columnSpan': columnSpan,
+    'x': x,
+    'y': y,
+    'w': width,
+    'h': height,
   };
 
   /// Parses a single item; returns `null` when [json] is not a valid item.
+  ///
+  /// Coordinates are clamped to the canvas bounds and sizes to the tile
+  /// limits; items that would render nothing (zero-area after clamping) are
+  /// dropped.
   static LayoutItem? tryFromJson(Object? json) {
     if (json is! Map<Object?, Object?>) {
       return null;
     }
-    final row = _nonNegativeInt(json['row']);
-    final column = _nonNegativeInt(json['column']);
-    if (row == null || column == null) {
+    final x = _finiteDouble(json['x']);
+    final y = _finiteDouble(json['y']);
+    if (x == null || y == null) {
       return null;
     }
+    final width = (_finiteDouble(json['w']) ?? kDefaultButtonSize).clamp(
+      kMinTileExtent,
+      kMaxTileExtent,
+    );
+    final height = (_finiteDouble(json['h']) ?? kDefaultButtonSize).clamp(
+      kMinTileExtent,
+      kMaxTileExtent,
+    );
     switch (json['type']) {
       case 'key':
         final key = _tryParseKey(json['key']);
@@ -114,17 +155,30 @@ class LayoutItem {
         }
         return LayoutItem.key(
           remoteKey: key,
-          row: row,
-          column: column,
-          rowSpan: (json['rowSpan'] as num?)?.clamp(1, 2).toInt() ?? 1,
-          columnSpan: (json['columnSpan'] as num?)?.clamp(1, 2).toInt() ?? 1,
+          x: x.clamp(0, kMaxCanvasExtent),
+          y: y.clamp(0, kMaxCanvasExtent),
+          width: width,
+          height: height,
         );
       case 'block':
         final block = _tryParseBlock(json['block']);
         if (block == null) {
           return null;
         }
-        return LayoutItem.block(block: block, row: row, column: column);
+        final (defaultW, defaultH) = kLayoutBlockSizes[block]!;
+        return LayoutItem.block(
+          block: block,
+          x: x.clamp(0, kMaxCanvasExtent),
+          y: y.clamp(0, kMaxCanvasExtent),
+          width: (_finiteDouble(json['w']) ?? defaultW).clamp(
+            kMinTileExtent,
+            kMaxTileExtent,
+          ),
+          height: (_finiteDouble(json['h']) ?? defaultH).clamp(
+            kMinTileExtent,
+            kMaxTileExtent,
+          ),
+        );
       default:
         return null;
     }
@@ -154,220 +208,116 @@ class LayoutItem {
     return null;
   }
 
-  static int? _nonNegativeInt(Object? value) =>
-      value is num && value >= 0 && value == value.round()
-      ? value.round()
-      : null;
+  static double? _finiteDouble(Object? value) =>
+      value is num && value.isFinite ? value.toDouble() : null;
 
   @override
   bool operator ==(Object other) =>
       other is LayoutItem &&
       other.remoteKey == remoteKey &&
       other.block == block &&
-      other.row == row &&
-      other.column == column &&
-      other.rowSpan == rowSpan &&
-      other.columnSpan == columnSpan;
+      other.x == x &&
+      other.y == y &&
+      other.width == width &&
+      other.height == height;
 
   @override
-  int get hashCode =>
-      Object.hash(remoteKey, block, row, column, rowSpan, columnSpan);
+  int get hashCode => Object.hash(remoteKey, block, x, y, width, height);
 }
 
-/// An arrangement of [LayoutItem]s on a custom remote layout grid.
-class RemoteGridLayout {
-  RemoteGridLayout(
-    Iterable<LayoutItem> items, {
-    this.columns = kLayoutGridColumns,
-  }) : assert(
-         columns >= kLayoutGridMinColumns && columns <= kLayoutGridMaxColumns,
-       ),
-       items = List.unmodifiable(items);
+/// An arrangement of [LayoutItem]s on the free-form canvas.
+class FreeRemoteLayout {
+  FreeRemoteLayout(Iterable<LayoutItem> items)
+    : items = List.unmodifiable(items);
 
   final List<LayoutItem> items;
 
-  /// Number of columns this arrangement was designed for. Renderers may use
-  /// fewer/more columns per screen width; items beyond the visible columns
-  /// are simply not shown there.
-  final int columns;
-
-  /// Suggested column count for [maxWidth], aiming at roughly 60 px cells.
-  static int suggestedColumnCount(
-    double maxWidth,
-    double gap, {
-    double cellTarget = 60,
-  }) {
-    final count = ((maxWidth + gap) / (cellTarget + gap)).floor();
-    return count.clamp(kLayoutGridMinColumns, kLayoutGridMaxColumns).toInt();
-  }
-
-  /// The cells (as `row:column` strings) occupied by [item].
-  static Set<String> cellsOf(LayoutItem item) => {
-    for (var r = item.row; r < item.row + item.effectiveRowSpan; r++)
-      for (var c = item.column; c < item.column + item.effectiveColumnSpan; c++)
-        '$r:$c',
-  };
-
-  /// Whether an item with the given geometry would stay inside the grid and
-  /// not overlap any other item (excluding [ignore]).
-  bool canPlace({
-    required int row,
-    required int column,
-    required int rowSpan,
-    required int columnSpan,
-    Object? ignore,
-  }) {
-    if (column < 0 || column + columnSpan > columns || row < 0) {
-      return false;
-    }
-    final candidate = <String>{
-      for (var r = row; r < row + rowSpan; r++)
-        for (var c = column; c < column + columnSpan; c++) '$r:$c',
-    };
+  /// Lowest content edge, used to size the canvas and to append new items.
+  double get contentBottom {
+    var bottom = 0.0;
     for (final item in items) {
-      if (identical(item, ignore)) {
-        continue;
-      }
-      if (cellsOf(item).any(candidate.contains)) {
-        return false;
+      if (item.bottom > bottom) {
+        bottom = item.bottom;
       }
     }
-    return true;
+    return bottom;
   }
 
-  /// First position (reading order) where an item with the given spans fits,
-  /// or `null` when the grid has no room left for it.
-  (int, int)? firstFreeSpot(int rowSpan, int columnSpan) {
-    var maxRow = 0;
-    for (final item in items) {
-      maxRow = maxRow > item.row ? maxRow : item.row;
-    }
-    for (var row = 0; row <= maxRow + 8; row++) {
-      for (var column = 0; column < columns; column++) {
-        if (canPlace(
-          row: row,
-          column: column,
-          rowSpan: rowSpan,
-          columnSpan: columnSpan,
-        )) {
-          return (row, column);
-        }
-      }
-    }
-    return null;
-  }
-
-  /// Nearest valid position for the given geometry, scanning outwards from
-  /// the requested spot; returns `null` when nothing fits anywhere nearby.
-  (int, int)? nearestFreeSpot({
-    required int row,
-    required int column,
-    required int rowSpan,
-    required int columnSpan,
-    Object? ignore,
-  }) {
-    if (canPlace(
-      row: row,
-      column: column,
-      rowSpan: rowSpan,
-      columnSpan: columnSpan,
-      ignore: ignore,
-    )) {
-      return (row, column);
-    }
-    for (var radius = 1; radius <= 24; radius++) {
-      for (var dr = -radius; dr <= radius; dr++) {
-        for (final dc in [-radius, radius]) {
-          final candidate = _validSpot(
-            row: row + dr,
-            column: column + dc,
-            rowSpan: rowSpan,
-            columnSpan: columnSpan,
-            ignore: ignore,
-          );
-          if (candidate != null) {
-            return candidate;
-          }
-        }
-      }
-      for (var dc = -radius + 1; dc <= radius - 1; dc++) {
-        for (final dr in [-radius, radius]) {
-          final candidate = _validSpot(
-            row: row + dr,
-            column: column + dc,
-            rowSpan: rowSpan,
-            columnSpan: columnSpan,
-            ignore: ignore,
-          );
-          if (candidate != null) {
-            return candidate;
-          }
-        }
-      }
-    }
-    return null;
-  }
-
-  (int, int)? _validSpot({
-    required int row,
-    required int column,
-    required int rowSpan,
-    required int columnSpan,
-    Object? ignore,
-  }) {
-    if (row < 0 ||
-        column < 0 ||
-        column + columnSpan > columns ||
-        !canPlace(
-          row: row,
-          column: column,
-          rowSpan: rowSpan,
-          columnSpan: columnSpan,
-          ignore: ignore,
-        )) {
-      return null;
-    }
-    return (row, column);
-  }
+  /// First free anchor below the existing content for a tile of [size];
+  /// free-form canvases always have room, so this never returns null.
+  (double, double) appendSpot() => (8, contentBottom + 16);
 
   /// A sensible starting point mirroring the classic preset.
-  static RemoteGridLayout defaultTemplate() => RemoteGridLayout([
-    LayoutItem.block(block: LayoutBlock.tvStatus, row: 0, column: 1),
-    LayoutItem.key(remoteKey: RemoteKey.power, row: 1, column: 0),
-    LayoutItem.key(remoteKey: RemoteKey.mute, row: 1, column: 1),
-    LayoutItem.key(remoteKey: RemoteKey.info, row: 1, column: 2),
-    LayoutItem.key(remoteKey: RemoteKey.volumeDown, row: 2, column: 0),
-    LayoutItem.key(remoteKey: RemoteKey.volumeUp, row: 2, column: 1),
-    LayoutItem.key(remoteKey: RemoteKey.channelDown, row: 2, column: 2),
-    LayoutItem.key(remoteKey: RemoteKey.channelUp, row: 2, column: 3),
-    LayoutItem.key(remoteKey: RemoteKey.up, row: 3, column: 1),
-    LayoutItem.key(remoteKey: RemoteKey.left, row: 4, column: 0),
-    LayoutItem.key(remoteKey: RemoteKey.select, row: 4, column: 1),
-    LayoutItem.key(remoteKey: RemoteKey.right, row: 4, column: 2),
-    LayoutItem.key(remoteKey: RemoteKey.down, row: 5, column: 1),
-    LayoutItem.key(remoteKey: RemoteKey.back, row: 6, column: 0),
-    LayoutItem.key(remoteKey: RemoteKey.exit, row: 6, column: 1),
-    LayoutItem.key(remoteKey: RemoteKey.settings, row: 7, column: 0),
-    LayoutItem.key(remoteKey: RemoteKey.favorites, row: 7, column: 1),
-    LayoutItem.key(remoteKey: RemoteKey.pictureFormat, row: 7, column: 2),
-    LayoutItem.key(remoteKey: RemoteKey.pictureMode, row: 7, column: 3),
-    LayoutItem.key(remoteKey: RemoteKey.audioTrack, row: 8, column: 0),
-    LayoutItem.key(remoteKey: RemoteKey.subtitleAudio, row: 8, column: 1),
-    LayoutItem.key(remoteKey: RemoteKey.subtitles, row: 8, column: 2),
-    LayoutItem.key(remoteKey: RemoteKey.teletext, row: 8, column: 3),
-    LayoutItem.block(block: LayoutBlock.digitsPad, row: 9, column: 0),
-    LayoutItem.block(block: LayoutBlock.sleepTimer, row: 11, column: 1),
-  ]);
+  static FreeRemoteLayout defaultTemplate() {
+    const step = _legacyCellSize + _legacyGap;
+    double col(int c) => 8 + c * step;
+    double row(int r) => 8 + r * step;
+    const button = 64.0;
+    return FreeRemoteLayout([
+      LayoutItem.block(
+        block: LayoutBlock.tvStatus,
+        x: col(1),
+        y: row(0),
+        width: 200,
+        height: 48,
+      ),
+      for (final (key, r, c) in [
+        (RemoteKey.power, 1, 0),
+        (RemoteKey.mute, 1, 1),
+        (RemoteKey.info, 1, 2),
+        (RemoteKey.volumeDown, 2, 0),
+        (RemoteKey.volumeUp, 2, 1),
+        (RemoteKey.channelDown, 2, 2),
+        (RemoteKey.channelUp, 2, 3),
+        (RemoteKey.up, 3, 1),
+        (RemoteKey.left, 4, 0),
+        (RemoteKey.select, 4, 1),
+        (RemoteKey.right, 4, 2),
+        (RemoteKey.down, 5, 1),
+        (RemoteKey.back, 6, 0),
+        (RemoteKey.exit, 6, 1),
+        (RemoteKey.settings, 7, 0),
+        (RemoteKey.favorites, 7, 1),
+        (RemoteKey.pictureFormat, 7, 2),
+        (RemoteKey.pictureMode, 7, 3),
+        (RemoteKey.audioTrack, 8, 0),
+        (RemoteKey.subtitleAudio, 8, 1),
+        (RemoteKey.subtitles, 8, 2),
+        (RemoteKey.teletext, 8, 3),
+      ])
+        LayoutItem.key(
+          remoteKey: key,
+          x: col(c),
+          y: row(r),
+          width: button,
+          height: button,
+        ),
+      LayoutItem.block(
+        block: LayoutBlock.digitsPad,
+        x: col(0),
+        y: row(9),
+        width: 4 * _legacyCellSize + 3 * _legacyGap,
+        height: 176,
+      ),
+      LayoutItem.block(
+        block: LayoutBlock.sleepTimer,
+        x: col(1),
+        y: row(11) + 8,
+        width: 200,
+        height: 48,
+      ),
+    ]);
+  }
 
   Map<String, Object?> toJson() => {
-    'version': 1,
-    'columns': columns,
+    'version': 2,
     'items': [for (final item in items) item.toJson()],
   };
 
-  /// Parses a grid; invalid items are skipped. Returns `null` when [json] is
-  /// not a valid grid payload.
-  static RemoteGridLayout? tryFromJson(Object? json) {
+  /// Parses a free-form layout. Version-1 grid payloads are migrated to
+  /// canvas coordinates on the fly. Returns `null` when [json] is not a
+  /// valid layout payload. At most [kMaxLayoutItems] tiles are kept.
+  static FreeRemoteLayout? tryFromJson(Object? json) {
     if (json is! Map<Object?, Object?>) {
       return null;
     }
@@ -375,35 +325,97 @@ class RemoteGridLayout {
     if (rawItems is! List<Object?>) {
       return null;
     }
-    final columns = (json['columns'] as num?)?.round() ?? kLayoutGridColumns;
+    final version = _safeInt(json['version']) ?? 1;
     final parsed = <LayoutItem>[];
     for (final raw in rawItems) {
-      final item = LayoutItem.tryFromJson(raw);
+      if (parsed.length >= kMaxLayoutItems) {
+        break;
+      }
+      final item = version >= 2
+          ? LayoutItem.tryFromJson(raw)
+          : _migrateGridItem(raw);
       if (item != null) {
+        // Defensive cap: ignore items placed absurdly far away.
+        if (item.x > kMaxCanvasExtent || item.y > kMaxCanvasExtent) {
+          continue;
+        }
         parsed.add(item);
       }
     }
-    // Drop items that overlap survivors so the result stays renderable.
-    final kept = <LayoutItem>[];
-    final occupiedCells = <String>{};
-    for (final item in parsed) {
-      final cells = cellsOf(item);
-      if (item.column + item.effectiveColumnSpan > columns ||
-          cells.any(occupiedCells.contains)) {
-        continue;
-      }
-      occupiedCells.addAll(cells);
-      kept.add(item);
-    }
-    return RemoteGridLayout(
-      kept,
-      columns: columns
-          .clamp(kLayoutGridMinColumns, kLayoutGridMaxColumns)
-          .toInt(),
-    );
+    return FreeRemoteLayout(parsed);
   }
 
-  static RemoteGridLayout? tryFromJsonString(String? source) {
+  /// Converts a version-1 grid item (`row`/`column`/`rowSpan`/`columnSpan`)
+  /// into canvas coordinates.
+  static LayoutItem? _migrateGridItem(Object? json) {
+    if (json is! Map<Object?, Object?>) {
+      return null;
+    }
+    final row = _nonNegativeInt(json['row']);
+    final column = _nonNegativeInt(json['column']);
+    if (row == null || column == null || column > 11) {
+      return null;
+    }
+    // Matches defaultTemplate()'s 8px canvas margin.
+    final x = 8 + column * (_legacyCellSize + _legacyGap);
+    final y = 8 + row * (_legacyCellSize + _legacyGap);
+    switch (json['type']) {
+      case 'key':
+        final key = LayoutItem._tryParseKey(json['key']);
+        if (key == null) {
+          return null;
+        }
+        final rowSpan = _safeInt(json['rowSpan'], min: 1, max: 2) ?? 1;
+        final columnSpan = _safeInt(json['columnSpan'], min: 1, max: 2) ?? 1;
+        return LayoutItem.key(
+          remoteKey: key,
+          x: x,
+          y: y,
+          width: (columnSpan * _legacyCellSize + (columnSpan - 1) * _legacyGap)
+              .clamp(kMinTileExtent, kMaxTileExtent),
+          height: (rowSpan * _legacyCellSize + (rowSpan - 1) * _legacyGap)
+              .clamp(kMinTileExtent, kMaxTileExtent),
+        );
+      case 'block':
+        final block = LayoutItem._tryParseBlock(json['block']);
+        if (block == null) {
+          return null;
+        }
+        final (defaultW, defaultH) = kLayoutBlockSizes[block]!;
+        return LayoutItem.block(
+          block: block,
+          x: x,
+          y: y,
+          width: defaultW,
+          height: defaultH,
+        );
+      default:
+        return null;
+    }
+  }
+
+  static int? _nonNegativeInt(Object? value) =>
+      value is num && value.isFinite && value >= 0 && value == value.round()
+      ? value.round()
+      : null;
+
+  /// Reads an integer with optional bounds; returns null for anything else
+  /// (including numeric strings), never throwing.
+  static int? _safeInt(Object? value, {int? min, int? max}) {
+    if (value is! num || !value.isFinite) {
+      return null;
+    }
+    var result = value.round();
+    if (min != null && result < min) {
+      result = min;
+    }
+    if (max != null && result > max) {
+      result = max;
+    }
+    return result;
+  }
+
+  static FreeRemoteLayout? tryFromJsonString(String? source) {
     if (source == null) {
       return null;
     }
@@ -418,9 +430,7 @@ class RemoteGridLayout {
 
   @override
   bool operator ==(Object other) {
-    if (other is! RemoteGridLayout ||
-        other.items.length != items.length ||
-        other.columns != columns) {
+    if (other is! FreeRemoteLayout || other.items.length != items.length) {
       return false;
     }
     for (var i = 0; i < items.length; i++) {
@@ -432,7 +442,113 @@ class RemoteGridLayout {
   }
 
   @override
-  int get hashCode => Object.hash(columns, Object.hashAll(items));
+  int get hashCode => Object.hashAll(items);
+}
+
+/// Result of snapping a dragged tile against its neighbours.
+class AlignmentSnap {
+  const AlignmentSnap({
+    required this.dx,
+    required this.dy,
+    required this.verticalLines,
+    required this.horizontalLines,
+  });
+
+  /// Horizontal correction to apply.
+  final double dx;
+
+  /// Vertical correction to apply.
+  final double dy;
+
+  /// X positions of the vertical guide lines to draw.
+  final List<double> verticalLines;
+
+  /// Y positions of the horizontal guide lines to draw.
+  final List<double> horizontalLines;
+
+  static const AlignmentSnap none = AlignmentSnap(
+    dx: 0,
+    dy: 0,
+    verticalLines: [],
+    horizontalLines: [],
+  );
+
+  @override
+  bool operator ==(Object other) =>
+      other is AlignmentSnap &&
+      other.dx == dx &&
+      other.dy == dy &&
+      _doublesEqual(other.verticalLines, verticalLines) &&
+      _doublesEqual(other.horizontalLines, horizontalLines);
+
+  @override
+  int get hashCode => Object.hash(
+    dx,
+    dy,
+    Object.hashAll(verticalLines),
+    Object.hashAll(horizontalLines),
+  );
+
+  static bool _doublesEqual(List<double> a, List<double> b) {
+    if (a.length != b.length) {
+      return false;
+    }
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /// Snaps [moving]'s edges/center against [others] within [threshold].
+  ///
+  /// Each axis snaps independently to the nearest candidate (left, center,
+  /// right / top, center, bottom).
+  static AlignmentSnap compute({
+    required LayoutItem moving,
+    required Iterable<LayoutItem> others,
+    double threshold = kSnapThreshold,
+    LayoutItem? ignore,
+  }) {
+    double? bestDx;
+    var bestDxDist = threshold + 1;
+    double? snapX;
+    double? bestDy;
+    var bestDyDist = threshold + 1;
+    double? snapY;
+    for (final other in others) {
+      if (identical(other, ignore)) {
+        continue;
+      }
+      for (final from in [moving.left, moving.centerX, moving.right]) {
+        for (final to in [other.left, other.centerX, other.right]) {
+          final distance = (to - from).abs();
+          if (distance <= threshold && distance < bestDxDist) {
+            bestDxDist = distance;
+            bestDx = to - from;
+            snapX = to;
+          }
+        }
+      }
+      for (final from in [moving.top, moving.centerY, moving.bottom]) {
+        for (final to in [other.top, other.centerY, other.bottom]) {
+          final distance = (to - from).abs();
+          if (distance <= threshold && distance < bestDyDist) {
+            bestDyDist = distance;
+            bestDy = to - from;
+            snapY = to;
+          }
+        }
+      }
+    }
+    return AlignmentSnap(
+      dx: bestDx ?? 0,
+      dy: bestDy ?? 0,
+      verticalLines: snapX == null ? const [] : [snapX],
+      horizontalLines: snapY == null ? const [] : [snapY],
+    );
+  }
 }
 
 /// A named, persisted custom layout.
@@ -449,7 +565,7 @@ class SavedRemoteLayout {
   /// User-visible name.
   final String name;
 
-  /// Serialized [RemoteGridLayout] JSON.
+  /// Serialized [FreeRemoteLayout] JSON.
   final String gridJson;
 
   SavedRemoteLayout copyWith({String? name, String? gridJson}) =>

@@ -374,12 +374,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get nameLabel => 'İsim';
 
   @override
-  String get showGrid => 'Izgara göster';
-
-  @override
-  String get hideGrid => 'Izgarayı gizle';
-
-  @override
   String get addToLayout => 'Düğme ekle';
 
   @override
@@ -395,7 +389,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get removeButton => 'Kaldır';
 
   @override
-  String get buttonSize => 'Boyut';
+  String get resizeButton => 'Yeniden boyutlandır';
 
   @override
   String get layoutSaved => 'Düzen kaydedildi';

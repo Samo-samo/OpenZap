@@ -11,9 +11,9 @@ import '../../tv_status/domain/tv_status.dart';
 import '../domain/remote_control_error.dart';
 import '../domain/remote_key.dart';
 import '../domain/remote_layout.dart';
+import 'free_layout_view.dart';
 import 'key_tester_screen.dart';
 import 'layout_editor_screen.dart';
-import 'layout_grid_view.dart';
 import 'layout_manager_sheet.dart';
 import 'remote_key_icons.dart';
 
@@ -139,11 +139,8 @@ class RemoteScreen extends ConsumerWidget {
         notifier.setRemoteLayout(RemoteLayout.values.byName(value));
       case 'create':
         final l10n = AppLocalizations.of(context)!;
-        final count = (ref
-            .read(settingsProvider)
-            .valueOrNull
-            ?.savedLayouts
-            .length)!;
+        final count =
+            ref.read(settingsProvider).valueOrNull?.savedLayouts.length ?? 0;
         final id = await notifier.createCustomLayout(
           '${l10n.layoutCustom} ${count + 1}',
         );
@@ -168,8 +165,8 @@ class RemoteScreen extends ConsumerWidget {
     }
   }
 
-  /// Builds the remote screen contents: the active custom grid layout when
-  /// one is selected, otherwise the fixed sections.
+  /// Builds the remote screen contents: the active custom canvas when one
+  /// is selected, otherwise the fixed sections.
   List<Widget> _buildBody(
     BuildContext context,
     WidgetRef ref,
@@ -182,15 +179,15 @@ class RemoteScreen extends ConsumerWidget {
       final saved = settings.savedLayouts
           .where((layout) => layout.id == activeId)
           .firstOrNull;
-      final grid = saved == null
+      final layout = saved == null
           ? null
-          : RemoteGridLayout.tryFromJsonString(saved.gridJson);
-      if (grid != null && grid.items.isNotEmpty) {
+          : FreeRemoteLayout.tryFromJsonString(saved.gridJson);
+      if (layout != null && layout.items.isNotEmpty) {
         return [
-          LayoutGridView(
-            grid: grid,
-            itemBuilder: (context, item) =>
-                _buildGridItem(context, ref, l10n, item),
+          FreeLayoutView(
+            layout: layout,
+            itemBuilder: (context, _, item) =>
+                _buildCanvasItem(context, ref, l10n, item),
           ),
           const SizedBox(height: 16),
         ];
@@ -199,32 +196,34 @@ class RemoteScreen extends ConsumerWidget {
     return _buildSections(context, ref, l10n);
   }
 
-  Widget _buildGridItem(
+  Widget _buildCanvasItem(
     BuildContext context,
     WidgetRef ref,
     AppLocalizations l10n,
     LayoutItem item,
   ) {
     if (item.isKey) {
-      final longestSpan = item.effectiveRowSpan > item.effectiveColumnSpan
-          ? item.effectiveRowSpan
-          : item.effectiveColumnSpan;
+      final iconSize =
+          (item.width < item.height ? item.width : item.height) * 0.42;
       return Tooltip(
         message: remoteKeyLabel(item.remoteKey!, l10n),
         child: SizedBox.expand(
           child: IconButton.filled(
-            iconSize: 24.0 + 8.0 * (longestSpan - 1),
+            iconSize: iconSize.clamp(18, 40),
             onPressed: () => _sendKey(context, ref, item.remoteKey!),
             icon: Icon(remoteKeyIcon(item.remoteKey!)),
           ),
         ),
       );
     }
-    return switch (item.block!) {
-      LayoutBlock.tvStatus => const Center(child: _TvStatusChip()),
-      LayoutBlock.digitsPad => Center(child: _buildDigits()),
-      LayoutBlock.sleepTimer => const Center(child: _SleepTimerControl()),
-    };
+    // Tiny tiles cannot fit the block content; clip instead of overflowing.
+    return ClipRect(
+      child: switch (item.block!) {
+        LayoutBlock.tvStatus => const Center(child: _TvStatusChip()),
+        LayoutBlock.digitsPad => Center(child: _buildDigits()),
+        LayoutBlock.sleepTimer => const Center(child: _SleepTimerControl()),
+      },
+    );
   }
 
   /// Builds the remote sections according to the visibility settings:

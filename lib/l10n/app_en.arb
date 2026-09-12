@@ -147,13 +147,11 @@
   "manageLayouts": "Manage layouts",
   "renameLayoutTitle": "Rename layout",
   "nameLabel": "Name",
-  "showGrid": "Show grid",
-  "hideGrid": "Hide grid",
   "addToLayout": "Add buttons",
   "blockTvStatus": "TV status",
   "blockDigitsPad": "Digit pad",
   "resetLayout": "Reset layout",
   "removeButton": "Remove",
-  "buttonSize": "Size",
+  "resizeButton": "Resize",
   "layoutSaved": "Layout saved"
 }

@@ -385,12 +385,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nameLabel => 'Name';
 
   @override
-  String get showGrid => 'Show grid';
-
-  @override
-  String get hideGrid => 'Hide grid';
-
-  @override
   String get addToLayout => 'Add buttons';
 
   @override
@@ -406,7 +400,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get removeButton => 'Remove';
 
   @override
-  String get buttonSize => 'Size';
+  String get resizeButton => 'Resize';
 
   @override
   String get layoutSaved => 'Layout saved';
