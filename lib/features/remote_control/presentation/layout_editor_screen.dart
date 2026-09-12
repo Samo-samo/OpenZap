@@ -75,12 +75,17 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
   final List<List<LayoutItem>> _undoStack = [];
   final List<List<LayoutItem>> _redoStack = [];
 
-  // Move-drag state (pointer-tracked so touch drags never lose to page scroll).
+  // Move-drag state.
+  //
+  // Pointer down is tracked with a raw Listener (so the page scroll locks
+  // before the scrollable can claim the gesture), while moves go through
+  // the tile's pan recognizer: once it wins the arena it keeps receiving
+  // every move even when the tile jumps away from under the finger
+  // (pointer capture), which a raw Listener cannot do.
   int? _dragIndex;
   int? _dragPointer;
   Offset _dragStart = Offset.zero;
   Offset _dragDelta = Offset.zero;
-  Offset _dragLastLocal = Offset.zero;
   AlignmentSnap _snap = AlignmentSnap.none;
 
   /// While true, page scrolling is locked (a tile gesture is in progress).
@@ -271,7 +276,7 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
   void _startDrag(int index, Offset globalPosition, int pointer) {
     if (_dragPointer != null || index >= _items.length) {
       return;
-    }    // A drag starting on the resize handle belongs to the handle. The badge
+    } // A drag starting on the resize handle belongs to the handle. The badge
     // is a ~25px circle overflowing the tile's bottom-right corner, so the
     // skip zone covers that corner.
     final box = _canvasBox;
@@ -294,7 +299,6 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
       _dragIndex = index;
       _dragStart = Offset(item.x, item.y);
       _dragDelta = Offset.zero;
-      _dragLastLocal = box.globalToLocal(globalPosition);
       _snap = AlignmentSnap.none;
       _selectedIndex = null;
       _scrollLock = true;
@@ -340,21 +344,6 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
       return;
     }
     _startDrag(index, event.position, event.pointer);
-  }
-
-  void _dragPointerMove(int index, PointerMoveEvent event) {
-    if (_dragPointer != event.pointer || _dragIndex != index) {
-      return;
-    }
-    final box = _canvasBox;
-    if (box == null) {
-      return;
-    }
-    // globalToLocal inverts the canvas zoom, so deltas are canvas pixels.
-    final local = box.globalToLocal(event.position);
-    final delta = local - _dragLastLocal;
-    _dragLastLocal = local;
-    _updateDragBy(delta);
   }
 
   void _dragPointerUp(int pointer) {
@@ -930,10 +919,12 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
           GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: () => _select(index),
+            onPanUpdate: (details) => _updateDragBy(details.delta / _zoom),
+            onPanEnd: (_) => _endDrag(),
+            onPanCancel: _endDrag,
             child: Listener(
               behavior: HitTestBehavior.translucent,
               onPointerDown: (event) => _dragPointerDown(index, event),
-              onPointerMove: (event) => _dragPointerMove(index, event),
               onPointerUp: (event) => _dragPointerUp(event.pointer),
               onPointerCancel: (event) => _dragPointerUp(event.pointer),
               child: content,
