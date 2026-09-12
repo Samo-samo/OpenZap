@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../l10n/app_localizations.dart';
@@ -47,6 +48,49 @@ class _LayoutManagerSheet extends ConsumerWidget {
       await notifier.renameCustomLayout(layout.id, name.trim());
     }
 
+    Future<void> export(SavedRemoteLayout layout) async {
+      await Clipboard.setData(ClipboardData(text: layout.gridJson));
+      if (!context.mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(l10n.layoutCopied),
+            backgroundColor: Colors.green.shade700,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+    }
+
+    Future<void> import() async {
+      final data = await showDialog<String>(
+        context: context,
+        builder: (dialogContext) => const _ImportDialog(),
+      );
+      if (data == null || data.trim().isEmpty) {
+        return;
+      }
+      final id = await notifier.importCustomLayout(data, l10n.layoutCustom);
+      if (!context.mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              id == null ? l10n.invalidLayoutData : l10n.layoutImported,
+            ),
+            backgroundColor: id == null
+                ? Colors.red.shade700
+                : Colors.green.shade700,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+    }
+
     return SafeArea(
       child: ListView(
         shrinkWrap: true,
@@ -80,6 +124,11 @@ class _LayoutManagerSheet extends ConsumerWidget {
                     onPressed: () => rename(entry),
                   ),
                   IconButton(
+                    icon: const Icon(Icons.ios_share),
+                    tooltip: l10n.exportLayout,
+                    onPressed: () => export(entry),
+                  ),
+                  IconButton(
                     icon: const Icon(Icons.delete_outline),
                     tooltip: l10n.removeButton,
                     onPressed: () => notifier.deleteCustomLayout(entry.id),
@@ -88,22 +137,100 @@ class _LayoutManagerSheet extends ConsumerWidget {
               ),
             ),
           const SizedBox(height: 8),
-          FilledButton.tonalIcon(
-            onPressed: () async {
-              final count = layouts.length;
-              final id = await notifier.createCustomLayout(
-                '${l10n.layoutCustom} ${count + 1}',
-              );
-              if (!context.mounted) {
-                return;
-              }
-              await openEditor(id);
-            },
-            icon: const Icon(Icons.add),
-            label: Text(l10n.newLayout),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.tonalIcon(
+                  onPressed: () async {
+                    final count = layouts.length;
+                    final id = await notifier.createCustomLayout(
+                      '${l10n.layoutCustom} ${count + 1}',
+                    );
+                    if (!context.mounted) {
+                      return;
+                    }
+                    await openEditor(id);
+                  },
+                  icon: const Icon(Icons.add),
+                  label: Text(l10n.newLayout),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: import,
+                  icon: const Icon(Icons.file_download_outlined),
+                  label: Text(l10n.importLayout),
+                ),
+              ),
+            ],
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ImportDialog extends StatefulWidget {
+  const _ImportDialog();
+
+  @override
+  State<_ImportDialog> createState() => _ImportDialogState();
+}
+
+class _ImportDialogState extends State<_ImportDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _paste() async {
+    final data = await Clipboard.getData('text/plain');
+    final text = data?.text;
+    if (text != null && text.isNotEmpty) {
+      _controller.text = text;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final materialL10n = MaterialLocalizations.of(context);
+    return AlertDialog(
+      title: Text(l10n.importLayout),
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        maxLines: 4,
+        decoration: InputDecoration(
+          labelText: l10n.pasteLayoutData,
+          border: const OutlineInputBorder(),
+        ),
+      ),
+      actions: [
+        TextButton.icon(
+          onPressed: _paste,
+          icon: const Icon(Icons.content_paste),
+          label: Text(materialL10n.pasteButtonLabel),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(materialL10n.cancelButtonLabel),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(_controller.text),
+          child: Text(materialL10n.okButtonLabel),
+        ),
+      ],
     );
   }
 }

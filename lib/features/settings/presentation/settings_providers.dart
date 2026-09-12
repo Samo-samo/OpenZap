@@ -75,6 +75,40 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     return id;
   }
 
+  /// Imports a layout from pasted JSON data. Returns the new layout id, or
+  /// `null` when [data] is not a valid layout payload. The entry is named
+  /// "$namePrefix N" (first unused N) and activated immediately.
+  Future<String?> importCustomLayout(String data, String namePrefix) async {
+    final parsed = FreeRemoteLayout.tryFromJsonString(data.trim());
+    if (parsed == null || parsed.items.isEmpty) {
+      return null;
+    }
+    final current = state.valueOrNull;
+    if (current == null) {
+      return null;
+    }
+    final takenNames = {for (final layout in current.savedLayouts) layout.name};
+    var n = current.savedLayouts.length + 1;
+    while (takenNames.contains('$namePrefix $n')) {
+      n++;
+    }
+    final id = 'layout-${DateTime.now().microsecondsSinceEpoch}';
+    final settings = current.copyWith(
+      savedLayouts: [
+        ...current.savedLayouts,
+        SavedRemoteLayout(
+          id: id,
+          name: '$namePrefix $n',
+          gridJson: jsonEncode(parsed.toJson()),
+        ),
+      ],
+      activeCustomLayoutId: id,
+    );
+    state = AsyncData(settings);
+    await ref.read(settingsStoreProvider).save(settings);
+    return id;
+  }
+
   Future<void> renameCustomLayout(String id, String name) async {
     final settings = state.value!.copyWith(
       savedLayouts: [

@@ -398,5 +398,32 @@ class AppLocalizationsTr extends AppLocalizations {
   String get snapGuides => 'Hizalama';
 
   @override
+  String get exportLayout => 'Dışa aktar';
+
+  @override
+  String get importLayout => 'İçe aktar';
+
+  @override
+  String get pasteLayoutData => 'Düzen verisini yapıştır';
+
+  @override
+  String get invalidLayoutData => 'Geçersiz düzen verisi.';
+
+  @override
+  String get layoutCopied => 'Düzen panoya kopyalandı.';
+
+  @override
+  String get layoutImported => 'Düzen içe aktarıldı.';
+
+  @override
+  String get undoAction => 'Geri al';
+
+  @override
+  String get redoAction => 'Yinele';
+
+  @override
+  String get resetZoom => 'Yakınlaştırmayı sıfırla';
+
+  @override
   String get layoutSaved => 'Düzen kaydedildi';
 }

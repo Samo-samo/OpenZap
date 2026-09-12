@@ -155,5 +155,14 @@
   "resizeButton": "Yeniden boyutlandır",
   "aspectLock": "Oranı koru",
   "snapGuides": "Hizalama",
+  "exportLayout": "Dışa aktar",
+  "importLayout": "İçe aktar",
+  "pasteLayoutData": "Düzen verisini yapıştır",
+  "invalidLayoutData": "Geçersiz düzen verisi.",
+  "layoutCopied": "Düzen panoya kopyalandı.",
+  "layoutImported": "Düzen içe aktarıldı.",
+  "undoAction": "Geri al",
+  "redoAction": "Yinele",
+  "resetZoom": "Yakınlaştırmayı sıfırla",
   "layoutSaved": "Düzen kaydedildi"
 }

@@ -155,5 +155,14 @@
   "resizeButton": "Resize",
   "aspectLock": "Keep ratio",
   "snapGuides": "Snap",
+  "exportLayout": "Export",
+  "importLayout": "Import",
+  "pasteLayoutData": "Paste layout data",
+  "invalidLayoutData": "Invalid layout data.",
+  "layoutCopied": "Layout copied to clipboard.",
+  "layoutImported": "Layout imported.",
+  "undoAction": "Undo",
+  "redoAction": "Redo",
+  "resetZoom": "Reset zoom",
   "layoutSaved": "Layout saved"
 }

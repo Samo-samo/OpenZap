@@ -164,6 +164,43 @@ void main() {
     expect(find.text('Custom 1'), findsOneWidget);
   });
 
+  testWidgets('editor undo removes a palette-added tile', (tester) async {
+    SharedPreferences.setMockInitialValues(
+      layoutPrefs(
+        items: [LayoutItem.key(remoteKey: RemoteKey.power, x: 8, y: 8)],
+      ),
+    );
+    await tester.pumpWidget(wrap());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('More options'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Manage layouts'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Edit layout').first);
+    await tester.pumpAndSettle();
+
+    IconButton toolbarButton(IconData icon) =>
+        tester.widget<IconButton>(find.widgetWithIcon(IconButton, icon));
+    expect(toolbarButton(Icons.undo).onPressed, isNull);
+
+    // Add a mute tile from the palette.
+    await tester.tap(find.byTooltip('Add buttons'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Mute').last);
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Mute'), findsOneWidget);
+    expect(toolbarButton(Icons.undo).onPressed, isNotNull);
+
+    await tester.tap(find.byTooltip('Undo'));
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Mute'), findsNothing);
+
+    await tester.tap(find.byTooltip('Redo'));
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Mute'), findsOneWidget);
+  });
+
   testWidgets('editor toolbar toggles default to on', (tester) async {
     SharedPreferences.setMockInitialValues(
       layoutPrefs(

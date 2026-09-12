@@ -842,6 +842,60 @@ abstract class AppLocalizations {
   /// **'Snap'**
   String get snapGuides;
 
+  /// No description provided for @exportLayout.
+  ///
+  /// In en, this message translates to:
+  /// **'Export'**
+  String get exportLayout;
+
+  /// No description provided for @importLayout.
+  ///
+  /// In en, this message translates to:
+  /// **'Import'**
+  String get importLayout;
+
+  /// No description provided for @pasteLayoutData.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste layout data'**
+  String get pasteLayoutData;
+
+  /// No description provided for @invalidLayoutData.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid layout data.'**
+  String get invalidLayoutData;
+
+  /// No description provided for @layoutCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Layout copied to clipboard.'**
+  String get layoutCopied;
+
+  /// No description provided for @layoutImported.
+  ///
+  /// In en, this message translates to:
+  /// **'Layout imported.'**
+  String get layoutImported;
+
+  /// No description provided for @undoAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get undoAction;
+
+  /// No description provided for @redoAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Redo'**
+  String get redoAction;
+
+  /// No description provided for @resetZoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset zoom'**
+  String get resetZoom;
+
   /// No description provided for @layoutSaved.
   ///
   /// In en, this message translates to:

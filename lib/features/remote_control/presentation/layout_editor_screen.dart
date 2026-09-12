@@ -1,6 +1,9 @@
 import 'dart:convert';
+import 'dart:math' as math;
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../l10n/app_localizations.dart';
@@ -26,8 +29,6 @@ class LayoutEditorScreen extends ConsumerStatefulWidget {
 }
 
 class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
-  static const double _maxCanvasWidth = 960;
-
   static const _navigationKeys = <RemoteKey>[
     RemoteKey.up,
     RemoteKey.down,
@@ -69,6 +70,11 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
   /// Whether dragged tiles snap to alignment guides.
   bool _snapEnabled = true;
 
+  /// Undo/redo history of tile arrangements (bounded).
+  static const int _historyLimit = 30;
+  final List<List<LayoutItem>> _undoStack = [];
+  final List<List<LayoutItem>> _redoStack = [];
+
   // Move-drag state.
   int? _dragIndex;
   Offset _dragStart = Offset.zero;
@@ -90,11 +96,22 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
   double _pinchStartDist = 0;
   (double, double)? _pinchBase;
 
+  /// True while a two-finger gesture zooms the canvas instead of a tile.
+  bool _pinchCanvas = false;
+  double _zoomStart = 1;
+
+  /// Canvas zoom level (desktop: Ctrl+wheel, touch: pinch on empty area).
+  double _zoom = 1;
+
+  /// Whether Ctrl is currently held (disables page scroll for zooming).
+  bool _ctrlHeld = false;
+
   final GlobalKey _canvasKey = GlobalKey();
 
   @override
   void initState() {
     super.initState();
+    HardwareKeyboard.instance.addHandler(_handleKey);
     final settings = ref.read(settingsProvider).valueOrNull;
     final saved = settings?.savedLayouts
         .where((layout) => layout.id == widget.layoutId)
@@ -114,8 +131,92 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
     }
   }
 
+  bool _handleKey(KeyEvent event) {
+    if (!mounted) {
+      return false;
+    }
+    final held = HardwareKeyboard.instance.isControlPressed;
+    if (held != _ctrlHeld) {
+      setState(() => _ctrlHeld = held);
+    }
+    return false;
+  }
+
+  @override
+  void dispose() {
+    HardwareKeyboard.instance.removeHandler(_handleKey);
+    super.dispose();
+  }
+
   RenderBox? get _canvasBox =>
       _canvasKey.currentContext?.findRenderObject() as RenderBox?;
+
+  /// Records the current arrangement for undo; clears the redo stack.
+  void _pushHistory() {
+    _undoStack.add(List.of(_items));
+    if (_undoStack.length > _historyLimit) {
+      _undoStack.removeAt(0);
+    }
+    _redoStack.clear();
+  }
+
+  /// Drops the last pushed snapshot when a gesture ended without changes.
+  void _dropUnchangedHistory() {
+    if (_undoStack.isNotEmpty && _listsEqual(_undoStack.last, _items)) {
+      _undoStack.removeLast();
+    }
+  }
+
+  static bool _listsEqual(List<LayoutItem> a, List<LayoutItem> b) {
+    if (a.length != b.length) {
+      return false;
+    }
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  void _undo() {
+    if (_undoStack.isEmpty) {
+      return;
+    }
+    setState(() {
+      _redoStack.add(List.of(_items));
+      _items = _undoStack.removeLast();
+      _clearGestureState();
+    });
+  }
+
+  void _redo() {
+    if (_redoStack.isEmpty) {
+      return;
+    }
+    setState(() {
+      _undoStack.add(List.of(_items));
+      _items = _redoStack.removeLast();
+      _clearGestureState();
+    });
+  }
+
+  /// Drops any in-flight drag/resize/pinch state (e.g. after undo mid-gesture
+  /// so stale indices cannot apply to the restored arrangement).
+  void _clearGestureState() {
+    _selectedIndex = null;
+    _dragIndex = null;
+    _dragDelta = Offset.zero;
+    _snap = AlignmentSnap.none;
+    _resizePointer = null;
+    _resizeIndex = null;
+    _resizeBase = null;
+    _pinchPointers.clear();
+    _pinchIndex = null;
+    _pinchBase = null;
+    _pinchCanvas = false;
+    _sizeSnap = null;
+  }
 
   // ----- selection -----
 
@@ -138,11 +239,14 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
     if (_selectedIndex == index && index < _items.length) {
       final local = box.globalToLocal(details.globalPosition);
       final item = _items[index];
-      if (local.dx >= item.right - 26 && local.dy >= item.bottom - 26) {
+      // Constant on-screen size regardless of zoom.
+      final corner = 26 / _zoom;
+      if (local.dx >= item.right - corner && local.dy >= item.bottom - corner) {
         return;
       }
     }
     final item = _items[index];
+    _pushHistory();
     setState(() {
       _dragIndex = index;
       _dragStart = Offset(item.x, item.y);
@@ -157,13 +261,14 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
     if (index == null || index >= _items.length) {
       return;
     }
-    // A simultaneous pinch owns the gesture.
-    if (_pinchIndex != null) {
+    // A simultaneous pinch (tile or canvas) owns the gesture.
+    if (_pinchIndex != null || _pinchCanvas) {
       return;
     }
     final item = _items[index];
     setState(() {
-      _dragDelta += details.delta;
+      // Deltas arrive in screen pixels; the canvas may be zoomed.
+      _dragDelta += details.delta / _zoom;
       var x = (_dragStart.dx + _dragDelta.dx)
           .clamp(0, kMaxCanvasExtent)
           .toDouble();
@@ -176,6 +281,7 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
               moving: candidate,
               others: _items,
               ignore: item,
+              includeOrigin: true,
             )
           : AlignmentSnap.none;
       x = (x + _snap.dx).clamp(0, kMaxCanvasExtent).toDouble();
@@ -188,6 +294,7 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
     if (_dragIndex == null) {
       return;
     }
+    _dropUnchangedHistory();
     setState(() {
       _dragIndex = null;
       _dragDelta = Offset.zero;
@@ -206,6 +313,7 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
       return;
     }
     final item = _items[index];
+    _pushHistory();
     setState(() {
       _resizePointer = pointer;
       _resizeIndex = index;
@@ -295,6 +403,7 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
 
   void _endResize(int pointer) {
     if (_resizePointer == pointer) {
+      _dropUnchangedHistory();
       setState(() {
         _resizePointer = null;
         _resizeIndex = null;
@@ -308,21 +417,33 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
 
   void _pinchDown(int pointer, Offset globalPosition) {
     _pinchPointers[pointer] = globalPosition;
-    if (_pinchPointers.length != 2 || _pinchIndex != null) {
+    if (_pinchPointers.length != 2 || _pinchIndex != null || _pinchCanvas) {
       return;
     }
-    var target = _selectedIndex;
-    target ??= _topmostTileAt(globalPosition);
+    // A pinch over a tile resizes that tile; a pinch over empty canvas
+    // zooms the canvas instead.
+    final positions = _pinchPointers.values.toList();
+    var target = _topmostTileAt(positions[0]);
+    target ??= _topmostTileAt(positions[1]);
+    final startDist = (positions[0] - positions[1]).distance;
     if (target == null) {
+      setState(() {
+        _pinchCanvas = true;
+        _pinchStartDist = startDist;
+        _zoomStart = _zoom;
+      });
+      return;
+    }
+    if (target >= _items.length) {
       _pinchPointers.clear();
       return;
     }
-    final positions = _pinchPointers.values.toList();
     final item = _items[target];
+    _pushHistory();
     setState(() {
       _pinchIndex = target;
       _selectedIndex = target;
-      _pinchStartDist = (positions[0] - positions[1]).distance;
+      _pinchStartDist = startDist;
       _pinchBase = (item.width, item.height);
     });
   }
@@ -332,17 +453,26 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
       return;
     }
     _pinchPointers[pointer] = globalPosition;
-    final index = _pinchIndex;
-    final base = _pinchBase;
-    if (index == null || base == null || _pinchPointers.length != 2) {
-      return;
-    }
-    if (index >= _items.length) {
+    if (_pinchPointers.length != 2) {
       return;
     }
     final positions = _pinchPointers.values.toList();
     final dist = (positions[0] - positions[1]).distance;
     if (_pinchStartDist <= 0 || dist <= 0) {
+      return;
+    }
+    if (_pinchCanvas) {
+      setState(() {
+        _zoom = (_zoomStart * dist / _pinchStartDist).clamp(0.5, 2.5);
+      });
+      return;
+    }
+    final index = _pinchIndex;
+    final base = _pinchBase;
+    if (index == null || base == null) {
+      return;
+    }
+    if (index >= _items.length) {
       return;
     }
     final factor = dist / _pinchStartDist;
@@ -352,12 +482,17 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
 
   void _pinchUp(int pointer) {
     _pinchPointers.remove(pointer);
-    if (_pinchPointers.length < 2 && _pinchIndex != null) {
-      setState(() {
-        _pinchIndex = null;
-        _pinchBase = null;
-        _sizeSnap = null;
-      });
+    if (_pinchPointers.length < 2) {
+      if (_pinchCanvas) {
+        setState(() => _pinchCanvas = false);
+      } else if (_pinchIndex != null) {
+        _dropUnchangedHistory();
+        setState(() {
+          _pinchIndex = null;
+          _pinchBase = null;
+          _sizeSnap = null;
+        });
+      }
     }
   }
 
@@ -384,12 +519,14 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
 
   void _addItem(LayoutItem Function(double x, double y) factory) {
     final (x, y) = FreeRemoteLayout(_items).appendSpot();
+    _pushHistory();
     setState(() {
       _items.add(factory(x, y));
     });
   }
 
   void _remove(int index) {
+    _pushHistory();
     setState(() {
       _items.removeAt(index);
       _selectedIndex = null;
@@ -397,6 +534,7 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
   }
 
   void _resetLayout() {
+    _pushHistory();
     setState(() {
       _items = FreeRemoteLayout.defaultTemplate().items.toList();
       _selectedIndex = null;
@@ -451,31 +589,83 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
       body: Column(
         children: [
           Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: _maxCanvasWidth),
-                  child: Listener(
-                    behavior: HitTestBehavior.translucent,
-                    onPointerDown: (event) =>
-                        _pinchDown(event.pointer, event.position),
-                    onPointerMove: (event) =>
-                        _pinchMove(event.pointer, event.position),
-                    onPointerUp: (event) => _pinchUp(event.pointer),
-                    onPointerCancel: (event) => _pinchUp(event.pointer),
-                    child: Container(
-                      key: _canvasKey,
-                      child: FreeLayoutView(
-                        layout: FreeRemoteLayout(_items),
-                        itemBuilder: (context, index, item) =>
-                            _buildEditableItem(context, index, item),
-                        underlayBuilder: (context) => _buildGuides(),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                var contentRight = 0.0;
+                var contentBottom = 0.0;
+                for (final item in _items) {
+                  if (item.right > contentRight) {
+                    contentRight = item.right;
+                  }
+                  if (item.bottom > contentBottom) {
+                    contentBottom = item.bottom;
+                  }
+                }
+                final viewportWidth = constraints.maxWidth.isFinite
+                    ? constraints.maxWidth
+                    : 960.0;
+                final baseWidth =
+                    (viewportWidth - 32 > contentRight + 16
+                            ? viewportWidth - 32
+                            : contentRight + 16)
+                        .toDouble();
+                final baseHeight =
+                    (contentBottom + 24 < 200 ? 200 : contentBottom + 24)
+                        .toDouble();
+                return SingleChildScrollView(
+                  physics: _ctrlHeld
+                      ? const NeverScrollableScrollPhysics()
+                      : const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(16),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: SizedBox(
+                      width: baseWidth * _zoom,
+                      height: baseHeight * _zoom,
+                      child: Transform.scale(
+                        scale: _zoom,
+                        alignment: Alignment.topLeft,
+                        child: SizedBox(
+                          width: baseWidth,
+                          height: baseHeight,
+                          child: Listener(
+                            behavior: HitTestBehavior.translucent,
+                            onPointerDown: (event) =>
+                                _pinchDown(event.pointer, event.position),
+                            onPointerMove: (event) =>
+                                _pinchMove(event.pointer, event.position),
+                            onPointerUp: (event) => _pinchUp(event.pointer),
+                            onPointerCancel: (event) => _pinchUp(event.pointer),
+                            onPointerSignal: (event) {
+                              if (event is PointerScrollEvent &&
+                                  HardwareKeyboard.instance.isControlPressed) {
+                                setState(() {
+                                  _zoom =
+                                      (_zoom *
+                                              math.exp(
+                                                -event.scrollDelta.dy / 500,
+                                              ))
+                                          .clamp(0.5, 2.5)
+                                          .toDouble();
+                                });
+                              }
+                            },
+                            child: Container(
+                              key: _canvasKey,
+                              child: FreeLayoutView(
+                                layout: FreeRemoteLayout(_items),
+                                itemBuilder: (context, index, item) =>
+                                    _buildEditableItem(context, index, item),
+                                underlayBuilder: (context) => _buildGuides(),
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
           ),
           _buildToolbar(l10n),
@@ -501,6 +691,22 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           child: Row(
             children: [
+              IconButton(
+                icon: const Icon(Icons.undo),
+                tooltip: l10n.undoAction,
+                onPressed: _undoStack.isEmpty ? null : _undo,
+              ),
+              IconButton(
+                icon: const Icon(Icons.redo),
+                tooltip: l10n.redoAction,
+                onPressed: _redoStack.isEmpty ? null : _redo,
+              ),
+              if ((_zoom - 1).abs() > 0.001)
+                IconButton(
+                  icon: const Icon(Icons.zoom_out_map),
+                  tooltip: l10n.resetZoom,
+                  onPressed: () => setState(() => _zoom = 1),
+                ),
               if (label != null)
                 Expanded(child: Text(label, overflow: TextOverflow.ellipsis))
               else

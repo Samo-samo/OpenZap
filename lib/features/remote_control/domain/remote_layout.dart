@@ -504,12 +504,14 @@ class AlignmentSnap {
   /// Snaps [moving]'s edges/center against [others] within [threshold].
   ///
   /// Each axis snaps independently to the nearest candidate (left, center,
-  /// right / top, center, bottom).
+  /// right / top, center, bottom). With [includeOrigin], the moving tile's
+  /// left/top edges also snap to the canvas origin (0, 0).
   static AlignmentSnap compute({
     required LayoutItem moving,
     required Iterable<LayoutItem> others,
     double threshold = kSnapThreshold,
     LayoutItem? ignore,
+    bool includeOrigin = false,
   }) {
     double? bestDx;
     var bestDxDist = threshold + 1;
@@ -517,36 +519,50 @@ class AlignmentSnap {
     double? bestDy;
     var bestDyDist = threshold + 1;
     double? snapY;
+    void considerX(double from, double to) {
+      final distance = (to - from).abs();
+      if (distance <= threshold && distance < bestDxDist) {
+        bestDxDist = distance;
+        bestDx = to - from;
+        snapX = to;
+      }
+    }
+
+    void considerY(double from, double to) {
+      final distance = (to - from).abs();
+      if (distance <= threshold && distance < bestDyDist) {
+        bestDyDist = distance;
+        bestDy = to - from;
+        snapY = to;
+      }
+    }
+
+    if (includeOrigin) {
+      considerX(moving.left, 0);
+      considerY(moving.top, 0);
+    }
     for (final other in others) {
       if (identical(other, ignore)) {
         continue;
       }
       for (final from in [moving.left, moving.centerX, moving.right]) {
         for (final to in [other.left, other.centerX, other.right]) {
-          final distance = (to - from).abs();
-          if (distance <= threshold && distance < bestDxDist) {
-            bestDxDist = distance;
-            bestDx = to - from;
-            snapX = to;
-          }
+          considerX(from, to);
         }
       }
       for (final from in [moving.top, moving.centerY, moving.bottom]) {
         for (final to in [other.top, other.centerY, other.bottom]) {
-          final distance = (to - from).abs();
-          if (distance <= threshold && distance < bestDyDist) {
-            bestDyDist = distance;
-            bestDy = to - from;
-            snapY = to;
-          }
+          considerY(from, to);
         }
       }
     }
+    final vLine = snapX;
+    final hLine = snapY;
     return AlignmentSnap(
       dx: bestDx ?? 0,
       dy: bestDy ?? 0,
-      verticalLines: snapX == null ? const [] : [snapX],
-      horizontalLines: snapY == null ? const [] : [snapY],
+      verticalLines: vLine == null ? const [] : [vLine],
+      horizontalLines: hLine == null ? const [] : [hLine],
     );
   }
 }

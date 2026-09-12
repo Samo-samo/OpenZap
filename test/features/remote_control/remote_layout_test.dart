@@ -186,8 +186,27 @@ void main() {
     });
   });
 
-  group('SizeSnap', () {
-    test('snaps width to a neighbour width', () {
+  test('snaps to the canvas origin when enabled', () {
+    const moving = LayoutItem.key(remoteKey: RemoteKey.power, x: 4, y: 200);
+    final snap = AlignmentSnap.compute(
+      moving: moving,
+      others: const [],
+      includeOrigin: true,
+    );
+    expect(snap.dx, -4);
+    expect(snap.verticalLines, [0]);
+    expect(snap.dy, 0);
+    expect(snap.horizontalLines, isEmpty);
+  });
+
+  test('ignores the canvas origin by default', () {
+    const moving = LayoutItem.key(remoteKey: RemoteKey.power, x: 4, y: 3);
+    final snap = AlignmentSnap.compute(moving: moving, others: const []);
+    expect(snap.dx, 0);
+    expect(snap.dy, 0);
+  });
+
+  group('SizeSnap', () {    test('snaps width to a neighbour width', () {
       const item = LayoutItem.key(
         remoteKey: RemoteKey.power,
         x: 8,

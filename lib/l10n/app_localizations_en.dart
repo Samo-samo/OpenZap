@@ -409,5 +409,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get snapGuides => 'Snap';
 
   @override
+  String get exportLayout => 'Export';
+
+  @override
+  String get importLayout => 'Import';
+
+  @override
+  String get pasteLayoutData => 'Paste layout data';
+
+  @override
+  String get invalidLayoutData => 'Invalid layout data.';
+
+  @override
+  String get layoutCopied => 'Layout copied to clipboard.';
+
+  @override
+  String get layoutImported => 'Layout imported.';
+
+  @override
+  String get undoAction => 'Undo';
+
+  @override
+  String get redoAction => 'Redo';
+
+  @override
+  String get resetZoom => 'Reset zoom';
+
+  @override
   String get layoutSaved => 'Layout saved';
 }
