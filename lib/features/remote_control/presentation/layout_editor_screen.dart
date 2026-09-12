@@ -103,6 +103,10 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
   /// Canvas zoom level (desktop: Ctrl+wheel, touch: pinch on empty area).
   double _zoom = 1;
 
+  /// Scroll controllers so zooming can keep the view centered on content.
+  final ScrollController _vScroll = ScrollController();
+  final ScrollController _hScroll = ScrollController();
+
   /// Whether Ctrl is currently held (disables page scroll for zooming).
   bool _ctrlHeld = false;
 
@@ -145,11 +149,42 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
   @override
   void dispose() {
     HardwareKeyboard.instance.removeHandler(_handleKey);
+    _vScroll.dispose();
+    _hScroll.dispose();
     super.dispose();
   }
 
   RenderBox? get _canvasBox =>
       _canvasKey.currentContext?.findRenderObject() as RenderBox?;
+
+  /// Changes the zoom level, rescaling scroll offsets so the view stays on
+  /// the content instead of stranding the viewport on empty space.
+  void _applyZoom(double zoom) {
+    final next = zoom.clamp(0.5, 2.5).toDouble();
+    if (next == _zoom) {
+      return;
+    }
+    final factor = next / _zoom;
+    setState(() => _zoom = next);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      for (final controller in [_vScroll, _hScroll]) {
+        if (!controller.hasClients) {
+          continue;
+        }
+        final position = controller.position;
+        if (position.maxScrollExtent <= 0) {
+          controller.jumpTo(0);
+        } else {
+          controller.jumpTo(
+            (position.pixels * factor).clamp(0.0, position.maxScrollExtent),
+          );
+        }
+      }
+    });
+  }
 
   /// Records the current arrangement for undo; clears the redo stack.
   void _pushHistory() {
@@ -462,9 +497,7 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
       return;
     }
     if (_pinchCanvas) {
-      setState(() {
-        _zoom = (_zoomStart * dist / _pinchStartDist).clamp(0.5, 2.5);
-      });
+      _applyZoom(_zoomStart * dist / _pinchStartDist);
       return;
     }
     final index = _pinchIndex;
@@ -613,11 +646,13 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
                     (contentBottom + 24 < 200 ? 200 : contentBottom + 24)
                         .toDouble();
                 return SingleChildScrollView(
+                  controller: _vScroll,
                   physics: _ctrlHeld
                       ? const NeverScrollableScrollPhysics()
                       : const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.all(16),
                   child: SingleChildScrollView(
+                    controller: _hScroll,
                     scrollDirection: Axis.horizontal,
                     child: SizedBox(
                       width: baseWidth * _zoom,
@@ -639,15 +674,9 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
                             onPointerSignal: (event) {
                               if (event is PointerScrollEvent &&
                                   HardwareKeyboard.instance.isControlPressed) {
-                                setState(() {
-                                  _zoom =
-                                      (_zoom *
-                                              math.exp(
-                                                -event.scrollDelta.dy / 500,
-                                              ))
-                                          .clamp(0.5, 2.5)
-                                          .toDouble();
-                                });
+                                _applyZoom(
+                                  _zoom * math.exp(-event.scrollDelta.dy / 500),
+                                );
                               }
                             },
                             child: Container(
@@ -705,7 +734,7 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
                 IconButton(
                   icon: const Icon(Icons.zoom_out_map),
                   tooltip: l10n.resetZoom,
-                  onPressed: () => setState(() => _zoom = 1),
+                  onPressed: () => _applyZoom(1),
                 ),
               if (label != null)
                 Expanded(child: Text(label, overflow: TextOverflow.ellipsis))
