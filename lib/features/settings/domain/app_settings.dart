@@ -105,6 +105,7 @@ class AppSettings {
     this.showExtras = true,
     this.savedLayouts = const [],
     this.activeCustomLayoutId,
+    this.editorZoomEnabled = true,
     this.languageCode,
     this.sleepTimerHumanReadable = true,
     this.sleepTimerShowMinutesInParens = false,
@@ -143,6 +144,10 @@ class AppSettings {
   /// active.
   final String? activeCustomLayoutId;
 
+  /// Whether canvas zoom is available in the layout editor (pinch on touch,
+  /// Ctrl+wheel on desktop). Disabling is possible but not recommended.
+  final bool editorZoomEnabled;
+
   /// App language (`tr`, `en`, ...), or `null` to follow the system locale.
   final String? languageCode;
 
@@ -173,6 +178,7 @@ class AppSettings {
     bool? showExtras,
     List<SavedRemoteLayout>? savedLayouts,
     Object? activeCustomLayoutId = _unset,
+    bool? editorZoomEnabled,
     String? languageCode,
     bool? sleepTimerHumanReadable,
     bool? sleepTimerShowMinutesInParens,
@@ -192,6 +198,7 @@ class AppSettings {
       activeCustomLayoutId: activeCustomLayoutId == _unset
           ? this.activeCustomLayoutId
           : activeCustomLayoutId as String?,
+      editorZoomEnabled: editorZoomEnabled ?? this.editorZoomEnabled,
       languageCode: languageCode ?? this.languageCode,
       sleepTimerHumanReadable:
           sleepTimerHumanReadable ?? this.sleepTimerHumanReadable,
@@ -216,6 +223,7 @@ class AppSettings {
       other.showExtras == showExtras &&
       _layoutsEqual(other.savedLayouts, savedLayouts) &&
       other.activeCustomLayoutId == activeCustomLayoutId &&
+      other.editorZoomEnabled == editorZoomEnabled &&
       other.languageCode == languageCode &&
       other.sleepTimerHumanReadable == sleepTimerHumanReadable &&
       other.sleepTimerShowMinutesInParens == sleepTimerShowMinutesInParens &&
@@ -234,6 +242,7 @@ class AppSettings {
     showExtras,
     Object.hashAll(savedLayouts),
     activeCustomLayoutId,
+    editorZoomEnabled,
     languageCode,
     sleepTimerHumanReadable,
     sleepTimerShowMinutesInParens,

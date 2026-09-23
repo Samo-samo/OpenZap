@@ -220,5 +220,15 @@ void main() {
       expect(settings.savedLayouts, hasLength(1));
       expect(settings.activeCustomLayoutId, isNull);
     });
+
+    test('editor zoom defaults to on and round-trips', () async {
+      SharedPreferences.setMockInitialValues({});
+      final store = SharedPreferencesSettingsStore();
+
+      expect((await store.load()).editorZoomEnabled, isTrue);
+
+      await store.save(const AppSettings(editorZoomEnabled: false));
+      expect((await store.load()).editorZoomEnabled, isFalse);
+    });
   });
 }

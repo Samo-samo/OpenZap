@@ -425,5 +425,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get resetZoom => 'Yakınlaştırmayı sıfırla';
 
   @override
+  String get appVersion => 'Sürüm';
+
+  @override
+  String get editorZoom => 'Editör yakınlaştırması';
+
+  @override
+  String get editorZoomDescription =>
+      'Düzen editöründe pinch ve Ctrl+tekerlek yakınlaştırması. Kapatılması önerilmez.';
+
+  @override
   String get layoutSaved => 'Düzen kaydedildi';
 }

@@ -896,6 +896,24 @@ abstract class AppLocalizations {
   /// **'Reset zoom'**
   String get resetZoom;
 
+  /// No description provided for @appVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get appVersion;
+
+  /// No description provided for @editorZoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Editor zoom'**
+  String get editorZoom;
+
+  /// No description provided for @editorZoomDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinch and Ctrl+wheel zoom in the layout editor. Turning this off is not recommended.'**
+  String get editorZoomDescription;
+
   /// No description provided for @layoutSaved.
   ///
   /// In en, this message translates to:

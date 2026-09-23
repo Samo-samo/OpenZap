@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/providers.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../device_settings/presentation/saved_devices_provider.dart';
 import '../../discovery/domain/discovered_device.dart';
@@ -36,6 +37,14 @@ class SettingsScreen extends ConsumerWidget {
             onChanged: (value) => ref
                 .read(settingsProvider.notifier)
                 .setWifiWarningEnabled(value),
+          ),
+          SwitchListTile(
+            title: Text(l10n.editorZoom),
+            subtitle: Text(l10n.editorZoomDescription),
+            mouseCursor: SystemMouseCursors.click,
+            value: settings?.editorZoomEnabled ?? true,
+            onChanged: (value) =>
+                ref.read(settingsProvider.notifier).setEditorZoomEnabled(value),
           ),
           _SectionHeader(l10n.appearance),
           SwitchListTile(
@@ -195,6 +204,7 @@ class SettingsScreen extends ConsumerWidget {
                   ],
                 ),
               ),
+          _VersionTile(),
         ],
       ),
     );
@@ -220,6 +230,24 @@ class SettingsScreen extends ConsumerWidget {
       return;
     }
     await ref.read(savedDevicesProvider.notifier).add(added);
+  }
+}
+
+class _VersionTile extends ConsumerWidget {
+  const _VersionTile();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final packageInfo = ref.watch(packageInfoProvider).valueOrNull;
+    final version = packageInfo == null
+        ? '…'
+        : '${packageInfo.version}+${packageInfo.buildNumber}';
+    return ListTile(
+      leading: const Icon(Icons.info_outline),
+      title: Text(l10n.appVersion),
+      subtitle: Text('OpenZap $version'),
+    );
   }
 }
 

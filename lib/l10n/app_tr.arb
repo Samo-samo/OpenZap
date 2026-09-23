@@ -164,5 +164,8 @@
   "undoAction": "Geri al",
   "redoAction": "Yinele",
   "resetZoom": "Yakınlaştırmayı sıfırla",
+  "appVersion": "Sürüm",
+  "editorZoom": "Editör yakınlaştırması",
+  "editorZoomDescription": "Düzen editöründe pinch ve Ctrl+tekerlek yakınlaştırması. Kapatılması önerilmez.",
   "layoutSaved": "Düzen kaydedildi"
 }

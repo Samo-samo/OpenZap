@@ -436,5 +436,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resetZoom => 'Reset zoom';
 
   @override
+  String get appVersion => 'Version';
+
+  @override
+  String get editorZoom => 'Editor zoom';
+
+  @override
+  String get editorZoomDescription =>
+      'Pinch and Ctrl+wheel zoom in the layout editor. Turning this off is not recommended.';
+
+  @override
   String get layoutSaved => 'Layout saved';
 }

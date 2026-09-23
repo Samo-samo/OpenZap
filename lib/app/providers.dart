@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../features/device_settings/data/shared_preferences_device_store.dart';
 import '../features/device_settings/domain/device_store.dart';
@@ -66,6 +67,11 @@ final quickLaunchProvider = Provider<QuickLaunchService?>((ref) {
 /// The device last controlled across app launches, if any.
 final lastDeviceProvider = FutureProvider<DiscoveredDevice?>(
   (ref) => ref.watch(deviceStoreProvider).loadLastDevice(),
+);
+
+/// App version info from the platform package (pubspec version + build).
+final packageInfoProvider = FutureProvider<PackageInfo>(
+  (ref) => PackageInfo.fromPlatform(),
 );
 
 /// Live status of the selected TV, or `null` when none is selected or when

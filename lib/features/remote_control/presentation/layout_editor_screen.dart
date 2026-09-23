@@ -169,7 +169,18 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
 
   /// Changes the zoom level, rescaling scroll offsets so the view stays on
   /// the content instead of stranding the viewport on empty space.
+  ///
+  /// No-op while [AppSettings.editorZoomEnabled] is off; a zoomed canvas
+  /// snaps back to 1x in that case.
   void _applyZoom(double zoom) {
+    final zoomAllowed =
+        ref.read(settingsProvider).valueOrNull?.editorZoomEnabled ?? true;
+    if (!zoomAllowed) {
+      if (_zoom != 1 && mounted) {
+        setState(() => _zoom = 1);
+      }
+      return;
+    }
     final next = zoom.clamp(0.5, 2.5).toDouble();
     if (next == _zoom) {
       return;
@@ -643,6 +654,16 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final zoomEnabled = ref.watch(
+      settingsProvider.select((s) => s.valueOrNull?.editorZoomEnabled ?? true),
+    );
+    if (!zoomEnabled && _zoom != 1) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() => _zoom = 1);
+        }
+      });
+    }
     return Scaffold(
       appBar: AppBar(
         title: Text(_name.isEmpty ? l10n.editLayout : _name),
@@ -745,7 +766,7 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
               },
             ),
           ),
-          _buildToolbar(l10n),
+          _buildToolbar(l10n, zoomEnabled),
         ],
       ),
     );
@@ -753,7 +774,7 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
 
   /// Bottom toolbar with the editor-wide toggles and the selected tile name.
   /// Identical on touch and desktop.
-  Widget _buildToolbar(AppLocalizations l10n) {
+  Widget _buildToolbar(AppLocalizations l10n, bool zoomEnabled) {
     final index = _selectedIndex;
     final String? label = index != null && index >= 0 && index < _items.length
         ? (_items[index].isKey
@@ -781,7 +802,7 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
                   tooltip: l10n.redoAction,
                   onPressed: _redoStack.isEmpty ? null : _redo,
                 ),
-                if ((_zoom - 1).abs() > 0.001)
+                if (zoomEnabled && (_zoom - 1).abs() > 0.001)
                   IconButton(
                     icon: const Icon(Icons.zoom_out_map),
                     tooltip: l10n.resetZoom,

@@ -206,7 +206,8 @@ void main() {
     expect(snap.dy, 0);
   });
 
-  group('SizeSnap', () {    test('snaps width to a neighbour width', () {
+  group('SizeSnap', () {
+    test('snaps width to a neighbour width', () {
       const item = LayoutItem.key(
         remoteKey: RemoteKey.power,
         x: 8,
