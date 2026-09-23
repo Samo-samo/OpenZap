@@ -104,6 +104,7 @@ class SettingsScreen extends ConsumerWidget {
               ],
             ),
           ),
+          _SectionHeader(l10n.language),
           RadioGroup<String>(
             groupValue: languageCode,
             onChanged: (value) {

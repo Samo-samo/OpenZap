@@ -184,7 +184,7 @@ Skipped / not started (research done, see `.ai/vestel-protocol-notes.md`):
 
 # v0.6.0 — Custom Remote Layouts
 
-Status: In progress (layout work landed, release pending)
+Status: v0.6.1 pending release (v0.6.0 tagged; polish landed since)
 
 Goals:
 
@@ -206,11 +206,14 @@ Done:
   canvas zoom (Ctrl+wheel / empty-area pinch), reset-to-template.
 * Layout selection moved out of Settings into the remote screen menu; TR/EN
   strings kept in sync.
+* v0.6.1 polish: 8 more palette keys (Apps & inputs), keep-screen-awake
+  with timeout options, editor zoom off by default, app version row in
+  Settings, equal-gap + drag-start snap.
 
 Known issues:
 
 * Canvas zoom-out can leave the viewport stranded showing half-cut buttons at
-  content edges — workaround: the zoom reset button in the editor toolbar.
+  content edges (zoom is now off by default) — workaround: the zoom reset button in the editor toolbar.
 * Live status tracking still non-functional on MB180 (7681 silent; default
   off, marked "in development").
 * Wake-on-LAN not implemented (TV is on Wi-Fi).

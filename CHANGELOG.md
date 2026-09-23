@@ -1,5 +1,42 @@
 # Changelog
 
+## v0.6.1 — 2026-09-23
+
+Polish on top of the custom remote layouts: more keys to build with,
+a screen-awake option for the remote, and smarter editor snapping.
+
+### Added
+
+- Eight more palette keys in a new Apps & inputs group: YouTube, Netflix,
+  fast access, source list, web browser, network type, hybrid broadcast
+  and current program.
+- Keep-screen-awake option for the remote screen with timeout choices
+  (Off, 30 seconds, 1/5/10/15 minutes, Always; defaults to 5 minutes).
+  The lock is released when you leave the remote or the timeout elapses.
+- App version row at the bottom of Settings (OpenZap version + build).
+- Editor snapping improvements: tiles dragged between two neighbours snap
+  so both gaps match, and tiles snap back to their drag-start position
+  (shown as a ghost outline).
+
+### Changed
+
+- Layout-editor zoom is now behind a kill-switch in Settings and off by
+  default; a zoomed canvas snaps back to 1x while it is off.
+
+### Fixed
+
+- Disabling editor zoom while zoomed no longer leaves the canvas zoomed;
+  the zoom-reset button only shows when zoom is enabled.
+
+### Known issues
+
+- Canvas zoom-out can still leave the viewport stranded showing half-cut
+  buttons at content edges (zoom is now off by default, so fewer users
+  hit this) — workaround: the zoom reset button in the editor toolbar.
+- Live status tracking still non-functional on MB180 (7681 silent;
+  default off, marked "in development").
+- Wake-on-LAN not implemented (TV is on Wi-Fi).
+
 ## v0.6.0 — 2026-09-19
 
 Custom remote layouts: build your own button arrangements on a free-form
