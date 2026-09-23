@@ -89,4 +89,12 @@ const Map<RemoteKey, int> _keyCodes = {
   RemoteKey.subtitleAudio: 1015,
   RemoteKey.subtitles: 1031,
   RemoteKey.teletext: 1060,
+  RemoteKey.showCurrent: 1030,
+  RemoteKey.fastAccess: 1046,
+  RemoteKey.hybridBroadcast: 1055,
+  RemoteKey.sourceList: 1056,
+  RemoteKey.youTube: 1062,
+  RemoteKey.networkType: 1063,
+  RemoteKey.netflix: 1064,
+  RemoteKey.webBrowser: 1065,
 };

@@ -45,6 +45,7 @@ dependencies:
   # Material You wallpaper colors on Android 12+ (dynamic_color support, v0.5).
   dynamic_color: ^1.7.0
   package_info_plus: ^10.2.1
+  wakelock_plus: ^1.8.0
 
 dev_dependencies:
   flutter_test:

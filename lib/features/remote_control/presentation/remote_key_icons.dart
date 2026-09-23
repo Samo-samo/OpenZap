@@ -38,6 +38,14 @@ IconData remoteKeyIcon(RemoteKey key) => switch (key) {
   RemoteKey.subtitleAudio => Icons.subtitles_outlined,
   RemoteKey.subtitles => Icons.closed_caption,
   RemoteKey.teletext => Icons.article_outlined,
+  RemoteKey.showCurrent => Icons.live_tv_outlined,
+  RemoteKey.fastAccess => Icons.bolt_outlined,
+  RemoteKey.hybridBroadcast => Icons.cell_tower,
+  RemoteKey.sourceList => Icons.input,
+  RemoteKey.youTube => Icons.play_circle_outline,
+  RemoteKey.networkType => Icons.settings_input_antenna,
+  RemoteKey.netflix => Icons.movie_outlined,
+  RemoteKey.webBrowser => Icons.language,
 };
 
 /// Localized label for each [RemoteKey], shared by the remote screen and the
@@ -75,4 +83,12 @@ String remoteKeyLabel(RemoteKey key, AppLocalizations l10n) => switch (key) {
   RemoteKey.subtitleAudio => l10n.tooltipSubtitleAudio,
   RemoteKey.subtitles => l10n.tooltipSubtitles,
   RemoteKey.teletext => l10n.tooltipTeletext,
+  RemoteKey.showCurrent => l10n.tooltipShowCurrent,
+  RemoteKey.fastAccess => l10n.keyNameFastAccess,
+  RemoteKey.hybridBroadcast => l10n.keyNameHybrid,
+  RemoteKey.sourceList => l10n.keyNameSourceList,
+  RemoteKey.youTube => l10n.appYouTube,
+  RemoteKey.networkType => l10n.keyNameNetworkType,
+  RemoteKey.netflix => l10n.appNetflix,
+  RemoteKey.webBrowser => l10n.keyNameWebBrowser,
 };

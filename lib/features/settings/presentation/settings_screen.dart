@@ -42,9 +42,17 @@ class SettingsScreen extends ConsumerWidget {
             title: Text(l10n.editorZoom),
             subtitle: Text(l10n.editorZoomDescription),
             mouseCursor: SystemMouseCursors.click,
-            value: settings?.editorZoomEnabled ?? true,
+            value: settings?.editorZoomEnabled ?? false,
             onChanged: (value) =>
                 ref.read(settingsProvider.notifier).setEditorZoomEnabled(value),
+          ),
+          SwitchListTile(
+            title: Text(l10n.keepScreenAwake),
+            subtitle: Text(l10n.keepScreenAwakeDescription),
+            mouseCursor: SystemMouseCursors.click,
+            value: settings?.keepScreenAwake ?? true,
+            onChanged: (value) =>
+                ref.read(settingsProvider.notifier).setKeepScreenAwake(value),
           ),
           _SectionHeader(l10n.appearance),
           SwitchListTile(

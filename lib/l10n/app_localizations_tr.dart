@@ -353,6 +353,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get tooltipTeletext => 'Teletekst';
 
   @override
+  String get tooltipShowCurrent => 'Mevcut program';
+
+  @override
   String get moreOptions => 'Diğer seçenekler';
 
   @override
@@ -432,7 +435,14 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get editorZoomDescription =>
-      'Düzen editöründe pinch ve Ctrl+tekerlek yakınlaştırması. Kapatılması önerilmez.';
+      'Düzen editöründe pinch ve Ctrl+tekerlek yakınlaştırması. Açılması önerilmez.';
+
+  @override
+  String get keepScreenAwake => 'Kumandada ekranı uyanık tut';
+
+  @override
+  String get keepScreenAwakeDescription =>
+      'Kumanda ekranı açıkken ekranın uyumasını engeller.';
 
   @override
   String get layoutSaved => 'Düzen kaydedildi';

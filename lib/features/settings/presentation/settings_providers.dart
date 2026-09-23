@@ -158,6 +158,12 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     await ref.read(settingsStoreProvider).save(settings);
   }
 
+  Future<void> setKeepScreenAwake(bool value) async {
+    final settings = state.value!.copyWith(keepScreenAwake: value);
+    state = AsyncData(settings);
+    await ref.read(settingsStoreProvider).save(settings);
+  }
+
   Future<void> setLanguageCode(String? value) async {
     final settings = state.value!.copyWith(languageCode: value);
     state = AsyncData(settings);

@@ -60,6 +60,17 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
     RemoteKey.teletext,
   ];
 
+  static const _appsInputsKeys = <RemoteKey>[
+    RemoteKey.youTube,
+    RemoteKey.netflix,
+    RemoteKey.fastAccess,
+    RemoteKey.sourceList,
+    RemoteKey.webBrowser,
+    RemoteKey.networkType,
+    RemoteKey.hybridBroadcast,
+    RemoteKey.showCurrent,
+  ];
+
   List<LayoutItem> _items = [];
   String _name = '';
   int? _selectedIndex;
@@ -1091,6 +1102,9 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
             ]),
             section(l10n.keyGroupPictureAudio, [
               for (final key in _pictureAudioKeys) keyChip(key),
+            ]),
+            section(l10n.keyGroupAppsInputs, [
+              for (final key in _appsInputsKeys) keyChip(key),
             ]),
             section(l10n.layoutBlocks, [
               blockChip(l10n.blockTvStatus, Icons.tv, LayoutBlock.tvStatus),

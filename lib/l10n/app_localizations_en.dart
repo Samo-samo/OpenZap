@@ -364,6 +364,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tooltipTeletext => 'Teletext';
 
   @override
+  String get tooltipShowCurrent => 'Current program';
+
+  @override
   String get moreOptions => 'More options';
 
   @override
@@ -443,7 +446,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get editorZoomDescription =>
-      'Pinch and Ctrl+wheel zoom in the layout editor. Turning this off is not recommended.';
+      'Pinch and Ctrl+wheel zoom in the layout editor. Turning this on is not recommended.';
+
+  @override
+  String get keepScreenAwake => 'Keep screen awake on remote';
+
+  @override
+  String get keepScreenAwakeDescription =>
+      'Prevents the screen from sleeping while the remote screen is open.';
 
   @override
   String get layoutSaved => 'Layout saved';

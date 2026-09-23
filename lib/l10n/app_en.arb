@@ -140,6 +140,7 @@
   "tooltipSubtitleAudio": "Subtitle & audio",
   "tooltipSubtitles": "Subtitles",
   "tooltipTeletext": "Teletext",
+  "tooltipShowCurrent": "Current program",
   "moreOptions": "More options",
   "editLayout": "Edit layout",
   "layoutCustom": "Custom",
@@ -166,6 +167,8 @@
   "resetZoom": "Reset zoom",
   "appVersion": "Version",
   "editorZoom": "Editor zoom",
-  "editorZoomDescription": "Pinch and Ctrl+wheel zoom in the layout editor. Turning this off is not recommended.",
+  "editorZoomDescription": "Pinch and Ctrl+wheel zoom in the layout editor. Turning this on is not recommended.",
+  "keepScreenAwake": "Keep screen awake on remote",
+  "keepScreenAwakeDescription": "Prevents the screen from sleeping while the remote screen is open.",
   "layoutSaved": "Layout saved"
 }

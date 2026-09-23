@@ -221,14 +221,24 @@ void main() {
       expect(settings.activeCustomLayoutId, isNull);
     });
 
-    test('editor zoom defaults to on and round-trips', () async {
+    test('editor zoom defaults to off and round-trips', () async {
       SharedPreferences.setMockInitialValues({});
       final store = SharedPreferencesSettingsStore();
 
-      expect((await store.load()).editorZoomEnabled, isTrue);
-
-      await store.save(const AppSettings(editorZoomEnabled: false));
       expect((await store.load()).editorZoomEnabled, isFalse);
+
+      await store.save(const AppSettings(editorZoomEnabled: true));
+      expect((await store.load()).editorZoomEnabled, isTrue);
+    });
+
+    test('keep screen awake defaults to on and round-trips', () async {
+      SharedPreferences.setMockInitialValues({});
+      final store = SharedPreferencesSettingsStore();
+
+      expect((await store.load()).keepScreenAwake, isTrue);
+
+      await store.save(const AppSettings(keepScreenAwake: false));
+      expect((await store.load()).keepScreenAwake, isFalse);
     });
   });
 }

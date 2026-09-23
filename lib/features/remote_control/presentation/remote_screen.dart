@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../../app/providers.dart';
 import '../../../l10n/app_localizations.dart';
@@ -107,14 +108,16 @@ class RemoteScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 960),
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: _buildBody(context, ref, l10n),
+      body: _WakelockGuard(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 960),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: _buildBody(context, ref, l10n),
+              ),
             ),
           ),
         ),
@@ -434,6 +437,38 @@ class RemoteScreen extends ConsumerWidget {
       children: [for (final digit in digits) _DigitButton(digit)],
     );
   }
+}
+
+/// Keeps the screen awake while the remote screen is open, when enabled in
+/// the settings. Releases the lock when the screen is left.
+class _WakelockGuard extends ConsumerStatefulWidget {
+  const _WakelockGuard({required this.child});
+
+  final Widget child;
+
+  @override
+  ConsumerState<_WakelockGuard> createState() => _WakelockGuardState();
+}
+
+class _WakelockGuardState extends ConsumerState<_WakelockGuard> {
+  @override
+  void initState() {
+    super.initState();
+    final enabled =
+        ref.read(settingsProvider).valueOrNull?.keepScreenAwake ?? true;
+    if (enabled) {
+      WakelockPlus.enable();
+    }
+  }
+
+  @override
+  void dispose() {
+    WakelockPlus.disable();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 class _SleepTimerControl extends ConsumerWidget {

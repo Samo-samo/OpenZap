@@ -752,6 +752,12 @@ abstract class AppLocalizations {
   /// **'Teletext'**
   String get tooltipTeletext;
 
+  /// No description provided for @tooltipShowCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current program'**
+  String get tooltipShowCurrent;
+
   /// No description provided for @moreOptions.
   ///
   /// In en, this message translates to:
@@ -911,8 +917,20 @@ abstract class AppLocalizations {
   /// No description provided for @editorZoomDescription.
   ///
   /// In en, this message translates to:
-  /// **'Pinch and Ctrl+wheel zoom in the layout editor. Turning this off is not recommended.'**
+  /// **'Pinch and Ctrl+wheel zoom in the layout editor. Turning this on is not recommended.'**
   String get editorZoomDescription;
+
+  /// No description provided for @keepScreenAwake.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep screen awake on remote'**
+  String get keepScreenAwake;
+
+  /// No description provided for @keepScreenAwakeDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Prevents the screen from sleeping while the remote screen is open.'**
+  String get keepScreenAwakeDescription;
 
   /// No description provided for @layoutSaved.
   ///

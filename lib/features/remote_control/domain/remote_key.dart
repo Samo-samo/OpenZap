@@ -32,4 +32,12 @@ enum RemoteKey {
   subtitleAudio,
   subtitles,
   teletext,
+  showCurrent,
+  fastAccess,
+  hybridBroadcast,
+  sourceList,
+  youTube,
+  networkType,
+  netflix,
+  webBrowser,
 }

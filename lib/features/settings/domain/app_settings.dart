@@ -105,7 +105,8 @@ class AppSettings {
     this.showExtras = true,
     this.savedLayouts = const [],
     this.activeCustomLayoutId,
-    this.editorZoomEnabled = true,
+    this.editorZoomEnabled = false,
+    this.keepScreenAwake = true,
     this.languageCode,
     this.sleepTimerHumanReadable = true,
     this.sleepTimerShowMinutesInParens = false,
@@ -145,8 +146,11 @@ class AppSettings {
   final String? activeCustomLayoutId;
 
   /// Whether canvas zoom is available in the layout editor (pinch on touch,
-  /// Ctrl+wheel on desktop). Disabling is possible but not recommended.
+  /// Ctrl+wheel on desktop). Enabling is possible but not recommended.
   final bool editorZoomEnabled;
+
+  /// Whether the screen stays awake while the remote screen is open.
+  final bool keepScreenAwake;
 
   /// App language (`tr`, `en`, ...), or `null` to follow the system locale.
   final String? languageCode;
@@ -179,6 +183,7 @@ class AppSettings {
     List<SavedRemoteLayout>? savedLayouts,
     Object? activeCustomLayoutId = _unset,
     bool? editorZoomEnabled,
+    bool? keepScreenAwake,
     String? languageCode,
     bool? sleepTimerHumanReadable,
     bool? sleepTimerShowMinutesInParens,
@@ -199,6 +204,7 @@ class AppSettings {
           ? this.activeCustomLayoutId
           : activeCustomLayoutId as String?,
       editorZoomEnabled: editorZoomEnabled ?? this.editorZoomEnabled,
+      keepScreenAwake: keepScreenAwake ?? this.keepScreenAwake,
       languageCode: languageCode ?? this.languageCode,
       sleepTimerHumanReadable:
           sleepTimerHumanReadable ?? this.sleepTimerHumanReadable,
@@ -224,6 +230,7 @@ class AppSettings {
       _layoutsEqual(other.savedLayouts, savedLayouts) &&
       other.activeCustomLayoutId == activeCustomLayoutId &&
       other.editorZoomEnabled == editorZoomEnabled &&
+      other.keepScreenAwake == keepScreenAwake &&
       other.languageCode == languageCode &&
       other.sleepTimerHumanReadable == sleepTimerHumanReadable &&
       other.sleepTimerShowMinutesInParens == sleepTimerShowMinutesInParens &&
@@ -243,6 +250,7 @@ class AppSettings {
     Object.hashAll(savedLayouts),
     activeCustomLayoutId,
     editorZoomEnabled,
+    keepScreenAwake,
     languageCode,
     sleepTimerHumanReadable,
     sleepTimerShowMinutesInParens,
