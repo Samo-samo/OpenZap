@@ -216,7 +216,6 @@ Known issues:
   content edges (zoom is now off by default) — workaround: the zoom reset button in the editor toolbar.
 * Live status tracking still non-functional on MB180 (7681 silent; default
   off, marked "in development").
-* Wake-on-LAN not implemented (TV is on Wi-Fi).
 
 ---
 

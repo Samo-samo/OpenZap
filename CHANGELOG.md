@@ -35,7 +35,6 @@ a screen-awake option for the remote, and smarter editor snapping.
   hit this) — workaround: the zoom reset button in the editor toolbar.
 - Live status tracking still non-functional on MB180 (7681 silent;
   default off, marked "in development").
-- Wake-on-LAN not implemented (TV is on Wi-Fi).
 
 ## v0.6.0 — 2026-09-19
 
