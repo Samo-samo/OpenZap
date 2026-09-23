@@ -932,6 +932,24 @@ abstract class AppLocalizations {
   /// **'Prevents the screen from sleeping while the remote screen is open.'**
   String get keepScreenAwakeDescription;
 
+  /// No description provided for @awakeOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get awakeOff;
+
+  /// No description provided for @awakeAlways.
+  ///
+  /// In en, this message translates to:
+  /// **'Always'**
+  String get awakeAlways;
+
+  /// No description provided for @awakeSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'30 seconds'**
+  String get awakeSeconds;
+
   /// No description provided for @layoutSaved.
   ///
   /// In en, this message translates to:

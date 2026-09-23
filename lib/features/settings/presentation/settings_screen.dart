@@ -10,6 +10,18 @@ import '../../discovery/domain/discovered_device.dart';
 import '../domain/app_settings.dart';
 import 'settings_providers.dart';
 
+/// Localized label for a [ScreenAwakeTimeout] option.
+String _awakeLabel(AppLocalizations l10n, ScreenAwakeTimeout value) =>
+    switch (value) {
+      ScreenAwakeTimeout.off => l10n.awakeOff,
+      ScreenAwakeTimeout.seconds30 => l10n.awakeSeconds,
+      ScreenAwakeTimeout.minutes1 => l10n.sleepTimerMinutes(1),
+      ScreenAwakeTimeout.minutes5 => l10n.sleepTimerMinutes(5),
+      ScreenAwakeTimeout.minutes10 => l10n.sleepTimerMinutes(10),
+      ScreenAwakeTimeout.minutes15 => l10n.sleepTimerMinutes(15),
+      ScreenAwakeTimeout.always => l10n.awakeAlways,
+    };
+
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
@@ -46,13 +58,15 @@ class SettingsScreen extends ConsumerWidget {
             onChanged: (value) =>
                 ref.read(settingsProvider.notifier).setEditorZoomEnabled(value),
           ),
-          SwitchListTile(
+          ListTile(
             title: Text(l10n.keepScreenAwake),
-            subtitle: Text(l10n.keepScreenAwakeDescription),
+            subtitle: Text(
+              '${l10n.keepScreenAwakeDescription}\n'
+              '${_awakeLabel(l10n, settings?.screenAwakeTimeout ?? ScreenAwakeTimeout.minutes5)}',
+            ),
+            trailing: const Icon(Icons.chevron_right),
             mouseCursor: SystemMouseCursors.click,
-            value: settings?.keepScreenAwake ?? true,
-            onChanged: (value) =>
-                ref.read(settingsProvider.notifier).setKeepScreenAwake(value),
+            onTap: () => _pickScreenAwakeTimeout(context, ref),
           ),
           _SectionHeader(l10n.appearance),
           SwitchListTile(
@@ -216,6 +230,42 @@ class SettingsScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _pickScreenAwakeTimeout(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    final current =
+        ref.read(settingsProvider).valueOrNull?.screenAwakeTimeout ??
+        ScreenAwakeTimeout.minutes5;
+    final picked = await showDialog<ScreenAwakeTimeout>(
+      context: context,
+      builder: (_) => SimpleDialog(
+        title: Text(l10n.keepScreenAwake),
+        children: [
+          RadioGroup<ScreenAwakeTimeout>(
+            groupValue: current,
+            onChanged: (value) => Navigator.of(context).pop(value),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final option in ScreenAwakeTimeout.values)
+                  RadioListTile<ScreenAwakeTimeout>(
+                    title: Text(_awakeLabel(l10n, option)),
+                    mouseCursor: SystemMouseCursors.click,
+                    value: option,
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+    if (picked != null) {
+      await ref.read(settingsProvider.notifier).setKeepScreenAwake(picked);
+    }
   }
 
   Future<void> _addDevice(BuildContext context, WidgetRef ref) async {

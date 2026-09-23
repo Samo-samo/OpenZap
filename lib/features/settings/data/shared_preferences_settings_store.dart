@@ -15,7 +15,7 @@ class SharedPreferencesSettingsStore implements SettingsStore {
   static const _savedLayoutsKey = 'custom_layouts_v1';
   static const _activeCustomLayoutIdKey = 'active_custom_layout_id';
   static const _editorZoomEnabledKey = 'editor_zoom_enabled';
-  static const _keepScreenAwakeKey = 'keep_screen_awake';
+  static const _screenAwakeTimeoutKey = 'screen_awake_timeout';
   // Pre-multi-layout keys, migrated on load.
   static const _legacyUseCustomLayoutKey = 'use_custom_layout';
   static const _legacyCustomLayoutJsonKey = 'custom_layout_json';
@@ -45,7 +45,11 @@ class SharedPreferencesSettingsStore implements SettingsStore {
       savedLayouts: savedLayouts,
       activeCustomLayoutId: activeId,
       editorZoomEnabled: prefs.getBool(_editorZoomEnabledKey) ?? false,
-      keepScreenAwake: prefs.getBool(_keepScreenAwakeKey) ?? true,
+      screenAwakeTimeout:
+          ScreenAwakeTimeout.values.asNameMap()[prefs.getString(
+            _screenAwakeTimeoutKey,
+          )] ??
+          ScreenAwakeTimeout.minutes5,
       languageCode: prefs.getString(_languageCodeKey),
       sleepTimerHumanReadable:
           prefs.getBool(_sleepTimerHumanReadableKey) ?? true,
@@ -105,7 +109,10 @@ class SharedPreferencesSettingsStore implements SettingsStore {
       await prefs.setString(_activeCustomLayoutIdKey, activeId);
     }
     await prefs.setBool(_editorZoomEnabledKey, settings.editorZoomEnabled);
-    await prefs.setBool(_keepScreenAwakeKey, settings.keepScreenAwake);
+    await prefs.setString(
+      _screenAwakeTimeoutKey,
+      settings.screenAwakeTimeout.name,
+    );
     final languageCode = settings.languageCode;
     if (languageCode == null) {
       await prefs.remove(_languageCodeKey);

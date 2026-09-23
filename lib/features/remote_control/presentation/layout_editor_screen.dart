@@ -356,6 +356,25 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
           : AlignmentSnap.none;
       x = (x + _snap.dx).clamp(0, kMaxCanvasExtent).toDouble();
       y = (y + _snap.dy).clamp(0, kMaxCanvasExtent).toDouble();
+      // Snap back to the drag start position ("remember previous spot").
+      final vLines = [..._snap.verticalLines];
+      final hLines = [..._snap.horizontalLines];
+      if (_snapEnabled) {
+        if ((x - _dragStart.dx).abs() <= kSnapThreshold) {
+          x = _dragStart.dx;
+          vLines.add(_dragStart.dx);
+        }
+        if ((y - _dragStart.dy).abs() <= kSnapThreshold) {
+          y = _dragStart.dy;
+          hLines.add(_dragStart.dy);
+        }
+      }
+      _snap = AlignmentSnap(
+        dx: _snap.dx,
+        dy: _snap.dy,
+        verticalLines: vLines,
+        horizontalLines: hLines,
+      );
       _items[index] = item.moveTo(x, y);
     });
   }
@@ -852,7 +871,8 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
     );
   }
 
-  /// Alignment guide lines for the in-progress drag or resize.
+  /// Alignment guide lines for the in-progress drag or resize, plus a
+  /// ghost of the drag start position.
   List<Widget> _buildGuides() {
     final sizeSnap = _sizeSnap;
     final resizing =
@@ -869,7 +889,28 @@ class _LayoutEditorScreenState extends ConsumerState<LayoutEditorScreen> {
       ..._snap.horizontalLines,
       if (resizing) ...sizeSnap.horizontalLines,
     ];
+    final dragIndex = _dragIndex;
+    final ghost = dragIndex != null && dragIndex < _items.length
+        ? [
+            Positioned(
+              left: _dragStart.dx,
+              top: _dragStart.dy,
+              width: _items[dragIndex].width,
+              height: _items[dragIndex].height,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: color.withValues(alpha: 0.35),
+                    width: 2,
+                  ),
+                ),
+              ),
+            ),
+          ]
+        : const <Widget>[];
     return [
+      ...ghost,
       for (final x in verticalLines)
         Positioned(
           left: x,

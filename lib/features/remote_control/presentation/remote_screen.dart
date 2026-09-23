@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
@@ -439,8 +441,9 @@ class RemoteScreen extends ConsumerWidget {
   }
 }
 
-/// Keeps the screen awake while the remote screen is open, when enabled in
-/// the settings. Releases the lock when the screen is left.
+/// Keeps the screen awake while the remote screen is open, honoring the
+/// [ScreenAwakeTimeout] setting. Releases the lock when the screen is left
+/// or the timeout elapses.
 class _WakelockGuard extends ConsumerStatefulWidget {
   const _WakelockGuard({required this.child});
 
@@ -451,18 +454,27 @@ class _WakelockGuard extends ConsumerStatefulWidget {
 }
 
 class _WakelockGuardState extends ConsumerState<_WakelockGuard> {
+  Timer? _releaseTimer;
+
   @override
   void initState() {
     super.initState();
-    final enabled =
-        ref.read(settingsProvider).valueOrNull?.keepScreenAwake ?? true;
-    if (enabled) {
-      WakelockPlus.enable();
+    final mode =
+        ref.read(settingsProvider).valueOrNull?.screenAwakeTimeout ??
+        ScreenAwakeTimeout.minutes5;
+    if (mode == ScreenAwakeTimeout.off) {
+      return;
+    }
+    WakelockPlus.enable();
+    final duration = mode.duration;
+    if (duration != null) {
+      _releaseTimer = Timer(duration, () => WakelockPlus.disable());
     }
   }
 
   @override
   void dispose() {
+    _releaseTimer?.cancel();
     WakelockPlus.disable();
     super.dispose();
   }

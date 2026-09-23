@@ -505,7 +505,9 @@ class AlignmentSnap {
   ///
   /// Each axis snaps independently to the nearest candidate (left, center,
   /// right / top, center, bottom). With [includeOrigin], the moving tile's
-  /// left/top edges also snap to the canvas origin (0, 0).
+  /// left/top edges also snap to the canvas origin (0, 0). When no edge
+  /// snaps on an axis, gaps are equalized instead: a tile dragged between
+  /// two neighbours snaps so both gaps match.
   static AlignmentSnap compute({
     required LayoutItem moving,
     required Iterable<LayoutItem> others,
@@ -515,16 +517,18 @@ class AlignmentSnap {
   }) {
     double? bestDx;
     var bestDxDist = threshold + 1;
-    double? snapX;
+    final vLines = <double>[];
     double? bestDy;
     var bestDyDist = threshold + 1;
-    double? snapY;
+    final hLines = <double>[];
     void considerX(double from, double to) {
       final distance = (to - from).abs();
       if (distance <= threshold && distance < bestDxDist) {
         bestDxDist = distance;
         bestDx = to - from;
-        snapX = to;
+        vLines
+          ..clear()
+          ..add(to);
       }
     }
 
@@ -533,7 +537,9 @@ class AlignmentSnap {
       if (distance <= threshold && distance < bestDyDist) {
         bestDyDist = distance;
         bestDy = to - from;
-        snapY = to;
+        hLines
+          ..clear()
+          ..add(to);
       }
     }
 
@@ -541,10 +547,8 @@ class AlignmentSnap {
       considerX(moving.left, 0);
       considerY(moving.top, 0);
     }
-    for (final other in others) {
-      if (identical(other, ignore)) {
-        continue;
-      }
+    final rest = others.where((other) => !identical(other, ignore)).toList();
+    for (final other in rest) {
       for (final from in [moving.left, moving.centerX, moving.right]) {
         for (final to in [other.left, other.centerX, other.right]) {
           considerX(from, to);
@@ -556,14 +560,95 @@ class AlignmentSnap {
         }
       }
     }
-    final vLine = snapX;
-    final hLine = snapY;
+    if (bestDx == null) {
+      final gap = _equalizeGap(
+        movingLeft: moving.left,
+        movingSize: moving.width,
+        neighbours: [
+          for (final other in rest)
+            if (_overlaps(
+              moving.top,
+              moving.bottom,
+              other.top,
+              other.bottom,
+            ))
+              (other.left, other.right),
+        ],
+        threshold: threshold,
+      );
+      if (gap != null) {
+        bestDx = gap.$1;
+        vLines
+          ..clear()
+          ..addAll(gap.$2);
+      }
+    }
+    if (bestDy == null) {
+      final gap = _equalizeGap(
+        movingLeft: moving.top,
+        movingSize: moving.height,
+        neighbours: [
+          for (final other in rest)
+            if (_overlaps(
+              moving.left,
+              moving.right,
+              other.left,
+              other.right,
+            ))
+              (other.top, other.bottom),
+        ],
+        threshold: threshold,
+      );
+      if (gap != null) {
+        bestDy = gap.$1;
+        hLines
+          ..clear()
+          ..addAll(gap.$2);
+      }
+    }
     return AlignmentSnap(
       dx: bestDx ?? 0,
       dy: bestDy ?? 0,
-      verticalLines: vLine == null ? const [] : [vLine],
-      horizontalLines: hLine == null ? const [] : [hLine],
+      verticalLines: vLines,
+      horizontalLines: hLines,
     );
+  }
+
+  static bool _overlaps(double a1, double a2, double b1, double b2) =>
+      a1 < b2 && a2 > b1;
+
+  /// Equalizes the gaps around a tile dragged between two neighbours.
+  ///
+  /// Returns the shift plus the gap-boundary lines, or null when no
+  /// bracketing pair has near-equal gaps.
+  static (double, List<double>)? _equalizeGap({
+    required double movingLeft,
+    required double movingSize,
+    required List<(double, double)> neighbours,
+    required double threshold,
+  }) {
+    double? bestShift;
+    var bestDiff = threshold + 1;
+    List<double> bestLines = const [];
+    for (final (_, a2) in neighbours) {
+      for (final (b1, _) in neighbours) {
+        if (a2 > movingLeft || b1 < movingLeft + movingSize) {
+          continue;
+        }
+        final gapL = movingLeft - a2;
+        final gapR = b1 - (movingLeft + movingSize);
+        if (gapL < 0 || gapR < 0) {
+          continue;
+        }
+        final diff = (gapL - gapR).abs();
+        if (diff <= threshold && diff < bestDiff) {
+          bestDiff = diff;
+          bestShift = (gapR - gapL) / 2;
+          bestLines = [a2, b1];
+        }
+      }
+    }
+    return bestShift == null ? null : (bestShift, bestLines);
   }
 }
 

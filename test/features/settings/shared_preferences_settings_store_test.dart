@@ -231,14 +231,37 @@ void main() {
       expect((await store.load()).editorZoomEnabled, isTrue);
     });
 
-    test('keep screen awake defaults to on and round-trips', () async {
+    test('screen awake defaults to 5 minutes and round-trips', () async {
       SharedPreferences.setMockInitialValues({});
       final store = SharedPreferencesSettingsStore();
 
-      expect((await store.load()).keepScreenAwake, isTrue);
+      expect(
+        (await store.load()).screenAwakeTimeout,
+        ScreenAwakeTimeout.minutes5,
+      );
 
-      await store.save(const AppSettings(keepScreenAwake: false));
-      expect((await store.load()).keepScreenAwake, isFalse);
+      await store.save(
+        const AppSettings(screenAwakeTimeout: ScreenAwakeTimeout.always),
+      );
+      expect(
+        (await store.load()).screenAwakeTimeout,
+        ScreenAwakeTimeout.always,
+      );
+
+      await store.save(
+        const AppSettings(screenAwakeTimeout: ScreenAwakeTimeout.off),
+      );
+      expect((await store.load()).screenAwakeTimeout, ScreenAwakeTimeout.off);
+    });
+
+    test('unknown screen awake value falls back to 5 minutes', () async {
+      SharedPreferences.setMockInitialValues({'screen_awake_timeout': 'bogus'});
+      final store = SharedPreferencesSettingsStore();
+
+      expect(
+        (await store.load()).screenAwakeTimeout,
+        ScreenAwakeTimeout.minutes5,
+      );
     });
   });
 }

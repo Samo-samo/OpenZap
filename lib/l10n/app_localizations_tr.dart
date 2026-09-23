@@ -445,5 +445,14 @@ class AppLocalizationsTr extends AppLocalizations {
       'Kumanda ekranı açıkken ekranın uyumasını engeller.';
 
   @override
+  String get awakeOff => 'Kapalı';
+
+  @override
+  String get awakeAlways => 'Her zaman';
+
+  @override
+  String get awakeSeconds => '30 saniye';
+
+  @override
   String get layoutSaved => 'Düzen kaydedildi';
 }

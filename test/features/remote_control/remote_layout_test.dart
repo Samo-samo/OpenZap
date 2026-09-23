@@ -206,6 +206,56 @@ void main() {
     expect(snap.dy, 0);
   });
 
+  test('equalizes gaps between two neighbours', () {
+    // A spans 0..100, B spans 300..364; M (64 wide) at x=165 has gaps
+    // 65 and 71 -> snaps +3 so both gaps become 68.
+    const a = LayoutItem.key(
+      remoteKey: RemoteKey.power,
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 64,
+    );
+    const b = LayoutItem.key(
+      remoteKey: RemoteKey.mute,
+      x: 300,
+      y: 0,
+      width: 64,
+      height: 64,
+    );
+    const moving = LayoutItem.key(
+      remoteKey: RemoteKey.info,
+      x: 165,
+      y: 0,
+      width: 64,
+      height: 64,
+    );
+    final snap = AlignmentSnap.compute(moving: moving, others: [a, b]);
+    expect(snap.dx, 3);
+    expect(snap.verticalLines, containsAll([100, 300]));
+  });
+
+  test('prefers edge snap over gap equalization', () {
+    const a = LayoutItem.key(
+      remoteKey: RemoteKey.power,
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 64,
+    );
+    // M's left edge (102) is 2px from A's right edge (100): edge wins.
+    const moving = LayoutItem.key(
+      remoteKey: RemoteKey.info,
+      x: 102,
+      y: 0,
+      width: 64,
+      height: 64,
+    );
+    final snap = AlignmentSnap.compute(moving: moving, others: [a]);
+    expect(snap.dx, -2);
+    expect(snap.verticalLines, [100]);
+  });
+
   group('SizeSnap', () {
     test('snaps width to a neighbour width', () {
       const item = LayoutItem.key(

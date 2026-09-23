@@ -170,5 +170,8 @@
   "editorZoomDescription": "Düzen editöründe pinch ve Ctrl+tekerlek yakınlaştırması. Açılması önerilmez.",
   "keepScreenAwake": "Kumandada ekranı uyanık tut",
   "keepScreenAwakeDescription": "Kumanda ekranı açıkken ekranın uyumasını engeller.",
+  "awakeOff": "Kapalı",
+  "awakeAlways": "Her zaman",
+  "awakeSeconds": "30 saniye",
   "layoutSaved": "Düzen kaydedildi"
 }

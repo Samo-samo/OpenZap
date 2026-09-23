@@ -170,5 +170,8 @@
   "editorZoomDescription": "Pinch and Ctrl+wheel zoom in the layout editor. Turning this on is not recommended.",
   "keepScreenAwake": "Keep screen awake on remote",
   "keepScreenAwakeDescription": "Prevents the screen from sleeping while the remote screen is open.",
+  "awakeOff": "Off",
+  "awakeAlways": "Always",
+  "awakeSeconds": "30 seconds",
   "layoutSaved": "Layout saved"
 }

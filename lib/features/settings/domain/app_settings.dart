@@ -25,6 +25,36 @@ enum AppThemeMode {
   dark,
 }
 
+/// How long the screen stays awake while the remote screen is open.
+enum ScreenAwakeTimeout {
+  /// No wakelock.
+  off,
+
+  /// Release the wakelock after the given duration.
+  seconds30,
+  minutes1,
+  minutes5,
+  minutes10,
+  minutes15,
+
+  /// Hold the wakelock until the remote screen is left.
+  always,
+}
+
+/// Duration of [ScreenAwakeTimeout], or `null` for [ScreenAwakeTimeout.off]
+/// and [ScreenAwakeTimeout.always].
+extension ScreenAwakeTimeoutDuration on ScreenAwakeTimeout {
+  Duration? get duration => switch (this) {
+    ScreenAwakeTimeout.off => null,
+    ScreenAwakeTimeout.seconds30 => const Duration(seconds: 30),
+    ScreenAwakeTimeout.minutes1 => const Duration(minutes: 1),
+    ScreenAwakeTimeout.minutes5 => const Duration(minutes: 5),
+    ScreenAwakeTimeout.minutes10 => const Duration(minutes: 10),
+    ScreenAwakeTimeout.minutes15 => const Duration(minutes: 15),
+    ScreenAwakeTimeout.always => null,
+  };
+}
+
 /// Preset arrangements of the remote screen sections.
 ///
 /// Selecting a preset turns the individual sections on/off through
@@ -106,7 +136,7 @@ class AppSettings {
     this.savedLayouts = const [],
     this.activeCustomLayoutId,
     this.editorZoomEnabled = false,
-    this.keepScreenAwake = true,
+    this.screenAwakeTimeout = ScreenAwakeTimeout.minutes5,
     this.languageCode,
     this.sleepTimerHumanReadable = true,
     this.sleepTimerShowMinutesInParens = false,
@@ -149,8 +179,8 @@ class AppSettings {
   /// Ctrl+wheel on desktop). Enabling is possible but not recommended.
   final bool editorZoomEnabled;
 
-  /// Whether the screen stays awake while the remote screen is open.
-  final bool keepScreenAwake;
+  /// How long the screen stays awake while the remote screen is open.
+  final ScreenAwakeTimeout screenAwakeTimeout;
 
   /// App language (`tr`, `en`, ...), or `null` to follow the system locale.
   final String? languageCode;
@@ -183,7 +213,7 @@ class AppSettings {
     List<SavedRemoteLayout>? savedLayouts,
     Object? activeCustomLayoutId = _unset,
     bool? editorZoomEnabled,
-    bool? keepScreenAwake,
+    ScreenAwakeTimeout? screenAwakeTimeout,
     String? languageCode,
     bool? sleepTimerHumanReadable,
     bool? sleepTimerShowMinutesInParens,
@@ -204,7 +234,7 @@ class AppSettings {
           ? this.activeCustomLayoutId
           : activeCustomLayoutId as String?,
       editorZoomEnabled: editorZoomEnabled ?? this.editorZoomEnabled,
-      keepScreenAwake: keepScreenAwake ?? this.keepScreenAwake,
+      screenAwakeTimeout: screenAwakeTimeout ?? this.screenAwakeTimeout,
       languageCode: languageCode ?? this.languageCode,
       sleepTimerHumanReadable:
           sleepTimerHumanReadable ?? this.sleepTimerHumanReadable,
@@ -230,7 +260,7 @@ class AppSettings {
       _layoutsEqual(other.savedLayouts, savedLayouts) &&
       other.activeCustomLayoutId == activeCustomLayoutId &&
       other.editorZoomEnabled == editorZoomEnabled &&
-      other.keepScreenAwake == keepScreenAwake &&
+      other.screenAwakeTimeout == screenAwakeTimeout &&
       other.languageCode == languageCode &&
       other.sleepTimerHumanReadable == sleepTimerHumanReadable &&
       other.sleepTimerShowMinutesInParens == sleepTimerShowMinutesInParens &&
@@ -250,7 +280,7 @@ class AppSettings {
     Object.hashAll(savedLayouts),
     activeCustomLayoutId,
     editorZoomEnabled,
-    keepScreenAwake,
+    screenAwakeTimeout,
     languageCode,
     sleepTimerHumanReadable,
     sleepTimerShowMinutesInParens,

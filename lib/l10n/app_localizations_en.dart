@@ -456,5 +456,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Prevents the screen from sleeping while the remote screen is open.';
 
   @override
+  String get awakeOff => 'Off';
+
+  @override
+  String get awakeAlways => 'Always';
+
+  @override
+  String get awakeSeconds => '30 seconds';
+
+  @override
   String get layoutSaved => 'Layout saved';
 }
